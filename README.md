@@ -1,8 +1,8 @@
-# AI Workflow Agent — Foundation Milestone
+# AI Workflow Agent — Foundation & LLM-Powered Router
 
 A modular, Excel-driven AI workflow automation system built with Python 3.12, Pydantic, and openpyxl.
 
-This milestone establishes the foundational layer: dynamic loading, validation, and registration of business workflows directly from `data/workflows.xlsx`, with clean separation of concerns and an extensible architecture designed so that new workflows (e.g. WF011) can be registered without modifying the core router or execution engine.
+The system dynamically loads, validates, and registers business workflows directly from `data/workflows.xlsx`, routes natural language requests to workflows using an LLM-powered router, and executes workflow steps through registered tools with strict separation of concerns.
 
 ---
 
@@ -22,8 +22,10 @@ The codebase enforces strict separation of concerns across dedicated modules:
   - `context.py`: `ExecutionContext` carrying workflow state, inputs, intermediate variables, and step history.
   - `resolver.py`: `StepResolver`, `ConfigurableStepResolver`, and `StepBinding` implementing extensible, decoupled step-to-tool resolution without hardcoding workflow IDs.
   - `base.py`: `WorkflowExecutor` abstract interface and `GenericWorkflowEngine` driving genuine step-by-step tool execution, passing arguments, saving intermediate outputs, and enforcing accurate error statuses.
-- **`app/agent/`**: Reserved natural-language routing integration boundary:
-  - `router.py`: `WorkflowRouter` abstract interface and `RoutingDecision` model designed to evaluate queries dynamically against registered workflows without if-else branching.
+- **`app/agent/`**: Natural-language routing and LLM provider integration:
+  - `provider.py`: Lightweight provider abstraction (`LLMProvider`, `OpenAICompatibleProvider`, `GeminiProvider`, and `FakeLLMProvider`) without heavy external SDK dependencies. API credentials are read from environment variables and never logged.
+  - `prompts.py`: Dynamic workflow catalog injection and system prompt builder.
+  - `router.py`: `WorkflowRouter` interface and `LLMWorkflowRouter` implementation with structured JSON output, strict registry validation, confidence thresholds, and robust error handling.
 - **`app/tools/`**: Reusable tool abstractions and registry:
   - `base.py`: `BaseTool` abstract interface and `ToolMetadata`.
   - `registry.py`: `ToolRegistry` for registering and discovering tools dynamically.
@@ -35,8 +37,28 @@ The codebase enforces strict separation of concerns across dedicated modules:
 
 The system does **not** hardcode workflow IDs (WF001–WF010) into routing or engine logic:
 - The registry accepts any valid `WorkflowDefinition` programmatically or via Excel.
-- Workflows declare required tools as metadata strings; the engine evaluates steps dynamically.
-- When an 11th workflow (such as WF011) is added in future milestones, it is registered directly into the `WorkflowRegistry`. The core execution engine and router evaluate it without code modifications.
+- The `LLMWorkflowRouter` constructs its prompt dynamically from whatever workflows are supplied in `available_workflows`. Adding an 11th workflow (`WF011`) makes it immediately eligible for natural-language routing without changing router code.
+- Hallucinated or unregistered workflow IDs returned by the model are strictly rejected by registry validation.
+- Tool bindings are mapped through `ConfigurableStepResolver`; business rules are evaluated deterministically by tools, not the router.
+
+---
+
+## Confidence & Clarification Policy
+
+`LLMWorkflowRouter` applies the following validation policy to all decisions:
+
+1. **Confidence Semantics**:
+   The `confidence` score in `RoutingDecision` represents the **model-reported routing certainty score** (0.0 to 1.0) returned by the LLM, **not a mathematically calibrated probability**. The system compares this score directly against `confidence_threshold` (default `0.70`). No artificial secondary calibration mechanism is applied.
+2. **Registry Verification (Zero Hallucination Tolerance)**:
+   The selected `workflow_id` must match a workflow currently registered in the catalog. If the model returns an unregistered or invented ID, the match is rejected, `workflow_id` is set to `None`, `confidence` is reset to `0.0`, and `requires_clarification` is set to `True`.
+3. **Threshold Enforcement**:
+   Matches scoring below `confidence_threshold` are flagged with `requires_clarification = True`, preventing execution on weak guesses.
+4. **Ambiguous or Unrelated Requests**:
+   If the user query does not match any registered workflow trigger or lacks critical parameters, the router returns `workflow_id = None` and `requires_clarification = True`.
+5. **Sanitized Provider Error Handling**:
+   Network errors, timeouts, or HTTP errors are sanitized to prevent secret leakage. Raw HTTP response bodies, request URLs with credentials, and authorization headers are never exposed in exceptions or user-facing reasoning.
+6. **Explicit Unconfigured Fallback**:
+   When no live LLM credentials (`OPENAI_API_KEY` or `GEMINI_API_KEY`) are present, the system defaults to a safe fallback provider that returns `workflow_id = None`, `requires_clarification = True`, and explicitly states that automated live LLM routing is inactive. It never silently pretends a live model completed the routing.
 
 ---
 
@@ -59,6 +81,30 @@ source .venv/bin/activate  # On macOS/Linux
 pip install pydantic openpyxl pytest
 ```
 
+### LLM Provider Configuration
+
+Configure environment variables in `.env` (copied from `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+To configure an OpenAI-compatible provider:
+```env
+LLM_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o-mini
+```
+
+To configure Google Gemini:
+```env
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=AIza...
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+For hermetic, offline testing, `FakeLLMProvider` is used by default with zero network calls or credentials required.
+
 ---
 
 ## Running Tests
@@ -72,19 +118,11 @@ pytest
 # Run tests with verbose output
 pytest -v
 
-# Run a specific test module
+# Run specific test modules
+pytest tests/test_router.py
+pytest tests/test_execution.py
 pytest tests/test_loader.py
 pytest tests/test_registry.py
 pytest tests/test_models.py
 pytest tests/test_engine_interfaces.py
 ```
-
-### Test Coverage Highlights
-
-1. **Successful Loading of All 10 Workflows**: Confirms that WF001 through WF010 are parsed from `data/workflows.xlsx` with all fields preserved verbatim.
-2. **Loading All 10 Evaluation Requests**: Confirms all rows from `Test_Questions` are loaded and validated.
-3. **Duplicate Workflow ID Detection**: Asserts that duplicate IDs raise `DuplicateWorkflowIDError` with row and ID context.
-4. **Missing Required Column Detection**: Validates that missing columns in either sheet raise `MissingColumnError`.
-5. **Missing Workflow ID Detection**: Validates that rows with empty or missing IDs raise `WorkflowValidationError`.
-6. **Missing or Unreadable Workbook**: Validates that non-existent paths raise `WorkbookNotFoundError` and corrupted files raise `InvalidWorkbookError`.
-7. **Generic Registration Interface**: Demonstrates adding an arbitrary workflow definition (WF011) to the registry programmatically and retrieving it without altering engine or router code.
