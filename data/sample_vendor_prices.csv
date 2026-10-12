@@ -1,0 +1,11 @@
+# Sample Vendor Price List Dataset (Sample Data for WF002)
+# Notice: This is simulated vendor pricing data used for automated price validation.
+sku,vendor_name,vendor_price,currency
+SKU-001,Alpha Suppliers,26.00,USD
+SKU-002,KeyCraft Wholesale,92.00,USD
+SKU-003,ConnectPro Direct,44.00,USD
+SKU-004,VisionTech Displays,255.00,USD
+SKU-005,AudioWave Systems,145.00,USD
+SKU-006,CableLine Global,12.50,USD
+SKU-007,ErgoDesk Co,38.50,USD
+SKU-099,NewVendor Imports,19.99,USD

@@ -1,0 +1,11 @@
+# Sample Vendor Catalog Ingestion Dataset (Sample Data for WF003)
+# Notice: This is simulated vendor input containing column-name variations and mixed valid/invalid rows.
+Item_SKU,Item_Title,Category,Unit_Price,Quantity_Available
+VND-101,Wireless Keyboard,Electronics,45.99,150
+,Ergonomic Mouse,Electronics,24.50,80
+VND-103,,Office Supplies,12.00,200
+VND-104,Monitor Riser Stand,Office Furniture,34.00,45
+   ,  ,Accessories,15.00,10
+VND-106,USB-C Charging Hub,Electronics,39.95,120
+VND-107,Desk Mat Extended,Accessories,-5.00,50
+VND-108,Noise Canceling Earbuds,Audio,89.00,35

@@ -166,4 +166,91 @@ def create_default_step_resolver() -> ConfigurableStepResolver:
         step_name="generate restock list",
         tool_name="restock_reporter",
     )
+
+    # WF002: Product Price Validation
+    resolver.bind(
+        workflow_id="WF002",
+        step_name="Load product prices",
+        tool_name="price_data_loader",
+    )
+    resolver.bind(
+        workflow_id="WF002",
+        step_name="match products by SKU",
+        tool_name="sku_matcher",
+    )
+    resolver.bind(
+        workflow_id="WF002",
+        step_name="compare internal and vendor prices",
+        tool_name="price_comparator",
+    )
+    resolver.bind(
+        workflow_id="WF002",
+        step_name="calculate percentage difference",
+        tool_name="percentage_difference_calculator",
+    )
+    resolver.bind(
+        workflow_id="WF002",
+        step_name="flag exceptions",
+        tool_name="price_exception_flagger",
+    )
+
+    # WF003: Vendor File Processing
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="Read file",
+        tool_name="vendor_file_reader",
+    )
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="detect columns",
+        tool_name="column_detector",
+    )
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="normalize column names",
+        tool_name="column_normalizer",
+    )
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="validate required fields",
+        tool_name="required_fields_validator",
+    )
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="identify invalid rows",
+        tool_name="invalid_rows_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF003",
+        step_name="produce cleaned dataset",
+        tool_name="clean_dataset_producer",
+    )
+
+    # WF004: Product Description Generator
+    resolver.bind(
+        workflow_id="WF004",
+        step_name="Validate required attributes",
+        tool_name="attribute_validator",
+    )
+    resolver.bind(
+        workflow_id="WF004",
+        step_name="create product description",
+        tool_name="product_description_generator",
+    )
+    resolver.bind(
+        workflow_id="WF004",
+        step_name="generate short description",
+        tool_name="short_description_generator",
+    )
+    resolver.bind(
+        workflow_id="WF004",
+        step_name="generate SEO title",
+        tool_name="seo_title_generator",
+    )
+    resolver.bind(
+        workflow_id="WF004",
+        step_name="generate meta description",
+        tool_name="meta_description_generator",
+    )
+
     return resolver

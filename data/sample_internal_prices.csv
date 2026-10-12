@@ -1,0 +1,11 @@
+# Sample Internal Product Prices Dataset (Sample Data for WF002)
+# Notice: This is simulated internal catalog data used for automated price validation.
+sku,product_name,internal_price,currency
+SKU-001,Wireless Ergonomic Mouse,25.00,USD
+SKU-002,Mechanical Gaming Keyboard,80.00,USD
+SKU-003,USB-C Multiport Hub,40.00,USD
+SKU-004,27-inch 4K Monitor,300.00,USD
+SKU-005,Noise-Canceling Headphones,150.00,USD
+SKU-006,Braided HDMI Cable 2m,10.00,USD
+SKU-007,Aluminum Laptop Stand,35.00,USD
+SKU-008,1080p HD Pro Webcam,50.00,USD

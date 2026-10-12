@@ -29,7 +29,10 @@ The codebase enforces strict separation of concerns across dedicated modules:
 - **`app/tools/`**: Reusable tool abstractions, registry, and domain implementations:
   - `base.py`: `BaseTool` abstract interface and `ToolMetadata`.
   - `registry.py`: `ToolRegistry` for registering and discovering tools dynamically.
-  - `inventory.py`: Production-grade domain tools for WF001 (`inventory_loader`, `stock_comparator`, `low_stock_identifier`, `reorder_calculator`, `restock_reporter`) with strict validation.
+  - `inventory.py`: Domain tools for WF001 (`inventory_loader`, `stock_comparator`, `low_stock_identifier`, `reorder_calculator`, `restock_reporter`).
+  - `pricing.py`: Domain tools for WF002 (`price_data_loader`, `sku_matcher`, `price_comparator`, `percentage_difference_calculator`, `price_exception_flagger`).
+  - `vendor_processing.py`: Domain tools for WF003 (`vendor_file_reader`, `column_detector`, `column_normalizer`, `required_fields_validator`, `invalid_rows_identifier`, `clean_dataset_producer`).
+  - `content_generation.py`: Domain tools for WF004 (`attribute_validator`, `product_description_generator`, `short_description_generator`, `seo_title_generator`, `meta_description_generator`).
 - **`app/orchestrator.py`**: `WorkflowOrchestrator` coordinating the full end-to-end pipeline:
   `Natural-language request → Router → Registry → Engine → Step Resolver → Domain Tools → ExecutionReport`.
 - **`app/main.py`**: Command-line interface for natural-language workflow execution.
@@ -37,36 +40,35 @@ The codebase enforces strict separation of concerns across dedicated modules:
 
 ---
 
-## End-to-End Workflow Execution (WF001)
+## End-to-End Workflow Execution (WF001 – WF004)
 
-The system features complete end-to-end orchestration for **WF001: Inventory Restock Check**:
+The system features complete end-to-end orchestration across four business workflows dynamically loaded from `data/workflows.xlsx`:
 
 ```
 Natural Language Request
          │
          ▼
  ┌──────────────────────┐
- │   LLM Router         │ (extracts parameters, matches WF001)
+ │   LLM Router         │ (extracts parameters, validates confidence, matches workflow)
  └──────────┬───────────┘
             │
             ▼
  ┌──────────────────────┐
- │  Workflow Registry   │ (validates WF001 against data/workflows.xlsx)
+ │  Workflow Registry   │ (validates ID against dynamic Excel catalog)
  └──────────┬───────────┘
             │
             ▼
  ┌──────────────────────┐
- │   Generic Engine     │ (resolves step bindings & passes context)
+ │   Generic Engine     │ (resolves step bindings & passes context variables)
  └──────────┬───────────┘
             │
             ▼
  ┌────────────────────────────────────────────────────────┐
- │   Domain Tools (Executed Sequentially)                 │
- │   1. inventory_loader     (parses & validates CSV)    │
- │   2. stock_comparator     (compares stock vs threshold)│
- │   3. low_stock_identifier (filters restock candidates) │
- │   4. reorder_calculator   (computes reorder qty/cost)  │
- │   5. restock_reporter     (formats structured report)  │
+ │   Registered Domain Tools (Executed Sequentially)      │
+ │   - WF001: 5 inventory & restock tools                 │
+ │   - WF002: 5 SKU matching & price comparison tools     │
+ │   - WF003: 6 file parsing & normalization tools        │
+ │   - WF004: 5 attribute validation & SEO content tools  │
  └──────────┬─────────────────────────────────────────────┘
             │
             ▼
@@ -75,17 +77,44 @@ Natural Language Request
  └──────────────────────┘
 ```
 
-### WF001 Business Rules & Edge Cases
-- **Restock Condition**: Triggered strictly when `current_stock < minimum_stock`.
-- **Boundary Condition**: If `current_stock == minimum_stock`, the item is marked as adequately stocked (`needs_reorder = False`, `reorder_quantity = 0`).
+### Supported Workflows & Business Rules
+
+#### 1. WF001 — Inventory Restock Check
+- **Trigger**: "Which products need restocking?"
+- **Decision Logic**: If `current_stock < minimum_stock`, flag product for restock.
+- **Boundary Condition**: Items exactly at threshold (`current_stock == minimum_stock`) are marked adequately stocked (`reorder_quantity = 0`).
 - **Zero Stock**: If `current_stock == 0`, `reorder_quantity = minimum_stock`.
-- **Reorder Formula**: `reorder_quantity = minimum_stock - current_stock`. Estimated reorder cost is computed as `reorder_quantity * unit_cost`.
-- **Validation**: Strict column verification, positive numeric coercion, and missing/empty file detection.
+
+#### 2. WF002 — Product Price Validation
+- **Trigger**: "Find products where vendor price differs by more than 10%."
+- **Steps**: Load product prices $\to$ match products by SKU $\to$ compare internal and vendor prices $\to$ calculate percentage difference $\to$ flag exceptions.
+- **Decision Logic**: Flag records strictly when `percentage_difference > 10.0%`.
+- **Boundary Condition**: Differences of exactly `10.0%` are marked `COMPLIANT`. Differences of `10.01%` or higher are flagged as `EXCEPTION (>10%)`.
+- **Data Integrity**: Handles missing SKUs, invalid/negative prices, and tracks unmatched vendor and internal records.
+
+#### 3. WF003 — Vendor File Processing
+- **Trigger**: "Process this vendor spreadsheet and show invalid rows."
+- **Steps**: Read file $\to$ detect columns $\to$ normalize column names $\to$ validate required fields $\to$ identify invalid rows $\to$ produce cleaned dataset.
+- **Decision Logic**: Rows missing SKU or product name are invalid.
+- **Column Normalization**: Detects synonyms such as `Item_SKU`, `Item_Title`, `Unit_Price`, `Quantity_Available` and normalizes to canonical names.
+- **Safety**: Separates valid records from invalid rows with actionable diagnostics; **never overwrites the input file**.
+
+#### 4. WF004 — Product Description Generator
+- **Trigger**: "Generate SEO content for this product."
+- **Steps**: Validate required attributes $\to$ create product description $\to$ generate short description $\to$ generate SEO title $\to$ generate meta description.
+- **Decision Logic**: Strictly forbids hallucinating or inventing missing attributes. Unprovided optional attributes are explicitly omitted and marked in report metadata.
+- **Validation**: Requires `product_name`; raises validation error if empty.
+- **Simulation Transparency**: When generated in simulated/offline mode, output is clearly badged with `is_simulated = True`.
 
 > [!NOTE]
-> **Sample Dataset Notice**: `data/sample_inventory.csv` provides realistic sample inventory records across multiple suppliers and stock levels. Purchase orders and restock summaries are simulated internally; no live supplier APIs or external purchase orders are dispatched.
+> **Sample Datasets Notice**:
+> - `data/sample_inventory.csv`: Realistic inventory levels and costs.
+> - `data/sample_internal_prices.csv` & `data/sample_vendor_prices.csv`: Multi-supplier product catalog and vendor quotes.
+> - `data/sample_vendor_catalog.csv`: Ingestion file containing column variations and mixed valid/invalid records.
 >
-> **Workflow Implementation Status**: WF001 is fully implemented end-to-end with genuine domain tools. Workflows WF002–WF010 are registered and ready for routing in `data/workflows.xlsx`, with domain tools to be delivered in subsequent milestones.
+> All sample data is simulated for testing and demonstration purposes without external side effects.
+>
+> **Workflow Implementation Status**: Workflows WF001, WF002, WF003, and WF004 are fully implemented end-to-end with genuine domain tools. Workflows WF005–WF010 are registered and ready for routing in `data/workflows.xlsx`.
 
 ---
 
@@ -94,17 +123,23 @@ Natural Language Request
 The system includes a CLI interface (`app/main.py`) to run natural language queries end-to-end:
 
 ```bash
-# Natural-language execution (uses configured LLM provider or prompts for clarification)
-python3 -m app.main "Which products need restocking?"
+# WF001: Inventory Restock Check
+python3 -m app.main --mock-route WF001 "Which products need restocking?"
 
-# Explicit mock routing (hermetic, offline testing without API key)
-python3 -m app.main --mock-route WF001 "Check inventory levels"
+# WF002: Product Price Validation
+python3 -m app.main --mock-route WF002 "Find products where vendor price differs by more than 10%."
 
-# Specifying a custom inventory CSV file
-python3 -m app.main --mock-route WF001 --csv-path data/sample_inventory.csv "Restock report"
+# WF003: Vendor File Processing
+python3 -m app.main --mock-route WF003 "Process this vendor spreadsheet and show invalid rows."
+
+# WF004: Product Description Generator
+python3 -m app.main --mock-route WF004 "Generate SEO content for this product."
+
+# WF004 with custom parameters
+python3 -m app.main --mock-route WF004 --product-name "Pro Wireless Mouse" --color "Midnight Blue" --category "Electronics" "Generate product content"
 
 # Output as structured JSON
-python3 -m app.main --mock-route WF001 --json "Restock check"
+python3 -m app.main --mock-route WF002 --json "Validate prices"
 ```
 
 ---
@@ -193,6 +228,10 @@ pytest -v
 
 # Run specific test modules
 pytest tests/test_wf001_inventory.py
+pytest tests/test_wf002_pricing.py
+pytest tests/test_wf003_vendor_processing.py
+pytest tests/test_wf004_content_generation.py
+pytest tests/test_orchestrator_wf002_wf004.py
 pytest tests/test_orchestrator.py
 pytest tests/test_router.py
 pytest tests/test_execution.py
