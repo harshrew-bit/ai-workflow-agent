@@ -5,9 +5,8 @@ against vendor price lists, calculating percentage differences, and flagging
 exceptions exceeding 10% strictly as defined in data/workflows.xlsx.
 """
 
-import csv
-import math
 from decimal import Decimal
+import csv
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -15,13 +14,16 @@ from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
 
+# The official WF002 workbook defines a fixed 10.0% threshold.
+DEFAULT_PRICE_THRESHOLD_PERCENTAGE: float = 10.0
+
 
 class InternalPriceRecord(BaseModel):
     """Internal catalog pricing record."""
 
     sku: str
     product_name: str
-    internal_price: float
+    internal_price: Decimal
     currency: str = "USD"
 
 
@@ -30,7 +32,7 @@ class VendorPriceRecord(BaseModel):
 
     sku: str
     vendor_name: str
-    vendor_price: float
+    vendor_price: Decimal
     currency: str = "USD"
 
 
@@ -40,39 +42,190 @@ class PriceComparisonItem(BaseModel):
     sku: str
     product_name: str
     vendor_name: str
-    internal_price: float
-    vendor_price: float
+    internal_price: Decimal
+    vendor_price: Decimal
     price_difference: float  # Signed difference: vendor_price - internal_price
     percentage_difference: float  # Absolute percentage: |diff| / internal_price * 100
     is_exception: bool  # True strictly when percentage_difference > threshold
-    validation_status: str  # "EXCEPTION_EXCEEDS_THRESHOLD" or "COMPLIANT"
+    validation_status: str  # "EXCEPTION_EXCEEDS_10_PERCENT" or "COMPLIANT"
     currency: str = "USD"
 
 
-def _read_clean_csv(file_path: Union[str, Path]) -> Tuple[List[str], List[Dict[str, str]]]:
-    """Read a CSV file, ignoring comments and stripping whitespace."""
+def to_decimal(val: Any) -> Decimal:
+    """Convert input numeric or string to Decimal safely without floating-point distortion."""
+    if isinstance(val, Decimal):
+        return val
+    return Decimal(str(val))
+
+
+def parse_price(raw_price: str, row_idx: int, sku: str, context: str = "Internal") -> Decimal:
+    """Parse and validate price string as a positive, finite Decimal.
+
+    Supports optional leading '$' and standard thousands separators (e.g., '$1,200.00').
+    Rejects negative, zero, non-finite, and malformed price values.
+    """
+    cleaned = raw_price.strip()
+    if not cleaned:
+        err_keyword = "price value" if context == "Internal" else "vendor price"
+        raise ValueError(
+            f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}'."
+        )
+
+    # Strip optional leading currency sign
+    if cleaned.startswith("$"):
+        cleaned = cleaned[1:].strip()
+
+    # Validate thousands separators if commas are present
+    if "," in cleaned:
+        parts = cleaned.split(".")
+        int_part = parts[0]
+        if len(parts) > 2:
+            err_keyword = "price value" if context == "Internal" else "vendor price"
+            raise ValueError(
+                f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}'."
+            )
+        int_chunks = int_part.split(",")
+        if not (
+            1 <= len(int_chunks[0]) <= 3
+            and all(len(c) == 3 and c.isdigit() for c in int_chunks[1:])
+        ):
+            err_keyword = "price value" if context == "Internal" else "vendor price"
+            raise ValueError(
+                f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}' with malformed thousands separator."
+            )
+        cleaned = cleaned.replace(",", "")
+
+    # Reject non-numeric or non-finite values (like 'nan', 'inf', '-inf')
+    if cleaned.lower() in ("nan", "inf", "-inf", "+inf"):
+        err_keyword = "price value" if context == "Internal" else "vendor price"
+        raise ValueError(
+            f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}'."
+        )
+
+    try:
+        price_dec = Decimal(cleaned)
+    except Exception:
+        err_keyword = "price value" if context == "Internal" else "vendor price"
+        raise ValueError(
+            f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}'."
+        )
+
+    # Check finite and positive
+    if not price_dec.is_finite() or price_dec <= Decimal("0"):
+        err_keyword = "price value" if context == "Internal" else "vendor price"
+        raise ValueError(
+            f"{context} price CSV row {row_idx} for SKU '{sku}': Invalid {err_keyword} '{raw_price}'."
+        )
+
+    return price_dec
+
+
+def evaluate_price_comparison(
+    internal_price: Any,
+    vendor_price: Any,
+    threshold_percentage: float = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
+) -> Tuple[float, float, bool, str]:
+    """Authoritative price comparison decision using exact Decimal arithmetic.
+
+    Decision Rule:
+        A product is flagged as an exception strictly when the absolute vendor-price
+        difference exceeds threshold_percentage% of the internal price:
+        abs(vendor_price - internal_price) > (internal_price * threshold_percentage / 100)
+
+    Comparing against the monetary threshold amount (internal_price * threshold / 100)
+    avoids floating-point precision boundary errors (e.g. 3.30 vs 3.63 is exactly 10%,
+    which float division distorts to 10.000000000000004).
+
+    Returns:
+        (price_difference, percentage_difference, is_exception, validation_status)
+    """
+    i_dec = to_decimal(internal_price)
+    v_dec = to_decimal(vendor_price)
+
+    if i_dec <= Decimal("0"):
+        raise ValueError(f"Internal price must be strictly positive, got '{internal_price}'.")
+    if v_dec <= Decimal("0"):
+        raise ValueError(f"Vendor price must be strictly positive, got '{vendor_price}'.")
+
+    diff_dec = v_dec - i_dec
+    abs_diff_dec = abs(diff_dec)
+
+    threshold_dec = to_decimal(threshold_percentage)
+    threshold_amount = (i_dec * threshold_dec) / Decimal("100")
+
+    # Strictly greater than threshold:
+    is_exception = abs_diff_dec > threshold_amount
+
+    if threshold_percentage == 10.0:
+        status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
+    else:
+        thresh_label = (
+            int(threshold_percentage)
+            if float(threshold_percentage).is_integer()
+            else threshold_percentage
+        )
+        status = f"EXCEPTION_EXCEEDS_{thresh_label}_PERCENT" if is_exception else "COMPLIANT"
+
+    # Percentage difference for display: |diff| / internal_price * 100, rounded to 2 decimals
+    raw_pct_diff = (abs_diff_dec / i_dec) * Decimal("100")
+    pct_diff_display = round(float(raw_pct_diff), 2)
+    diff_display = float(diff_dec)
+
+    return diff_display, pct_diff_display, is_exception, status
+
+
+def _read_clean_csv(file_path: Union[str, Path]) -> Tuple[List[str], List[Dict[str, Any]]]:
+    """Read a CSV file, ignoring comments and stripping whitespace.
+
+    Strictly validates that every row contains exactly the number of columns
+    defined in the header. Rows with extra or missing cells (such as unquoted commas
+    in currency values like '$1,200') are rejected with actionable line-number diagnostics.
+    """
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"Price dataset file not found at '{path}'")
 
-    rows: List[Dict[str, str]] = []
+    rows: List[Dict[str, Any]] = []
     headers: List[str] = []
 
     with open(path, mode="r", encoding="utf-8-sig") as f:
         reader = csv.reader(f)
         for raw_line in reader:
-            if not raw_line or not any(raw_line):
+            line_no = reader.line_num
+            # Skip empty lines
+            if not raw_line or not any(field.strip() for field in raw_line):
                 continue
             first_cell = raw_line[0].strip()
+            # Skip comment lines
             if first_cell.startswith("#"):
                 continue
+
             if not headers:
                 headers = [h.strip() for h in raw_line]
+                if not any(headers):
+                    raise ValueError(f"Price CSV file at '{path}' contains an empty header row.")
             else:
-                row_dict = {
-                    headers[i]: raw_line[i].strip() if i < len(raw_line) else ""
-                    for i in range(len(headers))
+                field_count = len(raw_line)
+                expected_count = len(headers)
+                if field_count != expected_count:
+                    if field_count > expected_count:
+                        raise ValueError(
+                            f"CSV file '{path}' line {line_no} has {field_count} columns, "
+                            f"expected {expected_count} (columns: {', '.join(headers)}). "
+                            "Unquoted commas inside values (e.g. '$1,200') split fields incorrectly; "
+                            "values containing commas must be enclosed in quotes (e.g. '\"$1,200\"')."
+                        )
+                    else:
+                        raise ValueError(
+                            f"CSV file '{path}' line {line_no} has {field_count} columns, "
+                            f"expected {expected_count} (columns: {', '.join(headers)}). "
+                            "Row is missing required columns."
+                        )
+
+                row_dict: Dict[str, Any] = {
+                    headers[i]: raw_line[i].strip() for i in range(len(headers))
                 }
+                row_dict["_csv_line_number"] = line_no
                 rows.append(row_dict)
 
     if not headers:
@@ -100,33 +253,43 @@ def load_internal_prices_csv(csv_path: Union[str, Path]) -> List[InternalPriceRe
     curr_col = hdr_map.get("currency")
 
     records: List[InternalPriceRecord] = []
-    for idx, row in enumerate(rows, start=2):
-        raw_sku = row.get(sku_col, "").strip()
+    seen_skus = set()
+    for fallback_idx, row in enumerate(rows, start=2):
+        line_no = row.get("_csv_line_number", fallback_idx)
+        raw_sku = str(row.get(sku_col, "")).strip()
         if not raw_sku:
-            raise ValueError(f"Internal price CSV row {idx}: Missing or empty SKU.")
+            raise ValueError(f"Internal price CSV row {line_no}: Missing or empty SKU.")
 
-        raw_price = row.get(price_col, "").strip().replace("$", "").replace(",", "")
-        try:
-            price = float(raw_price)
-            # Reject NaN and positive/negative infinity
-            if not math.isfinite(price):
-                raise ValueError
-            if price <= 0:
-                raise ValueError
-        except (ValueError, TypeError):
+        norm_sku = raw_sku.upper()
+        if norm_sku in seen_skus:
             raise ValueError(
-                f"Internal price CSV row {idx} for SKU '{raw_sku}': Invalid price value '{raw_price}'."
+                f"Duplicate internal SKU detected on row {line_no}: '{raw_sku}'. "
+                "Each SKU must appear only once."
             )
+        seen_skus.add(norm_sku)
 
-        name = row.get(name_col, "").strip() if name_col else raw_sku
-        currency = row.get(curr_col, "USD").strip() if curr_col else "USD"
+        raw_price = str(row.get(price_col, ""))
+        price_dec = parse_price(raw_price, line_no, raw_sku, context="Internal")
+
+        name = str(row.get(name_col, "")).strip() if name_col else raw_sku
+
+        if curr_col:
+            raw_curr = str(row.get(curr_col, "")).strip()
+            if not raw_curr:
+                raise ValueError(
+                    f"Internal price CSV row {line_no} for SKU '{raw_sku}': "
+                    "Missing or blank currency value."
+                )
+            currency = raw_curr.upper()
+        else:
+            currency = "USD"
 
         records.append(
             InternalPriceRecord(
                 sku=raw_sku,
                 product_name=name or raw_sku,
-                internal_price=round(price, 2),
-                currency=currency or "USD",
+                internal_price=price_dec,
+                currency=currency,
             )
         )
 
@@ -151,33 +314,43 @@ def load_vendor_prices_csv(csv_path: Union[str, Path]) -> List[VendorPriceRecord
     curr_col = hdr_map.get("currency")
 
     records: List[VendorPriceRecord] = []
-    for idx, row in enumerate(rows, start=2):
-        raw_sku = row.get(sku_col, "").strip()
+    seen_skus = set()
+    for fallback_idx, row in enumerate(rows, start=2):
+        line_no = row.get("_csv_line_number", fallback_idx)
+        raw_sku = str(row.get(sku_col, "")).strip()
         if not raw_sku:
-            raise ValueError(f"Vendor price CSV row {idx}: Missing or empty SKU.")
+            raise ValueError(f"Vendor price CSV row {line_no}: Missing or empty SKU.")
 
-        raw_price = row.get(price_col, "").strip().replace("$", "").replace(",", "")
-        try:
-            price = float(raw_price)
-            # Reject NaN and positive/negative infinity
-            if not math.isfinite(price):
-                raise ValueError
-            if price <= 0:
-                raise ValueError
-        except (ValueError, TypeError):
+        norm_sku = raw_sku.upper()
+        if norm_sku in seen_skus:
             raise ValueError(
-                f"Vendor price CSV row {idx} for SKU '{raw_sku}': Invalid vendor price '{raw_price}'."
+                f"Duplicate vendor SKU detected on row {line_no}: '{raw_sku}'. "
+                "Each SKU must appear only once."
             )
+        seen_skus.add(norm_sku)
 
-        vendor = row.get(vendor_col, "Vendor").strip() if vendor_col else "Vendor"
-        currency = row.get(curr_col, "USD").strip() if curr_col else "USD"
+        raw_price = str(row.get(price_col, ""))
+        price_dec = parse_price(raw_price, line_no, raw_sku, context="Vendor")
+
+        vendor = str(row.get(vendor_col, "Vendor")).strip() if vendor_col else "Vendor"
+
+        if curr_col:
+            raw_curr = str(row.get(curr_col, "")).strip()
+            if not raw_curr:
+                raise ValueError(
+                    f"Vendor price CSV row {line_no} for SKU '{raw_sku}': "
+                    "Missing or blank currency value."
+                )
+            currency = raw_curr.upper()
+        else:
+            currency = "USD"
 
         records.append(
             VendorPriceRecord(
                 sku=raw_sku,
                 vendor_name=vendor or "Vendor",
-                vendor_price=round(price, 2),
-                currency=currency or "USD",
+                vendor_price=price_dec,
+                currency=currency,
             )
         )
 
@@ -189,7 +362,6 @@ def match_prices_by_sku(
     vendor_records: List[VendorPriceRecord],
 ) -> Dict[str, Any]:
     """Match internal and vendor records by SKU, detecting unmatched items."""
-
     internal_map = {}
     for item in internal_records:
         key = item.sku.strip().upper()
@@ -209,7 +381,6 @@ def match_prices_by_sku(
                 "Each SKU must appear only once."
             )
         vendor_map[key] = item
-
 
     matched_pairs: List[Dict[str, Any]] = []
     unmatched_vendor: List[Dict[str, Any]] = []
@@ -261,30 +432,25 @@ def match_prices_by_sku(
 
 def compare_and_flag_prices(
     matched_pairs: List[Dict[str, Any]],
-    threshold_percentage: float = 10.0,
+    threshold_percentage: float = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
 ) -> Dict[str, Any]:
     """Calculate price difference, percentage difference, and flag exceptions exceeding threshold."""
     results: List[Dict[str, Any]] = []
     exceptions: List[Dict[str, Any]] = []
 
     for pair in matched_pairs:
-        internal_p = float(pair["internal_price"])
-        vendor_p = float(pair["vendor_price"])
-
-        diff = round(vendor_p - internal_p, 2)
-        raw_pct_diff = (abs(vendor_p - internal_p) / internal_p) * 100.0
-        pct_diff = round(raw_pct_diff, 2)
-
-        # Compare the unrounded percentage to the threshold.
-        is_exception = raw_pct_diff > threshold_percentage
-        status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
+        diff, pct_diff, is_exception, status = evaluate_price_comparison(
+            internal_price=pair["internal_price"],
+            vendor_price=pair["vendor_price"],
+            threshold_percentage=threshold_percentage,
+        )
 
         item_dict = {
             "sku": pair["sku"],
             "product_name": pair["product_name"],
             "vendor_name": pair["vendor_name"],
-            "internal_price": internal_p,
-            "vendor_price": vendor_p,
+            "internal_price": to_decimal(pair["internal_price"]),
+            "vendor_price": to_decimal(pair["vendor_price"]),
             "price_difference": diff,
             "percentage_difference": pct_diff,
             "is_exception": is_exception,
@@ -388,11 +554,11 @@ class PriceComparatorTool(BaseTool):
         pairs = matched_pairs or []
         compared: List[Dict[str, Any]] = []
         for pair in pairs:
-            i_p = float(pair["internal_price"])
-            v_p = float(pair["vendor_price"])
-            diff = round(v_p - i_p, 2)
+            diff_dec = to_decimal(pair["vendor_price"]) - to_decimal(pair["internal_price"])
             item = dict(pair)
-            item["price_difference"] = diff
+            item["internal_price"] = to_decimal(pair["internal_price"])
+            item["vendor_price"] = to_decimal(pair["vendor_price"])
+            item["price_difference"] = float(diff_dec)
             compared.append(item)
 
         return {
@@ -419,13 +585,16 @@ class PercentageDifferenceCalculatorTool(BaseTool):
         items = compared_products or []
         evaluated: List[Dict[str, Any]] = []
         for item in items:
-            i_p = float(item["internal_price"])
-            v_p = float(item["vendor_price"])
-            raw_pct_diff = (abs(v_p - i_p) / i_p) * 100.0
+            diff, pct_diff, _, _ = evaluate_price_comparison(
+                internal_price=item["internal_price"],
+                vendor_price=item["vendor_price"],
+            )
 
             res = dict(item)
-            res["percentage_difference"] = round(raw_pct_diff, 2)
-            res["_raw_percentage_difference"] = raw_pct_diff
+            res["internal_price"] = to_decimal(item["internal_price"])
+            res["vendor_price"] = to_decimal(item["vendor_price"])
+            res["price_difference"] = diff
+            res["percentage_difference"] = pct_diff
             evaluated.append(res)
 
         return {
@@ -449,26 +618,32 @@ class PriceExceptionFlaggerTool(BaseTool):
         price_evaluations: Optional[List[Dict[str, Any]]] = None,
         unmatched_vendor: Optional[List[Dict[str, Any]]] = None,
         unmatched_internal: Optional[List[Dict[str, Any]]] = None,
-        threshold: float = 10.0,
+        threshold: Optional[float] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         items = price_evaluations or []
         unmatched_v = unmatched_vendor or []
         unmatched_i = unmatched_internal or []
 
+        # WF002 decision logic as defined in data/workflows.xlsx mandates a fixed 10.0% threshold.
+        # User requests, router extractions, or tool arguments cannot override WF002's fixed policy.
+        fixed_threshold = DEFAULT_PRICE_THRESHOLD_PERCENTAGE
+
         validated_list: List[Dict[str, Any]] = []
         exceptions: List[Dict[str, Any]] = []
 
         for item in items:
-            pct = float(
-                item.get("_raw_percentage_difference", item["percentage_difference"])
+            diff, pct_diff, is_exception, status = evaluate_price_comparison(
+                internal_price=item["internal_price"],
+                vendor_price=item["vendor_price"],
+                threshold_percentage=fixed_threshold,
             )
-            # Decision logic: strictly greater than 10%
-            is_exception = pct > threshold
-            status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
 
             res = dict(item)
-            res.pop("_raw_percentage_difference", None)
+            res["internal_price"] = to_decimal(item["internal_price"])
+            res["vendor_price"] = to_decimal(item["vendor_price"])
+            res["price_difference"] = diff
+            res["percentage_difference"] = pct_diff
             res["is_exception"] = is_exception
             res["validation_status"] = status
             validated_list.append(res)
@@ -477,7 +652,7 @@ class PriceExceptionFlaggerTool(BaseTool):
 
         summary_msg = (
             f"Validated {len(validated_list)} products: {len(exceptions)} exception(s) "
-            f"exceeding {threshold}% threshold."
+            f"exceeding {fixed_threshold}% threshold."
         )
 
         return {

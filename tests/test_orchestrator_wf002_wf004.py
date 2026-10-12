@@ -188,6 +188,10 @@ def test_cli_mock_route_wf002(monkeypatch, capsys):
     assert "SKU-002" in captured.out
     assert "EXCEPTION (>10%)" in captured.out
     assert "COMPLIANT" in captured.out
+    assert "SKU-008" in captured.out
+    assert "SKU-099" in captured.out
+    assert "Unmatched Vendor SKUs: 1 record(s)" in captured.out
+    assert "Unmatched Internal SKUs: 1 record(s)" in captured.out
 
 
 def test_cli_mock_route_wf003(monkeypatch, capsys):
@@ -244,3 +248,286 @@ def test_wf001_regression_remains_intact():
     assert report.selected_workflow_id == "WF001"
     assert len(report.steps) == 5
     assert report.final_output["restock_required_count"] == 4
+
+
+def test_orchestrator_wf002_exact_boundary_and_precision_e2e(tmp_path: Path):
+    """E2E test with custom CSVs verifying exact boundary and precision preservation."""
+    int_csv = tmp_path / "internal_boundary.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-B1,Boundary 3.30,3.30,USD\n"
+        "SKU-B2,Precision 100,100.00,USD\n"
+    )
+    ven_csv = tmp_path / "vendor_boundary.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-B1,Vendor Alpha,3.63,USD\n"
+        "SKU-B2,Vendor Alpha,110.004,USD\n"
+    )
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate prices",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+    )
+
+    assert report.status == "success"
+    assert len(report.steps) == 5
+    final = report.final_output
+    assert final["total_matched"] == 2
+    assert final["exception_count"] == 1
+
+    by_sku = {item["sku"]: item for item in final["matched_products"]}
+    # 3.30 vs 3.63: exactly 10.0%, NOT an exception
+    assert by_sku["SKU-B1"]["is_exception"] is False
+    assert by_sku["SKU-B1"]["validation_status"] == "COMPLIANT"
+    assert by_sku["SKU-B1"]["percentage_difference"] == 10.0
+
+    # 100.00 vs 110.004: raw difference > 10.0%, IS an exception, display rounded to 10.0%
+    assert by_sku["SKU-B2"]["is_exception"] is True
+    assert by_sku["SKU-B2"]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+    assert by_sku["SKU-B2"]["percentage_difference"] == 10.0
+
+    # Ensure no internal raw keys leaked
+    for item in final["matched_products"]:
+        assert "_raw_percentage_difference" not in item
+
+
+def test_orchestrator_wf002_malformed_unquoted_csv_aborts(tmp_path: Path):
+    """WF002 aborts immediately when unquoted commas corrupt CSV column structure."""
+    bad_int = tmp_path / "bad_internal.csv"
+    bad_int.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,Camera,$1,200.00,USD\n"
+    )
+    ven = tmp_path / "ven.csv"
+    ven.write_text("sku,vendor_name,vendor_price,currency\nSKU-01,Ven,1200.00,USD\n")
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate prices",
+        internal_csv_path=str(bad_int),
+        vendor_csv_path=str(ven),
+    )
+
+    assert report.status in ("failed", "partial_failure")
+    assert any("line 2 has 5 columns, expected 4" in err for err in report.errors)
+    assert any("Unquoted commas" in err for err in report.errors)
+
+
+def test_orchestrator_wf002_duplicate_sku_aborts(tmp_path: Path):
+    """WF002 aborts on step 1 when duplicate SKU appears in internal catalog."""
+    dup_int = tmp_path / "dup_internal.csv"
+    dup_int.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,Widget A,10.00,USD\n"
+        "sku-01,Widget B,12.00,USD\n"
+    )
+    ven = tmp_path / "ven.csv"
+    ven.write_text("sku,vendor_name,vendor_price,currency\nSKU-01,Ven,10.00,USD\n")
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate prices",
+        internal_csv_path=str(dup_int),
+        vendor_csv_path=str(ven),
+    )
+
+    assert report.status in ("failed", "partial_failure")
+    assert any("Duplicate internal SKU" in err for err in report.errors)
+
+
+def test_orchestrator_wf002_currency_mismatch_aborts(tmp_path: Path):
+    """WF002 aborts on step 2 when matched SKU has mismatched currencies."""
+    int_csv = tmp_path / "int.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,Widget,10.00,USD\n"
+    )
+    ven_csv = tmp_path / "ven.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-01,Ven,10.00,EUR\n"
+    )
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate prices",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+    )
+
+    assert report.status in ("failed", "partial_failure")
+    assert any("Currency mismatch" in err for err in report.errors)
+
+
+def test_orchestrator_wf002_blank_currency_aborts(tmp_path: Path):
+    """WF002 aborts when a row with currency column has a blank currency value."""
+    int_csv = tmp_path / "int.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,Widget,10.00,   \n"
+    )
+    ven_csv = tmp_path / "ven.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-01,Ven,10.00,USD\n"
+    )
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate prices",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+    )
+
+    assert report.status in ("failed", "partial_failure")
+    assert any("Missing or blank currency" in err for err in report.errors)
+
+
+def test_orchestrator_wf002_threshold_cannot_be_overridden_to_15_percent(tmp_path: Path):
+    """WF002 enforces the official fixed 10% threshold; router/user 15% cannot change policy."""
+    from decimal import Decimal
+
+    int_csv = tmp_path / "int_12pct.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-12,Product 12% Diff,100.00,USD\n"
+    )
+    ven_csv = tmp_path / "ven_12pct.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-12,Vendor Alpha,112.00,USD\n"
+    )
+
+    # Simulated router returning WF002 with extracted threshold argument
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation with custom threshold requested",
+        "extracted_inputs": {"threshold": 15.0},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    # Explicitly pass threshold=15.0 as runtime input
+    report = orchestrator.run(
+        "Find products where vendor price differs by more than 15%.",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+        threshold=15.0,
+    )
+
+    assert report.status == "success"
+    final = report.final_output
+    # 112.00 vs 100.00 is 12.0% difference:
+    # Under fixed 10% policy, it MUST be flagged as an exception!
+    assert final["exception_count"] == 1
+    assert len(final["exceptions"]) == 1
+    exc_item = final["exceptions"][0]
+    assert exc_item["sku"] == "SKU-12"
+    assert exc_item["is_exception"] is True
+    assert exc_item["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+    assert "10.0% threshold" in final["summary"]
+
+
+def test_orchestrator_wf002_end_to_end_precision_preservation_from_csv(tmp_path: Path):
+    """True E2E test using CSV input proving precision is preserved across all models and serialization."""
+    from decimal import Decimal
+
+    int_csv = tmp_path / "int_prec.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-P1,Micro-Calibration Sensor,100.0000,USD\n"
+    )
+    ven_csv = tmp_path / "ven_prec.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-P1,Precision Dynamics,110.0040,USD\n"
+    )
+
+    fake_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
+    orchestrator = WorkflowOrchestrator(router=router)
+
+    report = orchestrator.run(
+        "Validate high precision pricing.",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+    )
+
+    assert report.status == "success"
+    final = report.final_output
+    assert final["total_matched"] == 1
+    assert final["exception_count"] == 1
+
+    matched = final["matched_products"][0]
+    # Check that exact Decimal types are preserved end-to-end
+    assert isinstance(matched["internal_price"], Decimal)
+    assert isinstance(matched["vendor_price"], Decimal)
+    assert matched["internal_price"] == Decimal("100.0000")
+    assert matched["vendor_price"] == Decimal("110.0040")
+    assert str(matched["vendor_price"]) == "110.0040"
+
+    # Check authoritative comparison flagged 110.0040 > 110.0000
+    assert matched["is_exception"] is True
+    assert matched["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+    assert matched["percentage_difference"] == 10.0
+
+    # Verify report is cleanly serializable via model_dump_json()
+    json_repr = report.model_dump_json()
+    assert "110.0040" in json_repr
+    assert "EXCEPTION_EXCEEDS_10_PERCENT" in json_repr

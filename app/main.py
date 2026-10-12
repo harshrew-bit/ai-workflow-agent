@@ -82,6 +82,11 @@ def format_report_for_display(report: Any) -> str:
             unmatched_v = report.final_output.get("unmatched_vendor_records", [])
             if unmatched_v:
                 lines.append(f"  Unmatched Vendor SKUs: {len(unmatched_v)} record(s)")
+                for item in unmatched_v:
+                    lines.append(
+                        f"    - {item.get('sku', '')}: "
+                        f"{item.get('reason', 'No matching internal price record')}"
+                    )
 
             unmatched_i = report.final_output.get("unmatched_internal_records", [])
             if unmatched_i:

@@ -324,3 +324,270 @@ def test_wf002_flags_unrounded_percentage_above_threshold():
 
     assert evaluations["JUST-OVER"]["percentage_difference"] == 10.0
     assert evaluations["JUST-OVER"]["is_exception"] is True
+
+
+def test_boundary_decimal_precision_3_30_vs_3_63_and_3_64():
+    """Verify exact Decimal boundary logic for 3.30 vs 3.63 and 3.64.
+
+    3.30 + 10% is exactly 3.63:
+      - 3.30 vs 3.63 has difference 0.33, which equals (3.30 * 10 / 100).
+        Because threshold comparison is strictly greater than, this is COMPLIANT.
+      - 3.30 vs 3.64 has difference 0.34, which exceeds 0.33 -> EXCEPTION.
+      - 3.30 vs 2.97 has difference -0.33, absolute difference 0.33 -> COMPLIANT.
+      - 3.30 vs 2.96 has difference -0.34, absolute difference 0.34 -> EXCEPTION.
+    """
+    pairs = [
+        {
+            "sku": "SKU-EXACT-UP",
+            "product_name": "Item Exact +10%",
+            "vendor_name": "Vendor A",
+            "internal_price": 3.30,
+            "vendor_price": 3.63,
+        },
+        {
+            "sku": "SKU-OVER-UP",
+            "product_name": "Item Over +10%",
+            "vendor_name": "Vendor A",
+            "internal_price": 3.30,
+            "vendor_price": 3.64,
+        },
+        {
+            "sku": "SKU-EXACT-DOWN",
+            "product_name": "Item Exact -10%",
+            "vendor_name": "Vendor A",
+            "internal_price": 3.30,
+            "vendor_price": 2.97,
+        },
+        {
+            "sku": "SKU-OVER-DOWN",
+            "product_name": "Item Over -10%",
+            "vendor_name": "Vendor A",
+            "internal_price": 3.30,
+            "vendor_price": 2.96,
+        },
+    ]
+
+    res = compare_and_flag_prices(pairs, threshold_percentage=10.0)
+    items = {item["sku"]: item for item in res["compared_products"]}
+
+    # Exact +10%: compliant
+    assert items["SKU-EXACT-UP"]["price_difference"] == 0.33
+    assert items["SKU-EXACT-UP"]["percentage_difference"] == 10.0
+    assert items["SKU-EXACT-UP"]["is_exception"] is False
+    assert items["SKU-EXACT-UP"]["validation_status"] == "COMPLIANT"
+
+    # Over +10%: exception
+    assert items["SKU-OVER-UP"]["price_difference"] == 0.34
+    assert items["SKU-OVER-UP"]["percentage_difference"] == 10.3
+    assert items["SKU-OVER-UP"]["is_exception"] is True
+    assert items["SKU-OVER-UP"]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+
+    # Exact -10%: compliant
+    assert items["SKU-EXACT-DOWN"]["price_difference"] == -0.33
+    assert items["SKU-EXACT-DOWN"]["percentage_difference"] == 10.0
+    assert items["SKU-EXACT-DOWN"]["is_exception"] is False
+    assert items["SKU-EXACT-DOWN"]["validation_status"] == "COMPLIANT"
+
+    # Over -10%: exception
+    assert items["SKU-OVER-DOWN"]["price_difference"] == -0.34
+    assert items["SKU-OVER-DOWN"]["percentage_difference"] == 10.3
+    assert items["SKU-OVER-DOWN"]["is_exception"] is True
+    assert items["SKU-OVER-DOWN"]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+
+
+def test_unquoted_comma_in_csv_rejected_with_line_number_and_guidance(tmp_path: Path):
+    """Verify that unquoted commas (e.g., $1,200) raise actionable errors with line number."""
+    csv_file = tmp_path / "unquoted_comma.csv"
+    csv_file.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,High-End Camera,$1,200.00,USD\n"
+    )
+
+    with pytest.raises(ValueError) as excinfo:
+        load_internal_prices_csv(csv_file)
+
+    err_msg = str(excinfo.value)
+    assert "line 2 has 5 columns, expected 4" in err_msg
+    assert "Unquoted commas inside values" in err_msg
+    assert "values containing commas must be enclosed in quotes" in err_msg
+
+
+def test_quoted_comma_currency_parsed_properly(tmp_path: Path):
+    """Verify that properly quoted currency values with commas are parsed as positive Decimals."""
+    csv_file = tmp_path / "quoted_comma.csv"
+    csv_file.write_text(
+        'sku,product_name,internal_price,currency\n'
+        'SKU-01,High-End Camera,"$1,200.50",USD\n'
+        'SKU-02,Studio Monitor,"$2,500",USD\n'
+    )
+
+    records = load_internal_prices_csv(csv_file)
+    assert len(records) == 2
+    assert records[0].sku == "SKU-01"
+    assert records[0].internal_price == 1200.50
+    assert records[1].sku == "SKU-02"
+    assert records[1].internal_price == 2500.00
+
+
+def test_blank_currency_in_csv_rejected(tmp_path: Path):
+    """Verify that rows with empty or blank currency values are rejected."""
+    csv_file = tmp_path / "blank_curr.csv"
+    csv_file.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-01,Valid Item,10.00,   \n"
+    )
+
+    with pytest.raises(ValueError, match="Missing or blank currency value"):
+        load_internal_prices_csv(csv_file)
+
+
+def test_duplicate_skus_in_csv_rejected(tmp_path: Path):
+    """Verify duplicate SKUs are caught at CSV load time with row number."""
+    int_csv = tmp_path / "dup_internal.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price\n"
+        "SKU-01,Item 1,10.00\n"
+        "sku-01,Item 2,12.00\n"
+    )
+    with pytest.raises(ValueError, match="Duplicate internal SKU detected on row 3"):
+        load_internal_prices_csv(int_csv)
+
+    ven_csv = tmp_path / "dup_vendor.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price\n"
+        "SKU-01,Vendor A,10.00\n"
+        "SKU-01,Vendor B,12.00\n"
+    )
+    with pytest.raises(ValueError, match="Duplicate vendor SKU detected on row 3"):
+        load_vendor_prices_csv(ven_csv)
+
+
+def test_no_raw_percentage_difference_leaked_in_output():
+    """Ensure no internal fields like _raw_percentage_difference exist in outputs."""
+    calculator = PercentageDifferenceCalculatorTool()
+    flagger = PriceExceptionFlaggerTool()
+
+    pairs = [
+        {
+            "sku": "SKU-1",
+            "product_name": "Test",
+            "vendor_name": "Vendor",
+            "internal_price": 100.0,
+            "vendor_price": 115.0,
+        }
+    ]
+
+    calc_res = calculator.execute(compared_products=pairs)
+    assert "_raw_percentage_difference" not in calc_res["price_evaluations"][0]
+
+    flag_res = flagger.execute(
+        price_evaluations=calc_res["price_evaluations"],
+        unmatched_vendor=[],
+        unmatched_internal=[],
+    )
+    for prod in flag_res["matched_products"]:
+        assert "_raw_percentage_difference" not in prod
+    for exc in flag_res["exceptions"]:
+        assert "_raw_percentage_difference" not in exc
+
+
+def test_price_exception_flagger_tool_ignores_15_percent_threshold_argument():
+    """Verify that PriceExceptionFlaggerTool enforces fixed 10% policy and ignores threshold argument."""
+    from decimal import Decimal
+
+    flagger = PriceExceptionFlaggerTool()
+    # 12% difference: 100.00 vs 112.00
+    evaluations = [
+        {
+            "sku": "SKU-12PCT",
+            "product_name": "12 Percent Item",
+            "vendor_name": "Vendor A",
+            "internal_price": Decimal("100.00"),
+            "vendor_price": Decimal("112.00"),
+            "price_difference": 12.0,
+            "percentage_difference": 12.0,
+        }
+    ]
+
+    # Passing threshold=15.0 to WF002 tool must NOT alter WF002's fixed 10% policy
+    res = flagger.execute(
+        price_evaluations=evaluations,
+        unmatched_vendor=[],
+        unmatched_internal=[],
+        threshold=15.0,
+    )
+
+    assert res["exception_count"] == 1
+    assert res["matched_products"][0]["is_exception"] is True
+    assert res["matched_products"][0]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+    assert "10.0% threshold" in res["summary"]
+
+    # In contrast, the standalone helper compare_and_flag_prices accepts custom threshold
+    standalone_res = compare_and_flag_prices(
+        [
+            {
+                "sku": "SKU-12PCT",
+                "product_name": "12 Percent Item",
+                "vendor_name": "Vendor A",
+                "internal_price": Decimal("100.00"),
+                "vendor_price": Decimal("112.00"),
+            }
+        ],
+        threshold_percentage=15.0,
+    )
+    # Under standalone 15%, 12% is compliant
+    assert standalone_res["exception_count"] == 0
+    assert standalone_res["compared_products"][0]["is_exception"] is False
+    assert standalone_res["compared_products"][0]["validation_status"] == "COMPLIANT"
+
+
+def test_end_to_end_precision_preservation_via_csv(tmp_path: Path):
+    """Prove exact source decimal values are preserved end-to-end from CSV input."""
+    from decimal import Decimal
+
+    int_csv = tmp_path / "int_exact.csv"
+    int_csv.write_text(
+        "sku,product_name,internal_price,currency\n"
+        "SKU-PREC,Precision Sensor,100.00,USD\n"
+    )
+    ven_csv = tmp_path / "ven_exact.csv"
+    ven_csv.write_text(
+        "sku,vendor_name,vendor_price,currency\n"
+        "SKU-PREC,Precision Vendor,110.004,USD\n"
+    )
+
+    internal_records = load_internal_prices_csv(int_csv)
+    vendor_records = load_vendor_prices_csv(ven_csv)
+
+    assert isinstance(internal_records[0].internal_price, Decimal)
+    assert isinstance(vendor_records[0].vendor_price, Decimal)
+    assert vendor_records[0].vendor_price == Decimal("110.004")
+
+    # Step tools cascading
+    loader = PriceDataLoaderTool()
+    matcher = ProductSkuMatcherTool()
+    comparator = PriceComparatorTool()
+    calculator = PercentageDifferenceCalculatorTool()
+    flagger = PriceExceptionFlaggerTool()
+
+    loaded = loader.execute(internal_csv_path=str(int_csv), vendor_csv_path=str(ven_csv))
+    matched = matcher.execute(
+        internal_prices=loaded["internal_prices"],
+        vendor_prices=loaded["vendor_prices"],
+    )
+    compared = comparator.execute(matched_pairs=matched["matched_pairs"])
+    evaluated = calculator.execute(compared_products=compared["compared_products"])
+    flagged = flagger.execute(
+        price_evaluations=evaluated["price_evaluations"],
+        unmatched_vendor=matched["unmatched_vendor"],
+        unmatched_internal=matched["unmatched_internal"],
+    )
+
+    prod = flagged["matched_products"][0]
+    assert isinstance(prod["internal_price"], Decimal)
+    assert isinstance(prod["vendor_price"], Decimal)
+    assert prod["internal_price"] == Decimal("100.00")
+    assert prod["vendor_price"] == Decimal("110.004")
+    assert str(prod["vendor_price"]) == "110.004"
+    assert prod["is_exception"] is True
+    assert prod["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"

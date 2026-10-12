@@ -188,10 +188,11 @@ The ten official workflows defined in `data/workflows.xlsx` are implemented end-
 - **Trigger**: *"Find products where vendor price differs by more than 10%."*
 - **Steps**: Load product prices $\to$ match products by SKU $\to$ compare internal and vendor prices $\to$ calculate percentage difference $\to$ flag exceptions.
 - **Key Business Rules**:
-  - Matches records using SKU.
+  - Matches records using SKU case-insensitively.
   - Computes percentage difference: $\frac{|\text{internal\_price} - \text{vendor\_price}|}{\text{internal\_price}} \times 100\%$.
-  - Boundary: Flags exceptions strictly when percentage difference is **strictly greater than 10.0%**. A difference of exactly $10.0\%$ is marked compliant.
-  - Safely handles missing SKUs, invalid price strings, and unmatched vendor records.
+  - **Fixed 10.0% Threshold Policy & Exact Arithmetic**: Evaluates the decision rule using exact `Decimal` arithmetic: flagged as an exception strictly when $|\text{vendor\_price} - \text{internal\_price}| > (\text{internal\_price} \times 10 / 100)$. A difference of exactly $10.0\%$ (such as \$3.30 vs \$3.63 or \$100.00 vs \$110.00) is marked compliant.
+  - **Strict Dataset Integrity (Abort on Error)**: Unlike WF003 (which filters invalid rows and produces a cleaned dataset), WF002 enforces strict dataset integrity. Malformed CSV rows (e.g. unquoted commas like `$1,200`), missing SKUs, non-finite/negative prices, duplicate SKUs, currency mismatches, or missing/blank currency values cause the workflow to abort immediately with actionable diagnostics and line numbers.
+  - **Unmatched Tracking**: Unmatched vendor SKUs and unmatched internal SKUs are tracked with explicit reasons and displayed alongside matched validation results in CLI and execution reports.
 
 ### 3. WF003 — Vendor File Processing
 - **Workbook Name**: Vendor File Processing
