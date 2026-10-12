@@ -272,10 +272,11 @@ def compare_and_flag_prices(
         vendor_p = float(pair["vendor_price"])
 
         diff = round(vendor_p - internal_p, 2)
-        pct_diff = round((abs(vendor_p - internal_p) / internal_p) * 100.0, 2)
+        raw_pct_diff = (abs(vendor_p - internal_p) / internal_p) * 100.0
+        pct_diff = round(raw_pct_diff, 2)
 
-        # Decision Logic: Flag when price difference strictly exceeds 10%
-        is_exception = pct_diff > threshold_percentage
+        # Compare the unrounded percentage to the threshold.
+        is_exception = raw_pct_diff > threshold_percentage
         status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
 
         item_dict = {
@@ -420,9 +421,11 @@ class PercentageDifferenceCalculatorTool(BaseTool):
         for item in items:
             i_p = float(item["internal_price"])
             v_p = float(item["vendor_price"])
-            pct_diff = round((abs(v_p - i_p) / i_p) * 100.0, 2)
+            raw_pct_diff = (abs(v_p - i_p) / i_p) * 100.0
+
             res = dict(item)
-            res["percentage_difference"] = pct_diff
+            res["percentage_difference"] = round(raw_pct_diff, 2)
+            res["_raw_percentage_difference"] = raw_pct_diff
             evaluated.append(res)
 
         return {
@@ -457,12 +460,15 @@ class PriceExceptionFlaggerTool(BaseTool):
         exceptions: List[Dict[str, Any]] = []
 
         for item in items:
-            pct = float(item["percentage_difference"])
+            pct = float(
+                item.get("_raw_percentage_difference", item["percentage_difference"])
+            )
             # Decision logic: strictly greater than 10%
             is_exception = pct > threshold
             status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
 
             res = dict(item)
+            res.pop("_raw_percentage_difference", None)
             res["is_exception"] = is_exception
             res["validation_status"] = status
             validated_list.append(res)

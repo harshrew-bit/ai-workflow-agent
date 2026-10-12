@@ -83,6 +83,16 @@ def format_report_for_display(report: Any) -> str:
             if unmatched_v:
                 lines.append(f"  Unmatched Vendor SKUs: {len(unmatched_v)} record(s)")
 
+            unmatched_i = report.final_output.get("unmatched_internal_records", [])
+            if unmatched_i:
+                lines.append(f"  Unmatched Internal SKUs: {len(unmatched_i)} record(s)")
+                for item in unmatched_i:
+                    lines.append(
+                        f"    - {item.get('sku', '')}: "
+                        f"{item.get('reason', 'No matching vendor price record')}"
+                    )
+
+
         # WF003: Vendor File Processing
         cleaned_records = report.final_output.get("cleaned_records")
         if cleaned_records is not None:

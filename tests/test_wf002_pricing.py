@@ -278,3 +278,49 @@ def test_duplicate_vendor_skus_are_rejected():
 
     with pytest.raises(ValueError, match="Duplicate vendor SKU"):
         match_prices_by_sku([], vendor)
+
+def test_wf002_flags_unrounded_percentage_above_threshold():
+    """A raw difference above 10% must be flagged even if rounded to 10.0%."""
+    comparator = PriceComparatorTool()
+    calculator = PercentageDifferenceCalculatorTool()
+    flagger = PriceExceptionFlaggerTool()
+
+    # The actual difference is 10.004%, but its displayed value rounds to 10.0%.
+    pairs = [
+        {
+            "sku": "EXACT-10",
+            "product_name": "Exact boundary",
+            "vendor_name": "Test",
+            "internal_price": 100.00,
+            "vendor_price": 110.00,
+        },
+        {
+            "sku": "JUST-OVER",
+            "product_name": "Just over boundary",
+            "vendor_name": "Test",
+            "internal_price": 100.00,
+            "vendor_price": 110.004,
+        },
+    ]
+
+    compared = comparator.execute(matched_pairs=pairs)
+    calculated = calculator.execute(
+        compared_products=compared["compared_products"]
+    )
+    result = flagger.execute(
+        price_evaluations=calculated["price_evaluations"],
+        unmatched_vendor=[],
+        unmatched_internal=[],
+        threshold=10.0,
+    )
+
+    evaluations = {
+        item["sku"]: item
+        for item in result["matched_products"]
+    }
+
+    assert evaluations["EXACT-10"]["percentage_difference"] == 10.0
+    assert evaluations["EXACT-10"]["is_exception"] is False
+
+    assert evaluations["JUST-OVER"]["percentage_difference"] == 10.0
+    assert evaluations["JUST-OVER"]["is_exception"] is True
