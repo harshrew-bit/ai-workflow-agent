@@ -55,6 +55,14 @@ from app.tools.order_status import (
     ShipmentRecord,
     extract_order_identifier,
 )
+from app.tools.performance_report import (
+    ErrorIdentifierTool,
+    ExecutionTimeCalculatorTool,
+    LogLoaderTool,
+    RateCalculatorTool,
+    RecommendationsGeneratorTool,
+    SlowStepsIdentifierTool,
+)
 from app.tools.pricing import (
     InternalPriceRecord,
     PercentageDifferenceCalculatorTool,
@@ -70,6 +78,25 @@ from app.tools.pricing import (
     match_prices_by_sku,
 )
 from app.tools.registry import ToolRegistry
+from app.tools.seo_keywords import (
+    CategoryMapperTool,
+    IntentClassifierTool,
+    KeywordDeduplicatorTool,
+    KeywordReaderTool,
+    KeywordRecord,
+    PriorityIdentifierTool,
+    ResultsExporterTool,
+)
+from app.tools.task_assignment import (
+    AssignmentSummarizerTool,
+    CandidateRankerTool,
+    EmployeeCandidate,
+    EmployeeSelectorTool,
+    SkillsComparatorTool,
+    TaskRequirement,
+    TaskRequirementsAnalyzerTool,
+    WorkloadCheckerTool,
+)
 from app.tools.vendor_processing import (
     CleanDatasetProducerTool,
     ColumnDetectorTool,
@@ -140,6 +167,30 @@ def create_default_tool_registry() -> ToolRegistry:
     registry.register(CampaignMessagingCreatorTool())
     registry.register(CampaignChannelRecommenderTool())
     registry.register(CampaignChecklistCreatorTool())
+
+    # WF008: SEO Keyword Classification
+    registry.register(KeywordReaderTool())
+    registry.register(KeywordDeduplicatorTool())
+    registry.register(IntentClassifierTool())
+    registry.register(CategoryMapperTool())
+    registry.register(PriorityIdentifierTool())
+    registry.register(ResultsExporterTool())
+
+    # WF009: Employee Task Assignment
+    registry.register(TaskRequirementsAnalyzerTool())
+    registry.register(SkillsComparatorTool())
+    registry.register(WorkloadCheckerTool())
+    registry.register(CandidateRankerTool())
+    registry.register(EmployeeSelectorTool())
+    registry.register(AssignmentSummarizerTool())
+
+    # WF010: Workflow Performance Report
+    registry.register(LogLoaderTool())
+    registry.register(RateCalculatorTool())
+    registry.register(ExecutionTimeCalculatorTool())
+    registry.register(ErrorIdentifierTool())
+    registry.register(SlowStepsIdentifierTool())
+    registry.register(RecommendationsGeneratorTool())
 
     return registry
 
@@ -223,4 +274,28 @@ __all__ = [
     "CampaignMessagingCreatorTool",
     "CampaignChannelRecommenderTool",
     "CampaignChecklistCreatorTool",
+    # WF008
+    "KeywordRecord",
+    "KeywordReaderTool",
+    "KeywordDeduplicatorTool",
+    "IntentClassifierTool",
+    "CategoryMapperTool",
+    "PriorityIdentifierTool",
+    "ResultsExporterTool",
+    # WF009
+    "TaskRequirement",
+    "EmployeeCandidate",
+    "TaskRequirementsAnalyzerTool",
+    "SkillsComparatorTool",
+    "WorkloadCheckerTool",
+    "CandidateRankerTool",
+    "EmployeeSelectorTool",
+    "AssignmentSummarizerTool",
+    # WF010
+    "LogLoaderTool",
+    "RateCalculatorTool",
+    "ExecutionTimeCalculatorTool",
+    "ErrorIdentifierTool",
+    "SlowStepsIdentifierTool",
+    "RecommendationsGeneratorTool",
 ]

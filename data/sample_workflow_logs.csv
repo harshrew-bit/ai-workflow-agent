@@ -1,0 +1,42 @@
+# Sample Workflow Execution Logs Dataset (Sample Data for WF010)
+# Notice: This is simulated workflow runtime telemetry for testing aggregation, failure rate analysis, and recommendations.
+log_id,workflow_id,workflow_name,step_name,execution_time_seconds,status,error_message,timestamp
+LOG-1001,WF001,Inventory Restock Check,restock_reporter,0.45,SUCCESS,,2026-10-10T09:00:00Z
+LOG-1002,WF001,Inventory Restock Check,restock_reporter,0.52,SUCCESS,,2026-10-10T09:15:00Z
+LOG-1003,WF001,Inventory Restock Check,restock_reporter,0.48,SUCCESS,,2026-10-10T09:30:00Z
+LOG-1004,WF001,Inventory Restock Check,restock_reporter,0.61,SUCCESS,,2026-10-10T10:00:00Z
+LOG-1005,WF001,Inventory Restock Check,restock_reporter,0.55,SUCCESS,,2026-10-10T10:30:00Z
+LOG-1006,WF002,Product Price Validation,price_exception_flagger,1.15,SUCCESS,,2026-10-10T11:00:00Z
+LOG-1007,WF002,Product Price Validation,price_exception_flagger,1.32,SUCCESS,,2026-10-10T11:15:00Z
+LOG-1008,WF002,Product Price Validation,price_exception_flagger,1.20,SUCCESS,,2026-10-10T11:30:00Z
+LOG-1009,WF002,Product Price Validation,price_comparator,1.10,SUCCESS,,2026-10-10T11:45:00Z
+LOG-1010,WF002,Product Price Validation,price_exception_flagger,1.25,SUCCESS,,2026-10-10T12:00:00Z
+LOG-1011,WF002,Product Price Validation,price_exception_flagger,1.40,SUCCESS,,2026-10-10T12:15:00Z
+LOG-1012,WF002,Product Price Validation,price_exception_flagger,1.18,SUCCESS,,2026-10-10T12:30:00Z
+LOG-1013,WF002,Product Price Validation,price_exception_flagger,1.22,SUCCESS,,2026-10-10T12:45:00Z
+LOG-1014,WF002,Product Price Validation,price_exception_flagger,1.30,SUCCESS,,2026-10-10T13:00:00Z
+LOG-1015,WF002,Product Price Validation,price_data_loader,0.95,FAILED,MissingColumnError: vendor_price column absent,2026-10-10T13:15:00Z
+LOG-1016,WF003,Vendor File Processing,clean_dataset_producer,6.80,SUCCESS,,2026-10-10T14:00:00Z
+LOG-1017,WF003,Vendor File Processing,clean_dataset_producer,7.20,SUCCESS,,2026-10-10T14:15:00Z
+LOG-1018,WF003,Vendor File Processing,clean_dataset_producer,6.10,SUCCESS,,2026-10-10T14:30:00Z
+LOG-1019,WF003,Vendor File Processing,vendor_file_reader,1.80,FAILED,FormatError: Invalid CSV delimiter,2026-10-10T14:45:00Z
+LOG-1020,WF003,Vendor File Processing,clean_dataset_producer,8.50,SUCCESS,,2026-10-10T15:00:00Z
+LOG-1021,WF003,Vendor File Processing,clean_dataset_producer,6.90,SUCCESS,,2026-10-10T15:15:00Z
+LOG-1022,WF003,Vendor File Processing,clean_dataset_producer,5.90,SUCCESS,,2026-10-10T15:30:00Z
+LOG-1023,WF003,Vendor File Processing,vendor_file_reader,1.75,FAILED,FormatError: Invalid CSV delimiter,2026-10-10T15:45:00Z
+LOG-1024,WF003,Vendor File Processing,clean_dataset_producer,6.40,SUCCESS,,2026-10-10T16:00:00Z
+LOG-1025,WF003,Vendor File Processing,clean_dataset_producer,7.10,SUCCESS,,2026-10-10T16:15:00Z
+LOG-1026,WF003,Vendor File Processing,clean_dataset_producer,9.10,FAILED,Timeout: file upload timeout after 9s,2026-10-10T16:30:00Z
+LOG-1027,WF003,Vendor File Processing,clean_dataset_producer,6.30,SUCCESS,,2026-10-10T16:45:00Z
+LOG-1028,WF004,Product Description Generator,meta_description_generator,2.10,SUCCESS,,2026-10-10T17:00:00Z
+LOG-1029,WF004,Product Description Generator,meta_description_generator,1.95,SUCCESS,,2026-10-10T17:15:00Z
+LOG-1030,WF004,Product Description Generator,meta_description_generator,2.25,SUCCESS,,2026-10-10T17:30:00Z
+LOG-1031,WF005,Customer Order Status,order_status_summarizer,0.75,SUCCESS,,2026-10-10T18:00:00Z
+LOG-1032,WF005,Customer Order Status,order_status_summarizer,0.82,SUCCESS,,2026-10-10T18:15:00Z
+LOG-1033,WF005,Customer Order Status,order_status_summarizer,0.78,SUCCESS,,2026-10-10T18:30:00Z
+LOG-1034,WF005,Customer Order Status,shipment_info_retriever,1.90,FAILED,CarrierAPIError: Simulated carrier timeout,2026-10-10T18:45:00Z
+LOG-1035,WF005,Customer Order Status,order_status_summarizer,0.85,SUCCESS,,2026-10-10T19:00:00Z
+LOG-1036,WF006,Duplicate Product Detection,duplicate_confidence_assigner,3.10,SUCCESS,,2026-10-10T19:15:00Z
+LOG-1037,WF006,Duplicate Product Detection,duplicate_confidence_assigner,3.40,SUCCESS,,2026-10-10T19:30:00Z
+LOG-1038,WF007,Marketing Campaign Brief,campaign_checklist_creator,1.45,SUCCESS,,2026-10-10T19:45:00Z
+LOG-1039,WF007,Marketing Campaign Brief,campaign_checklist_creator,1.55,SUCCESS,,2026-10-10T20:00:00Z

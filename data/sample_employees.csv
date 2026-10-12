@@ -1,0 +1,9 @@
+# Sample Employee Skills & Workload Dataset (Sample Data for WF009)
+# Notice: This is simulated internal employee capacity and skills data for testing automated task allocation.
+employee_id,name,role,skills,current_workload_hours,max_capacity_hours,active_tasks_count
+EMP-101,Alice Chen,Senior Backend Engineer,"python, fastapi, postgresql, aws, redis",24,40,3
+EMP-102,Bob Martinez,Frontend Engineer,"react, typescript, css, nextjs, tailwind",36,40,5
+EMP-103,Carlos Rivera,Fullstack Engineer,"python, react, typescript, postgresql, docker",10,40,1
+EMP-104,Diana Prince,Cloud & DevOps Specialist,"aws, docker, kubernetes, terraform, ci/cd",39,40,6
+EMP-105,Evan Wright,QA Automation Engineer,"pytest, selenium, python, playwright, cypress",20,40,2
+EMP-106,Fiona Gallagher,Backend Specialist,"python, django, fastapi, postgresql, kafka",40,40,6

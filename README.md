@@ -36,6 +36,9 @@ The codebase enforces strict separation of concerns across dedicated modules:
   - `order_status.py`: Domain tools for WF005 (`order_identifier_validator`, `order_data_search`, `order_status_retriever`, `shipment_info_retriever`, `order_status_summarizer`).
   - `duplicate_detection.py`: Domain tools for WF006 (`catalog_loader`, `catalog_normalizer`, `identifier_comparator`, `attribute_comparator`, `duplicate_grouper`, `duplicate_confidence_assigner`).
   - `campaign_brief.py`: Domain tools for WF007 (`campaign_inputs_validator`, `campaign_objective_identifier`, `campaign_product_summarizer`, `campaign_messaging_creator`, `campaign_channel_recommender`, `campaign_checklist_creator`).
+  - `seo_keywords.py`: Domain tools for WF008 (`keyword_reader`, `keyword_deduplicator`, `intent_classifier`, `category_mapper`, `priority_identifier`, `results_exporter`).
+  - `task_assignment.py`: Domain tools for WF009 (`task_requirements_analyzer`, `skills_comparator`, `workload_checker`, `candidate_ranker`, `employee_selector`, `assignment_summarizer`).
+  - `performance_report.py`: Domain tools for WF010 (`log_loader`, `rate_calculator`, `execution_time_calculator`, `error_identifier`, `slow_steps_identifier`, `recommendations_generator`).
 - **`app/orchestrator.py`**: `WorkflowOrchestrator` coordinating the full end-to-end pipeline:
   `Natural-language request → Router → Registry → Engine → Step Resolver → Domain Tools → ExecutionReport`.
 - **`app/main.py`**: Command-line interface for natural-language workflow execution.
@@ -43,9 +46,9 @@ The codebase enforces strict separation of concerns across dedicated modules:
 
 ---
 
-## End-to-End Workflow Execution (WF001 – WF007)
+## End-to-End Workflow Execution (WF001 – WF010)
 
-The system features complete end-to-end orchestration across seven business workflows dynamically loaded from `data/workflows.xlsx`:
+The system features complete end-to-end orchestration across all ten business workflows dynamically loaded from `data/workflows.xlsx`:
 
 ```
 Natural Language Request
@@ -75,6 +78,9 @@ Natural Language Request
  │   - WF005: 5 order lookup & shipment tracking tools    │
  │   - WF006: 6 duplicate detection & grouping tools      │
  │   - WF007: 6 campaign brief synthesis tools            │
+ │   - WF008: 6 SEO keyword classification tools          │
+ │   - WF009: 6 employee task assignment tools            │
+ │   - WF010: 6 workflow telemetry & reporting tools      │
  └──────────┬─────────────────────────────────────────────┘
             │
             ▼
@@ -134,6 +140,33 @@ Natural Language Request
 - **Decision Logic**: Requires both `campaign_goal` and `dates`/timeline. If either is missing, raises a validation error rather than hallucinating dates or goals.
 - **No Hallucination**: Does not invent promotional discounts or pricing claims if not explicitly provided by the user. Badged with `is_simulated = True`.
 
+#### 8. WF008 — SEO Keyword Classification
+- **Trigger**: "Classify these keywords and map them to pages."
+- **Steps**: Read keywords $\to$ remove duplicates $\to$ classify search intent $\to$ map keywords to categories $\to$ identify high-priority keywords $\to$ export results.
+- **Decision Logic**: Classify each keyword into `informational`, `commercial`, `transactional`, or `navigational` intent. Maps keywords to product categories and target URLs. Assigns explainable priorities (`HIGH`, `MEDIUM`, `LOW`) based on business conversion value and volume.
+- **Data Quality**: Normalizes spacing and casing, removes duplicate queries while preserving maximum search volume, and handles malformed rows gracefully.
+
+#### 9. WF009 — Employee Task Assignment
+- **Trigger**: "Assign this urgent task to the best available developer."
+- **Steps**: Understand task requirements $\to$ compare employee skills $\to$ check current workload $\to$ rank candidates $\to$ select employee $\to$ generate assignment summary.
+- **Decision Logic**:
+  - Matches required task capabilities against candidate skill profiles.
+  - Evaluates current workload hours vs maximum capacity to calculate remaining availability.
+  - Computes composite suitability score with priority-weighted factors (skills vs immediate bandwidth).
+  - **Escalation**: Triggers an actionable escalation alert if no employee possesses the required skills or all qualified engineers are at $100\%$ capacity.
+  - **Simulation Disclosure**: Operates offline without mutating real corporate HR, Jira, or ticket management systems (`is_simulated = True`).
+
+#### 10. WF010 — Workflow Performance Report
+- **Trigger**: "Which workflows are failing most often?"
+- **Steps**: Load execution logs $\to$ calculate success/failure rate $\to$ calculate average execution time $\to$ identify frequent errors $\to$ identify slow steps $\to$ generate recommendations.
+- **Decision Logic**:
+  - Computes overall and per-workflow success rates, failure rates, and average latencies.
+  - Strictly flags workflows with failure rate $> 10.0\%$ (e.g. WF003 at $25.0\%$).
+  - Flags workflows exceeding the configured execution time threshold (e.g. WF003 at $6.15\text{s} > 5.0\text{s}$).
+  - Aggregates frequent error causes and isolates bottleneck steps exceeding latency thresholds.
+  - Generates targeted architectural and operational recommendations.
+- **Telemetry Transparency**: Clearly discloses simulated local log records and differentiates from production telemetry.
+
 > [!NOTE]
 > **Sample Datasets Notice**:
 > - `data/sample_inventory.csv`: Realistic inventory levels and costs (WF001).
@@ -141,10 +174,13 @@ Natural Language Request
 > - `data/sample_vendor_catalog.csv`: Ingestion file containing column variations and mixed valid/invalid records (WF003).
 > - `data/sample_orders.csv` & `data/sample_shipments.csv`: Simulated orders and tracking records (WF005).
 > - `data/sample_products_catalog.csv`: Multi-category catalog with exact SKU duplicates, near-duplicate models, and distinct items (WF006).
+> - `data/sample_keywords.csv`: Search keywords with search volume, CPC, and competition levels (WF008).
+> - `data/sample_employees.csv`: Simulated employee skills, role descriptions, and workload capacity (WF009).
+> - `data/sample_workflow_logs.csv`: Simulated execution logs spanning healthy, slow, and failing workflow runs (WF010).
 >
 > All sample data is simulated for testing and demonstration purposes without external side effects.
 >
-> **Workflow Implementation Status**: Workflows WF001 through WF007 are fully implemented end-to-end with genuine domain tools. Workflows WF008–WF010 are registered and ready for routing in `data/workflows.xlsx`.
+> **Workflow Implementation Status**: All ten workflows defined in `data/workflows.xlsx` (WF001 through WF010) are fully implemented end-to-end with genuine domain tools. An 11th workflow (`WF011`) can be added dynamically without modifying the router or execution engine.
 
 ---
 
@@ -179,6 +215,18 @@ python3 -m app.main --mock-route WF006 "Find duplicate products in catalog"
 
 # WF007: Marketing Campaign Brief
 python3 -m app.main --mock-route WF007 --campaign-goal "Launch Summer Trail Runners" --dates "June 1 - July 15" --promotion "20% off with promo SUMMER20" --products "Trail Runner Pro, Quick-Dry Socks" "Generate marketing campaign brief"
+
+# WF008: SEO Keyword Classification
+python3 -m app.main --mock-route WF008 "Classify these keywords and map them to pages."
+
+# WF009: Employee Task Assignment (successful match)
+python3 -m app.main --mock-route WF009 --task-desc "Build high-throughput REST service in FastAPI with PostgreSQL backend" --skills "fastapi, python, postgresql" --task-priority "Urgent" "Assign this urgent task to the best available developer."
+
+# WF009: Employee Task Assignment (escalation on missing skills)
+python3 -m app.main --mock-route WF009 --task-desc "Modernize legacy COBOL batch system" --skills "cobol, mainframe" "Assign legacy task"
+
+# WF010: Workflow Performance Report
+python3 -m app.main --mock-route WF010 "Which workflows are failing most often?"
 
 # Output as structured JSON
 python3 -m app.main --mock-route WF002 --json "Validate prices"
@@ -276,6 +324,10 @@ pytest tests/test_wf004_content_generation.py
 pytest tests/test_wf005_order_status.py
 pytest tests/test_wf006_duplicate_detection.py
 pytest tests/test_wf007_campaign_brief.py
+pytest tests/test_wf008_seo_keywords.py
+pytest tests/test_wf009_task_assignment.py
+pytest tests/test_wf010_performance_report.py
+pytest tests/test_orchestrator_wf008_wf010.py
 pytest tests/test_orchestrator_wf005_wf007.py
 pytest tests/test_orchestrator_wf002_wf004.py
 pytest tests/test_orchestrator.py

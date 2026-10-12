@@ -344,4 +344,100 @@ def create_default_step_resolver() -> ConfigurableStepResolver:
         tool_name="campaign_checklist_creator",
     )
 
+    # WF008: SEO Keyword Classification
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="Read keywords",
+        tool_name="keyword_reader",
+    )
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="remove duplicates",
+        tool_name="keyword_deduplicator",
+    )
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="classify search intent",
+        tool_name="intent_classifier",
+    )
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="map keywords to categories",
+        tool_name="category_mapper",
+    )
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="identify high-priority keywords",
+        tool_name="priority_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF008",
+        step_name="export results",
+        tool_name="results_exporter",
+    )
+
+    # WF009: Employee Task Assignment
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="Understand task requirements",
+        tool_name="task_requirements_analyzer",
+    )
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="compare employee skills",
+        tool_name="skills_comparator",
+    )
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="check current workload",
+        tool_name="workload_checker",
+    )
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="rank candidates",
+        tool_name="candidate_ranker",
+    )
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="select employee",
+        tool_name="employee_selector",
+    )
+    resolver.bind(
+        workflow_id="WF009",
+        step_name="generate assignment summary",
+        tool_name="assignment_summarizer",
+    )
+
+    # WF010: Workflow Performance Report
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="Load execution logs",
+        tool_name="log_loader",
+    )
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="calculate success/failure rate",
+        tool_name="rate_calculator",
+    )
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="calculate average execution time",
+        tool_name="execution_time_calculator",
+    )
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="identify frequent errors",
+        tool_name="error_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="identify slow steps",
+        tool_name="slow_steps_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF010",
+        step_name="generate recommendations",
+        tool_name="recommendations_generator",
+    )
+
     return resolver

@@ -193,6 +193,123 @@ def format_report_for_display(report: Any) -> str:
                 lines.append("\n  [Notice: Campaign brief generated via offline deterministic synthesis (SIMULATED)]")
             lines.append("")
 
+        # WF008: SEO Keyword Classification
+        if "keyword_records" in report.final_output:
+            records = report.final_output.get("keyword_records", [])
+            lines.append(f"\n  SEO Keyword Classification ({len(records)} unique keywords processed):")
+            lines.append(
+                f"  {'KEYWORD':<34} {'INTENT':<15} {'CATEGORY':<24} {'PRIORITY':<10} {'TARGET PAGE':<28}"
+            )
+            lines.append("  " + "-" * 115)
+            for r in records[:10]:
+                kw = r.get("keyword", "")[:32]
+                intent = r.get("intent", "").upper()
+                cat = r.get("category", "")[:22]
+                pri = r.get("priority", "")
+                target = r.get("target_page", "")[:26]
+                lines.append(f"  {kw:<34} {intent:<15} {cat:<24} {pri:<10} {target:<28}")
+            lines.append("")
+            lines.append(f"  High Priority:   {report.final_output.get('high_priority_count', 0)} keyword(s)")
+            lines.append(f"  Medium Priority: {report.final_output.get('medium_priority_count', 0)} keyword(s)")
+            lines.append(f"  Low Priority:    {report.final_output.get('low_priority_count', 0)} keyword(s)")
+
+            ic = report.final_output.get("intent_counts", {})
+            if ic:
+                lines.append(f"  Intent Distribution: {ic.get('transactional', 0)} Transactional, {ic.get('commercial', 0)} Commercial, {ic.get('informational', 0)} Informational, {ic.get('navigational', 0)} Navigational")
+
+            if report.final_output.get("is_simulated"):
+                lines.append("  [Notice: SEO keyword classification generated via deterministic rule set (SIMULATED)]")
+            lines.append("")
+
+        # WF009: Employee Task Assignment
+        if "assignment_status" in report.final_output:
+            status = report.final_output.get("assignment_status")
+            reqs = report.final_output.get("task_requirements", {})
+            lines.append("\n  Task Assignment Decision:")
+            lines.append(f"    Task:             {reqs.get('description')}")
+            lines.append(f"    Required Skills:  {', '.join(reqs.get('required_skills', []))}")
+            lines.append(f"    Priority / Due:   {reqs.get('priority')} (Deadline: {reqs.get('deadline')})")
+            lines.append(f"    Status:           {status}")
+
+            if status == "ASSIGNED":
+                assigned = report.final_output.get("assigned_employee", {})
+                lines.append("\n  Recommended Assignee:")
+                lines.append(f"    Employee:         {assigned.get('name')} ({assigned.get('employee_id')}) — {assigned.get('role')}")
+                lines.append(f"    Suitability:      {assigned.get('composite_score', 0):.3f} composite score")
+                lines.append(f"    Matching Skills:  {', '.join(assigned.get('matching_skills', []))}")
+                lines.append(f"    Workload:         {assigned.get('current_workload_hours')}h logged ({assigned.get('available_hours')}h available)")
+                lines.append(f"    Reasoning:        {assigned.get('ranking_explanation')}")
+            else:
+                lines.append(f"\n  [!] Escalation Reason: {report.final_output.get('escalation_reason')}")
+                lines.append("  Recommendation: Reassign lower-priority tasks or bring in external contractor.")
+
+            top_cands = report.final_output.get("top_candidates", [])
+            if top_cands:
+                lines.append("\n  Candidate Evaluation Ranking:")
+                lines.append(f"    {'CANDIDATE':<22} {'ROLE':<26} {'SKILL MATCH':<14} {'AVAILABLE':<12} {'COMPOSITE':<10}")
+                lines.append("    " + "-" * 88)
+                for tc in top_cands:
+                    c_name = tc.get("name", "")[:20]
+                    c_role = tc.get("role", "")[:24]
+                    sm = tc.get("skill_match", "")
+                    av = f"{tc.get('available_hours', 0)}h"
+                    comp = f"{tc.get('composite_score', 0):.3f}"
+                    lines.append(f"    {c_name:<22} {c_role:<26} {sm:<14} {av:<12} {comp:<10}")
+
+            if report.final_output.get("is_simulated"):
+                lines.append("\n  [Notice: Employee assignment recommendation evaluated without external HR modifications (SIMULATED)]")
+            lines.append("")
+
+        # WF010: Workflow Performance Report
+        if "workflow_performance" in report.final_output:
+            ov = report.final_output.get("overall_metrics", {})
+            w_rates = report.final_output.get("workflow_performance", {})
+            w_times = report.final_output.get("workflow_timings", {})
+            lines.append("\n  Workflow Performance & Reliability Summary:")
+            lines.append(f"    Overall Success Rate: {ov.get('success_rate_percent', 0):.1f}%")
+            lines.append(f"    Overall Failure Rate: {ov.get('failure_rate_percent', 0):.1f}%")
+            lines.append(f"    Overall Average Time: {ov.get('avg_execution_time_seconds', 0):.2f}s")
+            lines.append(f"    Monitored Workflows:  {ov.get('total_workflows_monitored', 0)}")
+
+            flagged_fail = report.final_output.get("flagged_high_failure_workflows", [])
+            flagged_slow = report.final_output.get("flagged_slow_workflows", [])
+            if flagged_fail:
+                lines.append(f"    [!] Flagged High Failure (>10%): {', '.join(flagged_fail)}")
+            if flagged_slow:
+                lines.append(f"    [!] Flagged Slow Latency (>5.0s): {', '.join(flagged_slow)}")
+
+            lines.append("\n  Workflow Health Matrix:")
+            lines.append(
+                f"    {'WORKFLOW':<8} {'NAME':<30} {'RUNS':<8} {'SUCCESS':<10} {'FAILURE':<10} {'AVG TIME':<10} {'STATUS':<12}"
+            )
+            lines.append("    " + "-" * 92)
+            for wid, r_data in w_rates.items():
+                t_data = w_times.get(wid, {})
+                w_name = r_data.get("workflow_name", wid)[:28]
+                tot = r_data.get("total_runs", 0)
+                s_pct = f"{r_data.get('success_rate_percent', 0):.1f}%"
+                f_pct = f"{r_data.get('failure_rate_percent', 0):.1f}%"
+                avg_t = f"{t_data.get('avg_execution_time_seconds', 0):.2f}s"
+                status_label = "HEALTHY"
+                if r_data.get("is_failure_flagged") and t_data.get("is_slow_flagged"):
+                    status_label = "CRITICAL"
+                elif r_data.get("is_failure_flagged"):
+                    status_label = "HIGH FAILURE"
+                elif t_data.get("is_slow_flagged"):
+                    status_label = "SLOW"
+
+                lines.append(f"    {wid:<8} {w_name:<30} {tot:<8} {s_pct:<10} {f_pct:<10} {avg_t:<10} {status_label:<12}")
+
+            recs = report.final_output.get("recommendations", [])
+            if recs:
+                lines.append("\n  Key Improvement Recommendations:")
+                for rc in recs:
+                    lines.append(f"    - [{rc.get('priority')}] {rc.get('workflow_id')}: {rc.get('action')}")
+
+            if report.final_output.get("is_simulated"):
+                lines.append("\n  [Notice: Performance metrics computed from local execution logs, not production telemetry (SIMULATED)]")
+            lines.append("")
+
         summary = report.final_output.get("summary")
         if summary:
             lines.append(f"  Summary: {summary}")
@@ -302,6 +419,58 @@ def main() -> None:
         help="Featured campaign products (WF007)",
     )
     parser.add_argument(
+        "--keyword-csv",
+        default=None,
+        help="Keyword CSV path (WF008)",
+    )
+    parser.add_argument(
+        "--keywords",
+        default=None,
+        help="Direct keywords list or text (WF008)",
+    )
+    parser.add_argument(
+        "--task-desc",
+        default=None,
+        help="Task description (WF009)",
+    )
+    parser.add_argument(
+        "--skills",
+        default=None,
+        help="Required skills for task (WF009)",
+    )
+    parser.add_argument(
+        "--employee-csv",
+        default=None,
+        help="Employee CSV path (WF009)",
+    )
+    parser.add_argument(
+        "--task-priority",
+        default=None,
+        help="Task priority (WF009)",
+    )
+    parser.add_argument(
+        "--deadline",
+        default=None,
+        help="Task deadline (WF009)",
+    )
+    parser.add_argument(
+        "--log-csv",
+        default=None,
+        help="Workflow execution log CSV path (WF010)",
+    )
+    parser.add_argument(
+        "--failure-threshold",
+        type=float,
+        default=10.0,
+        help="Failure rate alert threshold percentage (WF010, default 10.0)",
+    )
+    parser.add_argument(
+        "--time-threshold",
+        type=float,
+        default=5.0,
+        help="Average execution time alert threshold in seconds (WF010, default 5.0)",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Output raw JSON execution report",
@@ -310,7 +479,7 @@ def main() -> None:
     parser.add_argument(
         "--mock-route",
         default=None,
-        help="Simulate router selection with a workflow ID (e.g. 'WF001' to 'WF007')",
+        help="Simulate router selection with a workflow ID (e.g. 'WF001' to 'WF010')",
     )
 
     args = parser.parse_args()
@@ -375,6 +544,36 @@ def main() -> None:
         runtime_inputs["promotion"] = args.promotion
     if args.products:
         runtime_inputs["product_list"] = args.products
+
+    # WF008 inputs
+    if args.keyword_csv:
+        runtime_inputs["keyword_file_path"] = args.keyword_csv
+    if args.keywords:
+        runtime_inputs["keywords"] = args.keywords
+
+    # WF009 inputs
+    if args.task_desc:
+        runtime_inputs["task_description"] = args.task_desc
+    elif args.mock_route == "WF009" and not args.task_desc:
+        runtime_inputs["task_description"] = "Build secure REST API endpoint for user profile export in FastAPI with PostgreSQL"
+        runtime_inputs["required_skills"] = "python, fastapi, postgresql"
+        runtime_inputs["priority"] = "Urgent"
+    if args.skills:
+        runtime_inputs["required_skills"] = args.skills
+    if args.employee_csv:
+        runtime_inputs["employee_file_path"] = args.employee_csv
+    if args.task_priority:
+        runtime_inputs["priority"] = args.task_priority
+    if args.deadline:
+        runtime_inputs["deadline"] = args.deadline
+
+    # WF010 inputs
+    if args.log_csv:
+        runtime_inputs["log_file_path"] = args.log_csv
+    if args.failure_threshold is not None:
+        runtime_inputs["failure_threshold"] = args.failure_threshold
+    if args.time_threshold is not None:
+        runtime_inputs["time_threshold_seconds"] = args.time_threshold
 
     report = orchestrator.run(args.request, **runtime_inputs)
 
