@@ -26,10 +26,86 @@ The codebase enforces strict separation of concerns across dedicated modules:
   - `provider.py`: Lightweight provider abstraction (`LLMProvider`, `OpenAICompatibleProvider`, `GeminiProvider`, and `FakeLLMProvider`) without heavy external SDK dependencies. API credentials are read from environment variables and never logged.
   - `prompts.py`: Dynamic workflow catalog injection and system prompt builder.
   - `router.py`: `WorkflowRouter` interface and `LLMWorkflowRouter` implementation with structured JSON output, strict registry validation, confidence thresholds, and robust error handling.
-- **`app/tools/`**: Reusable tool abstractions and registry:
+- **`app/tools/`**: Reusable tool abstractions, registry, and domain implementations:
   - `base.py`: `BaseTool` abstract interface and `ToolMetadata`.
   - `registry.py`: `ToolRegistry` for registering and discovering tools dynamically.
+  - `inventory.py`: Production-grade domain tools for WF001 (`inventory_loader`, `stock_comparator`, `low_stock_identifier`, `reorder_calculator`, `restock_reporter`) with strict validation.
+- **`app/orchestrator.py`**: `WorkflowOrchestrator` coordinating the full end-to-end pipeline:
+  `Natural-language request → Router → Registry → Engine → Step Resolver → Domain Tools → ExecutionReport`.
+- **`app/main.py`**: Command-line interface for natural-language workflow execution.
 - **`app/api/`**: Reserved API boundary for future REST / service endpoints.
+
+---
+
+## End-to-End Workflow Execution (WF001)
+
+The system features complete end-to-end orchestration for **WF001: Inventory Restock Check**:
+
+```
+Natural Language Request
+         │
+         ▼
+ ┌──────────────────────┐
+ │   LLM Router         │ (extracts parameters, matches WF001)
+ └──────────┬───────────┘
+            │
+            ▼
+ ┌──────────────────────┐
+ │  Workflow Registry   │ (validates WF001 against data/workflows.xlsx)
+ └──────────┬───────────┘
+            │
+            ▼
+ ┌──────────────────────┐
+ │   Generic Engine     │ (resolves step bindings & passes context)
+ └──────────┬───────────┘
+            │
+            ▼
+ ┌────────────────────────────────────────────────────────┐
+ │   Domain Tools (Executed Sequentially)                 │
+ │   1. inventory_loader     (parses & validates CSV)    │
+ │   2. stock_comparator     (compares stock vs threshold)│
+ │   3. low_stock_identifier (filters restock candidates) │
+ │   4. reorder_calculator   (computes reorder qty/cost)  │
+ │   5. restock_reporter     (formats structured report)  │
+ └──────────┬─────────────────────────────────────────────┘
+            │
+            ▼
+ ┌──────────────────────┐
+ │   ExecutionReport    │ (structured summary with step metrics)
+ └──────────────────────┘
+```
+
+### WF001 Business Rules & Edge Cases
+- **Restock Condition**: Triggered strictly when `current_stock < minimum_stock`.
+- **Boundary Condition**: If `current_stock == minimum_stock`, the item is marked as adequately stocked (`needs_reorder = False`, `reorder_quantity = 0`).
+- **Zero Stock**: If `current_stock == 0`, `reorder_quantity = minimum_stock`.
+- **Reorder Formula**: `reorder_quantity = minimum_stock - current_stock`. Estimated reorder cost is computed as `reorder_quantity * unit_cost`.
+- **Validation**: Strict column verification, positive numeric coercion, and missing/empty file detection.
+
+> [!NOTE]
+> **Sample Dataset Notice**: `data/sample_inventory.csv` provides realistic sample inventory records across multiple suppliers and stock levels. Purchase orders and restock summaries are simulated internally; no live supplier APIs or external purchase orders are dispatched.
+>
+> **Workflow Implementation Status**: WF001 is fully implemented end-to-end with genuine domain tools. Workflows WF002–WF010 are registered and ready for routing in `data/workflows.xlsx`, with domain tools to be delivered in subsequent milestones.
+
+---
+
+## CLI Usage
+
+The system includes a CLI interface (`app/main.py`) to run natural language queries end-to-end:
+
+```bash
+# Natural-language execution (uses configured LLM provider or prompts for clarification)
+python3 -m app.main "Which products need restocking?"
+
+# Explicit mock routing (hermetic, offline testing without API key)
+python3 -m app.main --mock-route WF001 "Check inventory levels"
+
+# Specifying a custom inventory CSV file
+python3 -m app.main --mock-route WF001 --csv-path data/sample_inventory.csv "Restock report"
+
+# Output as structured JSON
+python3 -m app.main --mock-route WF001 --json "Restock check"
+```
 
 ---
 
@@ -113,12 +189,11 @@ All automated tests use `pytest` and execute against both the assessment workboo
 
 ```bash
 # Run the complete test suite
-pytest
-
-# Run tests with verbose output
 pytest -v
 
 # Run specific test modules
+pytest tests/test_wf001_inventory.py
+pytest tests/test_orchestrator.py
 pytest tests/test_router.py
 pytest tests/test_execution.py
 pytest tests/test_loader.py

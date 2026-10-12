@@ -8,6 +8,7 @@ from app.engine.resolver import (
     StepResolutionError,
     StepResolver,
     UnresolvedStepError,
+    create_default_step_resolver,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "StepBinding",
     "StepResolutionError",
     "UnresolvedStepError",
+    "create_default_step_resolver",
 ]

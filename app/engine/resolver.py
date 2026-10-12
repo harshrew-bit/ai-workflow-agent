@@ -134,3 +134,36 @@ class ConfigurableStepResolver(StepResolver):
                 )
 
         return None
+
+
+def create_default_step_resolver() -> ConfigurableStepResolver:
+    """Create and pre-configure step resolver with standard workflow step bindings."""
+    resolver = ConfigurableStepResolver()
+
+    # WF001: Inventory Restock Check
+    resolver.bind(
+        workflow_id="WF001",
+        step_name="Load inventory",
+        tool_name="inventory_loader",
+    )
+    resolver.bind(
+        workflow_id="WF001",
+        step_name="compare current stock with minimum threshold",
+        tool_name="stock_comparator",
+    )
+    resolver.bind(
+        workflow_id="WF001",
+        step_name="identify low-stock products",
+        tool_name="low_stock_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF001",
+        step_name="calculate reorder quantity",
+        tool_name="reorder_calculator",
+    )
+    resolver.bind(
+        workflow_id="WF001",
+        step_name="generate restock list",
+        tool_name="restock_reporter",
+    )
+    return resolver

@@ -1,0 +1,8 @@
+product_id,product_name,current_stock,minimum_stock,unit_cost,supplier
+PRD-001,Wireless Ergonomic Mouse,5,20,29.99,TechSupply Direct
+PRD-002,Mechanical Gaming Keyboard,25,15,79.50,KeyCraft Labs
+PRD-003,USB-C Multiport Hub,0,30,45.00,ConnectPro Inc
+PRD-004,27-inch 4K Monitor,10,10,299.99,VisionTech Displays
+PRD-005,Noise-Canceling Headphones,3,12,149.00,AudioWave Systems
+PRD-006,Braided HDMI Cable 2m,50,25,8.99,CableLine Ltd
+PRD-007,Aluminum Laptop Stand,8,15,34.50,ErgoDesk Co
