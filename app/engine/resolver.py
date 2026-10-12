@@ -253,4 +253,95 @@ def create_default_step_resolver() -> ConfigurableStepResolver:
         tool_name="meta_description_generator",
     )
 
+    # WF005: Customer Order Status
+    resolver.bind(
+        workflow_id="WF005",
+        step_name="Validate identifier",
+        tool_name="order_identifier_validator",
+    )
+    resolver.bind(
+        workflow_id="WF005",
+        step_name="search order data",
+        tool_name="order_data_search",
+    )
+    resolver.bind(
+        workflow_id="WF005",
+        step_name="retrieve order status",
+        tool_name="order_status_retriever",
+    )
+    resolver.bind(
+        workflow_id="WF005",
+        step_name="retrieve shipment information",
+        tool_name="shipment_info_retriever",
+    )
+    resolver.bind(
+        workflow_id="WF005",
+        step_name="summarize current status",
+        tool_name="order_status_summarizer",
+    )
+
+    # WF006: Duplicate Product Detection
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="Load products",
+        tool_name="catalog_loader",
+    )
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="normalize names/SKUs",
+        tool_name="catalog_normalizer",
+    )
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="compare identifiers",
+        tool_name="identifier_comparator",
+    )
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="compare product attributes",
+        tool_name="attribute_comparator",
+    )
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="group likely duplicates",
+        tool_name="duplicate_grouper",
+    )
+    resolver.bind(
+        workflow_id="WF006",
+        step_name="assign confidence",
+        tool_name="duplicate_confidence_assigner",
+    )
+
+    # WF007: Marketing Campaign Brief
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="Validate inputs",
+        tool_name="campaign_inputs_validator",
+    )
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="identify campaign objective",
+        tool_name="campaign_objective_identifier",
+    )
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="summarize products",
+        tool_name="campaign_product_summarizer",
+    )
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="create messaging",
+        tool_name="campaign_messaging_creator",
+    )
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="create channel recommendations",
+        tool_name="campaign_channel_recommender",
+    )
+    resolver.bind(
+        workflow_id="WF007",
+        step_name="create campaign checklist",
+        tool_name="campaign_checklist_creator",
+    )
+
     return resolver

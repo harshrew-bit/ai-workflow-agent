@@ -1,0 +1,12 @@
+# Sample Products Catalog Dataset (Sample Data for WF006)
+# Notice: This is simulated product catalog data containing exact SKU duplicates, near-duplicates, and distinct items.
+product_id,sku,product_name,category,brand,price
+PRD-01,SKU-1001,Logitech MX Master 3S Wireless Mouse,Electronics,Logitech,99.99
+PRD-02,SKU-1001,Logitech MX Master 3S Mouse - Graphite,Electronics,Logitech,99.99
+PRD-03,SKU-2001,Keychron K2 Mechanical Keyboard RGB,Electronics,Keychron,79.99
+PRD-04,SKU-2002,Keychron K2 Wireless Mechanical Keyboard (RGB),Electronics,Keychron,79.99
+PRD-05,SKU-3001,Sony WH-1000XM5 Noise Canceling Headphones,Audio,Sony,399.99
+PRD-06,SKU-3002,Sony WH 1000XM5 Headphones - Silver,Audio,Sony,399.99
+PRD-07,SKU-4001,Apple MacBook Pro 16-inch M3 Max,Computers,Apple,3499.00
+PRD-08,SKU-5001,Dell UltraSharp 27 4K USB-C Hub Monitor,Displays,Dell,549.99
+PRD-09,SKU-6001,Anker 737 Power Bank 24000mAh,Accessories,Anker,149.99

@@ -33,6 +33,9 @@ The codebase enforces strict separation of concerns across dedicated modules:
   - `pricing.py`: Domain tools for WF002 (`price_data_loader`, `sku_matcher`, `price_comparator`, `percentage_difference_calculator`, `price_exception_flagger`).
   - `vendor_processing.py`: Domain tools for WF003 (`vendor_file_reader`, `column_detector`, `column_normalizer`, `required_fields_validator`, `invalid_rows_identifier`, `clean_dataset_producer`).
   - `content_generation.py`: Domain tools for WF004 (`attribute_validator`, `product_description_generator`, `short_description_generator`, `seo_title_generator`, `meta_description_generator`).
+  - `order_status.py`: Domain tools for WF005 (`order_identifier_validator`, `order_data_search`, `order_status_retriever`, `shipment_info_retriever`, `order_status_summarizer`).
+  - `duplicate_detection.py`: Domain tools for WF006 (`catalog_loader`, `catalog_normalizer`, `identifier_comparator`, `attribute_comparator`, `duplicate_grouper`, `duplicate_confidence_assigner`).
+  - `campaign_brief.py`: Domain tools for WF007 (`campaign_inputs_validator`, `campaign_objective_identifier`, `campaign_product_summarizer`, `campaign_messaging_creator`, `campaign_channel_recommender`, `campaign_checklist_creator`).
 - **`app/orchestrator.py`**: `WorkflowOrchestrator` coordinating the full end-to-end pipeline:
   `Natural-language request → Router → Registry → Engine → Step Resolver → Domain Tools → ExecutionReport`.
 - **`app/main.py`**: Command-line interface for natural-language workflow execution.
@@ -40,9 +43,9 @@ The codebase enforces strict separation of concerns across dedicated modules:
 
 ---
 
-## End-to-End Workflow Execution (WF001 – WF004)
+## End-to-End Workflow Execution (WF001 – WF007)
 
-The system features complete end-to-end orchestration across four business workflows dynamically loaded from `data/workflows.xlsx`:
+The system features complete end-to-end orchestration across seven business workflows dynamically loaded from `data/workflows.xlsx`:
 
 ```
 Natural Language Request
@@ -69,6 +72,9 @@ Natural Language Request
  │   - WF002: 5 SKU matching & price comparison tools     │
  │   - WF003: 6 file parsing & normalization tools        │
  │   - WF004: 5 attribute validation & SEO content tools  │
+ │   - WF005: 5 order lookup & shipment tracking tools    │
+ │   - WF006: 6 duplicate detection & grouping tools      │
+ │   - WF007: 6 campaign brief synthesis tools            │
  └──────────┬─────────────────────────────────────────────┘
             │
             ▼
@@ -106,15 +112,39 @@ Natural Language Request
 - **Validation**: Requires `product_name`; raises validation error if empty.
 - **Simulation Transparency**: When generated in simulated/offline mode, output is clearly badged with `is_simulated = True`.
 
+#### 5. WF005 — Customer Order Status
+- **Trigger**: "What is the status of order ORD-1001?" / "Where is my order?"
+- **Steps**: Validate identifier $\to$ search order data $\to$ retrieve order status $\to$ retrieve shipment information $\to$ summarize current status.
+- **Decision Logic**: Look up order using order ID or customer email. If found, retrieve shipment tracking status, carrier, and estimated delivery. If no order matches, execute workbook decision logic: **prompt the user for another identifier**.
+- **Privacy & Safety**: Never exposes unnecessary PII or calls live carrier APIs. All lookups resolve safely against simulated offline datasets.
+
+#### 6. WF006 — Duplicate Product Detection
+- **Trigger**: "Find duplicate products in catalog."
+- **Steps**: Load products $\to$ normalize names/SKUs $\to$ compare identifiers $\to$ compare product attributes $\to$ group likely duplicates $\to$ assign confidence.
+- **Decision Logic**:
+  - Exact normalized SKU match $\to$ `DEFINITE` duplicate (`100%` similarity).
+  - High attribute similarity (Token Dice $\ge 0.75$ with matching brand) $\to$ `LIKELY` duplicate.
+  - Moderate attribute similarity ($0.65 \le \text{Dice} < 0.75$) $\to$ `POSSIBLE` duplicate (manual review recommended).
+  - Distinct items (e.g. MacBook Pro vs Dell Monitor) $\to$ not flagged.
+- **Transparency**: Every analysis explicitly documents matching methodology and tokenization limitations.
+
+#### 7. WF007 — Marketing Campaign Brief
+- **Trigger**: "Generate marketing campaign brief."
+- **Steps**: Validate inputs $\to$ identify campaign objective $\to$ summarize products $\to$ create messaging $\to$ create channel recommendations $\to$ create campaign checklist.
+- **Decision Logic**: Requires both `campaign_goal` and `dates`/timeline. If either is missing, raises a validation error rather than hallucinating dates or goals.
+- **No Hallucination**: Does not invent promotional discounts or pricing claims if not explicitly provided by the user. Badged with `is_simulated = True`.
+
 > [!NOTE]
 > **Sample Datasets Notice**:
-> - `data/sample_inventory.csv`: Realistic inventory levels and costs.
-> - `data/sample_internal_prices.csv` & `data/sample_vendor_prices.csv`: Multi-supplier product catalog and vendor quotes.
-> - `data/sample_vendor_catalog.csv`: Ingestion file containing column variations and mixed valid/invalid records.
+> - `data/sample_inventory.csv`: Realistic inventory levels and costs (WF001).
+> - `data/sample_internal_prices.csv` & `data/sample_vendor_prices.csv`: Multi-supplier product catalog and vendor quotes (WF002).
+> - `data/sample_vendor_catalog.csv`: Ingestion file containing column variations and mixed valid/invalid records (WF003).
+> - `data/sample_orders.csv` & `data/sample_shipments.csv`: Simulated orders and tracking records (WF005).
+> - `data/sample_products_catalog.csv`: Multi-category catalog with exact SKU duplicates, near-duplicate models, and distinct items (WF006).
 >
 > All sample data is simulated for testing and demonstration purposes without external side effects.
 >
-> **Workflow Implementation Status**: Workflows WF001, WF002, WF003, and WF004 are fully implemented end-to-end with genuine domain tools. Workflows WF005–WF010 are registered and ready for routing in `data/workflows.xlsx`.
+> **Workflow Implementation Status**: Workflows WF001 through WF007 are fully implemented end-to-end with genuine domain tools. Workflows WF008–WF010 are registered and ready for routing in `data/workflows.xlsx`.
 
 ---
 
@@ -137,6 +167,18 @@ python3 -m app.main --mock-route WF004 "Generate SEO content for this product."
 
 # WF004 with custom parameters
 python3 -m app.main --mock-route WF004 --product-name "Pro Wireless Mouse" --color "Midnight Blue" --category "Electronics" "Generate product content"
+
+# WF005: Customer Order Status (known order)
+python3 -m app.main --mock-route WF005 --order-id "ORD-1001" "What is the status of order ORD-1001?"
+
+# WF005: Customer Order Status (unknown order -> prompts for another identifier)
+python3 -m app.main --mock-route WF005 --order-id "UNKNOWN-999" "Where is my order UNKNOWN-999?"
+
+# WF006: Duplicate Product Detection
+python3 -m app.main --mock-route WF006 "Find duplicate products in catalog"
+
+# WF007: Marketing Campaign Brief
+python3 -m app.main --mock-route WF007 --campaign-goal "Launch Summer Trail Runners" --dates "June 1 - July 15" --promotion "20% off with promo SUMMER20" --products "Trail Runner Pro, Quick-Dry Socks" "Generate marketing campaign brief"
 
 # Output as structured JSON
 python3 -m app.main --mock-route WF002 --json "Validate prices"
@@ -231,6 +273,10 @@ pytest tests/test_wf001_inventory.py
 pytest tests/test_wf002_pricing.py
 pytest tests/test_wf003_vendor_processing.py
 pytest tests/test_wf004_content_generation.py
+pytest tests/test_wf005_order_status.py
+pytest tests/test_wf006_duplicate_detection.py
+pytest tests/test_wf007_campaign_brief.py
+pytest tests/test_orchestrator_wf005_wf007.py
 pytest tests/test_orchestrator_wf002_wf004.py
 pytest tests/test_orchestrator.py
 pytest tests/test_router.py

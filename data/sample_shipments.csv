@@ -1,0 +1,5 @@
+# Sample Shipments Dataset (Sample Data for WF005)
+# Notice: This is simulated shipment and tracking data used for order status fulfillment tracking.
+shipment_id,order_id,carrier,tracking_number,estimated_delivery,shipment_status,last_location
+SHP-5001,ORD-1001,FastShip Express,TRK-987654321,2026-10-15,IN_TRANSIT,Distribution Center - Chicago IL
+SHP-5002,ORD-1002,GlobalParcel,TRK-123456789,2026-10-07,DELIVERED,Front Porch - Seattle WA

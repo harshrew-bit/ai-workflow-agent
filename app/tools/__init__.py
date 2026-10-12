@@ -1,6 +1,16 @@
 """Reusable workflow tool interfaces, registry, and domain tools."""
 
 from app.tools.base import BaseTool, ToolMetadata
+from app.tools.campaign_brief import (
+    CampaignChannelRecommenderTool,
+    CampaignChecklistCreatorTool,
+    CampaignInputsValidatorTool,
+    CampaignMessagingCreatorTool,
+    CampaignObjectiveIdentifierTool,
+    CampaignProductSummarizerTool,
+    ValidatedCampaignInputs,
+    extract_and_validate_campaign_inputs,
+)
 from app.tools.content_generation import (
     MetaDescriptionGeneratorTool,
     ProductAttributeValidatorTool,
@@ -9,6 +19,20 @@ from app.tools.content_generation import (
     ShortDescriptionGeneratorTool,
     ValidatedProductAttributes,
     validate_product_content_attributes,
+)
+from app.tools.duplicate_detection import (
+    AttributeComparatorTool,
+    CatalogLoaderTool,
+    CatalogNormalizerTool,
+    CatalogProduct,
+    DuplicateCandidate,
+    DuplicateConfidenceAssignerTool,
+    DuplicateGrouperTool,
+    IdentifierComparatorTool,
+    NormalizedProduct,
+    detect_duplicates,
+    load_catalog_csv,
+    normalize_catalog_products,
 )
 from app.tools.inventory import (
     InventoryItem,
@@ -20,6 +44,16 @@ from app.tools.inventory import (
     StockThresholdComparatorTool,
     calculate_restock_requirements,
     read_and_validate_inventory_csv,
+)
+from app.tools.order_status import (
+    OrderDataSearchTool,
+    OrderIdentifierValidatorTool,
+    OrderRecord,
+    OrderStatusRetrieverTool,
+    OrderStatusSummarizerTool,
+    ShipmentInfoRetrieverTool,
+    ShipmentRecord,
+    extract_order_identifier,
 )
 from app.tools.pricing import (
     InternalPriceRecord,
@@ -84,6 +118,29 @@ def create_default_tool_registry() -> ToolRegistry:
     registry.register(SeoTitleGeneratorTool())
     registry.register(MetaDescriptionGeneratorTool())
 
+    # WF005: Customer Order Status
+    registry.register(OrderIdentifierValidatorTool())
+    registry.register(OrderDataSearchTool())
+    registry.register(OrderStatusRetrieverTool())
+    registry.register(ShipmentInfoRetrieverTool())
+    registry.register(OrderStatusSummarizerTool())
+
+    # WF006: Duplicate Product Detection
+    registry.register(CatalogLoaderTool())
+    registry.register(CatalogNormalizerTool())
+    registry.register(IdentifierComparatorTool())
+    registry.register(AttributeComparatorTool())
+    registry.register(DuplicateGrouperTool())
+    registry.register(DuplicateConfidenceAssignerTool())
+
+    # WF007: Marketing Campaign Brief
+    registry.register(CampaignInputsValidatorTool())
+    registry.register(CampaignObjectiveIdentifierTool())
+    registry.register(CampaignProductSummarizerTool())
+    registry.register(CampaignMessagingCreatorTool())
+    registry.register(CampaignChannelRecommenderTool())
+    registry.register(CampaignChecklistCreatorTool())
+
     return registry
 
 
@@ -135,4 +192,35 @@ __all__ = [
     "ShortDescriptionGeneratorTool",
     "SeoTitleGeneratorTool",
     "MetaDescriptionGeneratorTool",
+    # WF005
+    "OrderRecord",
+    "ShipmentRecord",
+    "extract_order_identifier",
+    "OrderIdentifierValidatorTool",
+    "OrderDataSearchTool",
+    "OrderStatusRetrieverTool",
+    "ShipmentInfoRetrieverTool",
+    "OrderStatusSummarizerTool",
+    # WF006
+    "CatalogProduct",
+    "NormalizedProduct",
+    "DuplicateCandidate",
+    "load_catalog_csv",
+    "normalize_catalog_products",
+    "detect_duplicates",
+    "CatalogLoaderTool",
+    "CatalogNormalizerTool",
+    "IdentifierComparatorTool",
+    "AttributeComparatorTool",
+    "DuplicateGrouperTool",
+    "DuplicateConfidenceAssignerTool",
+    # WF007
+    "ValidatedCampaignInputs",
+    "extract_and_validate_campaign_inputs",
+    "CampaignInputsValidatorTool",
+    "CampaignObjectiveIdentifierTool",
+    "CampaignProductSummarizerTool",
+    "CampaignMessagingCreatorTool",
+    "CampaignChannelRecommenderTool",
+    "CampaignChecklistCreatorTool",
 ]

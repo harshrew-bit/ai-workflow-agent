@@ -113,6 +113,86 @@ def format_report_for_display(report: Any) -> str:
                 lines.append("  [Notice: Output generated via offline simulated content synthesis]")
             lines.append("")
 
+        # WF005: Customer Order Status
+        if "order_found" in report.final_output or "request_another_identifier" in report.final_output:
+            orders_list = report.final_output.get("orders", [])
+            if orders_list:
+                lines.append("\n  Order Status & Fulfillment Details:")
+                for ord_info in orders_list:
+                    lines.append(f"    Order ID:           {ord_info.get('order_id')}")
+                    lines.append(f"    Order Status:       {ord_info.get('order_status')}")
+                    lines.append(f"    Order Date:         {ord_info.get('order_date')}")
+                    lines.append(f"    Items:              {ord_info.get('items')}")
+                    lines.append(f"    Total Amount:       ${ord_info.get('total_amount', 0):.2f} {ord_info.get('currency', 'USD')}")
+                    lines.append(f"    Shipment Status:    {ord_info.get('shipment_status')}")
+                    lines.append(f"    Carrier:            {ord_info.get('carrier')}")
+                    lines.append(f"    Tracking Number:    {ord_info.get('tracking_number')}")
+                    lines.append(f"    Estimated Delivery: {ord_info.get('estimated_delivery')}")
+                    lines.append(f"    Current Location:   {ord_info.get('last_location')}")
+                    lines.append("")
+                if report.final_output.get("is_simulated"):
+                    lines.append("  [Notice: Order & fulfillment data retrieved from local simulated records (SIMULATED)]")
+                    lines.append("")
+            else:
+                lines.append(f"\n  [!] {report.final_output.get('summary')}")
+                if report.final_output.get("is_simulated"):
+                    lines.append("  [Notice: Order query executed against local simulated records (SIMULATED)]")
+                lines.append("")
+
+        # WF006: Duplicate Product Detection
+        if "duplicate_candidates" in report.final_output:
+            candidates = report.final_output.get("duplicate_candidates", [])
+            lines.append(f"\n  Duplicate Product Analysis ({len(candidates)} candidate pairs found):")
+            lines.append(
+                f"  {'PRIMARY PRODUCT / SKU':<36} {'DUPLICATE CANDIDATE / SKU':<36} {'SIMILARITY':<12} {'CONFIDENCE':<12}"
+            )
+            lines.append("  " + "-" * 98)
+            for c in candidates:
+                p1 = f"{c.get('primary_name', '')[:22]} ({c.get('primary_sku', '')})"
+                p2 = f"{c.get('duplicate_name', '')[:22]} ({c.get('duplicate_sku', '')})"
+                score_str = f"{c.get('similarity_score', 0):.0%}"
+                conf_str = c.get("confidence", "").upper()
+                lines.append(f"  {p1:<36} {p2:<36} {score_str:<12} {conf_str:<12}")
+            lines.append("")
+            lines.append(f"  Definite Duplicates (Exact SKU):    {report.final_output.get('definite_duplicates_count', 0)}")
+            lines.append(f"  Likely Duplicates (High Overlap):   {report.final_output.get('likely_duplicates_count', 0)}")
+            lines.append(f"  Possible Duplicates (Review Req):   {report.final_output.get('possible_duplicates_count', 0)}")
+            lines.append("")
+            methodology = report.final_output.get("methodology")
+            if methodology:
+                lines.append(f"  LIMITATIONS & METHODOLOGY: {methodology}")
+                lines.append("")
+
+        # WF007: Marketing Campaign Brief
+        if "execution_checklist" in report.final_output and "campaign_goal" in report.final_output:
+            lines.append(f"\n  Campaign Goal:       {report.final_output.get('campaign_goal')}")
+            lines.append(f"  Schedule/Timeline:   {report.final_output.get('timeline')}")
+            lines.append(f"  Target Audience:     {report.final_output.get('target_audience')}")
+            lines.append(f"  Promotion:           {report.final_output.get('promotion')}")
+            featured_p = report.final_output.get("featured_products", [])
+            if featured_p:
+                lines.append(f"  Featured Products:   {', '.join(featured_p)}")
+
+            messaging = report.final_output.get("messaging", {})
+            if messaging:
+                lines.append(f"\n  Headline:            {messaging.get('primary_headline')}")
+                lines.append(f"  Value Callout:       {messaging.get('promotional_callout')}")
+
+            channels = report.final_output.get("channels", [])
+            if channels:
+                lines.append("\n  Channel Strategy:")
+                for ch in channels:
+                    lines.append(f"    - {ch.get('channel')}: {ch.get('role')}")
+
+            checklist = report.final_output.get("execution_checklist", [])
+            if checklist:
+                lines.append("\n  Execution Checklist:")
+                for item in checklist:
+                    lines.append(f"    [ ] {item.get('phase')}: {item.get('task')}")
+            if report.final_output.get("is_simulated"):
+                lines.append("\n  [Notice: Campaign brief generated via offline deterministic synthesis (SIMULATED)]")
+            lines.append("")
+
         summary = report.final_output.get("summary")
         if summary:
             lines.append(f"  Summary: {summary}")
@@ -139,7 +219,7 @@ def main() -> None:
         "request",
         nargs="?",
         default="Which products need restocking?",
-        help="Natural language user request (default: 'Which products need restocking?')",
+        help="Natural language user request",
     )
     parser.add_argument(
         "--csv-path",
@@ -184,7 +264,42 @@ def main() -> None:
     parser.add_argument(
         "--target-audience",
         default=None,
-        help="Target audience (WF004)",
+        help="Target audience (WF004, WF007)",
+    )
+    parser.add_argument(
+        "--order-id",
+        default=None,
+        help="Order ID for order status lookup (WF005)",
+    )
+    parser.add_argument(
+        "--customer-email",
+        default=None,
+        help="Customer email for order status lookup (WF005)",
+    )
+    parser.add_argument(
+        "--catalog-csv",
+        default=None,
+        help="Catalog CSV path for duplicate detection (WF006)",
+    )
+    parser.add_argument(
+        "--campaign-goal",
+        default=None,
+        help="Marketing campaign goal (WF007)",
+    )
+    parser.add_argument(
+        "--dates",
+        default=None,
+        help="Campaign dates or timeline (WF007)",
+    )
+    parser.add_argument(
+        "--promotion",
+        default=None,
+        help="Campaign promotion details (WF007)",
+    )
+    parser.add_argument(
+        "--products",
+        default=None,
+        help="Featured campaign products (WF007)",
     )
     parser.add_argument(
         "--json",
@@ -195,7 +310,7 @@ def main() -> None:
     parser.add_argument(
         "--mock-route",
         default=None,
-        help="Simulate router selection with a workflow ID for deterministic offline CLI demo (e.g. 'WF001', 'WF002', 'WF003', 'WF004')",
+        help="Simulate router selection with a workflow ID (e.g. 'WF001' to 'WF007')",
     )
 
     args = parser.parse_args()
@@ -227,7 +342,6 @@ def main() -> None:
     if args.product_name:
         runtime_inputs["product_name"] = args.product_name
     elif args.mock_route == "WF004" and not args.product_name:
-        # Default sample product name if none provided for demo
         runtime_inputs["product_name"] = "Ergonomic Desk Chair"
         runtime_inputs["category"] = "Office Furniture"
         runtime_inputs["material"] = "Breathable Mesh"
@@ -241,6 +355,26 @@ def main() -> None:
         runtime_inputs["color"] = args.color
     if args.target_audience:
         runtime_inputs["target_audience"] = args.target_audience
+    if args.order_id:
+        runtime_inputs["order_id"] = args.order_id
+    if args.customer_email:
+        runtime_inputs["customer_email"] = args.customer_email
+    if args.catalog_csv:
+        runtime_inputs["catalog_csv_path"] = args.catalog_csv
+    if args.campaign_goal:
+        runtime_inputs["campaign_goal"] = args.campaign_goal
+    elif args.mock_route == "WF007" and not args.campaign_goal:
+        runtime_inputs["campaign_goal"] = "Launch New Sustainable Workspace Collection"
+        runtime_inputs["dates"] = "2026-11-01 to 2026-11-30"
+        runtime_inputs["target_audience"] = "Remote Professionals"
+        runtime_inputs["promotion"] = "15% off launch bundles with code ECO15"
+        runtime_inputs["product_list"] = ["Bamboo Desk Organizer", "Ergonomic Hemp Chair"]
+    if args.dates:
+        runtime_inputs["dates"] = args.dates
+    if args.promotion:
+        runtime_inputs["promotion"] = args.promotion
+    if args.products:
+        runtime_inputs["product_list"] = args.products
 
     report = orchestrator.run(args.request, **runtime_inputs)
 
