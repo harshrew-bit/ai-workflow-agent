@@ -52,7 +52,25 @@ def test_tool_registry():
 
 def test_generic_engine_executes_without_hardcoded_workflow_ids():
     """Verify that GenericWorkflowEngine executes any workflow definition dynamically."""
-    engine = GenericWorkflowEngine()
+    tool_reg = ToolRegistry()
+
+    class SimpleStepTool(BaseTool):
+        def __init__(self, name: str, output: str) -> None:
+            self._name = name
+            self._output = output
+
+        @property
+        def metadata(self) -> ToolMetadata:
+            return ToolMetadata(name=self._name, description=f"Tool for {self._name}")
+
+        def execute(self, **kwargs) -> str:
+            return self._output
+
+    tool_reg.register(SimpleStepTool("Read configuration", "Config loaded: env=prod"))
+    tool_reg.register(SimpleStepTool("Ping services", "All services responded 200"))
+    tool_reg.register(SimpleStepTool("Report health", "Health check OK"))
+
+    engine = GenericWorkflowEngine(tool_registry=tool_reg)
 
     # Generic arbitrary workflow (could be WF001, WF010, or an arbitrary future WF999)
     custom_wf = WorkflowDefinition(
@@ -72,5 +90,9 @@ def test_generic_engine_executes_without_hardcoded_workflow_ids():
     assert result.workflow_id == "WF999"
     assert len(result.step_results) == 3
     assert result.step_results[0].step_name == "Read configuration"
+    assert result.step_results[0].output == "Config loaded: env=prod"
     assert result.step_results[1].step_name == "Ping services"
+    assert result.step_results[1].output == "All services responded 200"
     assert result.step_results[2].step_name == "Report health"
+    assert result.step_results[2].output == "Health check OK"
+    assert result.output == "Health check OK"

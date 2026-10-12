@@ -18,9 +18,10 @@ The codebase enforces strict separation of concerns across dedicated modules:
   - `loader.py`: Validates workbook structure, verifies sheets (`Workflows`, `Test_Questions`), verifies required headers, skips blank rows, detects duplicate workflow IDs, and returns validated model instances.
   - `registry.py`: `WorkflowRegistry` provides registration, lookup, duplicate detection, and dynamic membership checks without hardcoded IDs.
   - `exceptions.py`: Actionable exception hierarchy (`WorkbookNotFoundError`, `InvalidWorkbookError`, `MissingSheetError`, `MissingColumnError`, `DuplicateWorkflowIDError`, `WorkflowValidationError`, `WorkflowNotFoundError`).
-- **`app/engine/`**: Generic execution interface:
+- **`app/engine/`**: Generic execution interface and step resolution:
   - `context.py`: `ExecutionContext` carrying workflow state, inputs, intermediate variables, and step history.
-  - `base.py`: `WorkflowExecutor` abstract interface and `GenericWorkflowEngine` driving step-by-step execution generically.
+  - `resolver.py`: `StepResolver`, `ConfigurableStepResolver`, and `StepBinding` implementing extensible, decoupled step-to-tool resolution without hardcoding workflow IDs.
+  - `base.py`: `WorkflowExecutor` abstract interface and `GenericWorkflowEngine` driving genuine step-by-step tool execution, passing arguments, saving intermediate outputs, and enforcing accurate error statuses.
 - **`app/agent/`**: Reserved natural-language routing integration boundary:
   - `router.py`: `WorkflowRouter` abstract interface and `RoutingDecision` model designed to evaluate queries dynamically against registered workflows without if-else branching.
 - **`app/tools/`**: Reusable tool abstractions and registry:

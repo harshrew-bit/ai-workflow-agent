@@ -33,6 +33,12 @@ class ExecutionContext:
             return self.inputs[key]
         return self.metadata.get(key, default)
 
+    def get_all(self) -> Dict[str, Any]:
+        """Return all merged inputs and variables."""
+        merged = dict(self.inputs)
+        merged.update(self.variables)
+        return merged
+
     def record_step(self, step_result: StepExecutionResult) -> None:
         """Record the outcome of a step execution."""
         self.step_results.append(step_result)
