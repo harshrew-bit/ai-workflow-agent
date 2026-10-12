@@ -97,6 +97,18 @@ from app.tools.task_assignment import (
     TaskRequirementsAnalyzerTool,
     WorkloadCheckerTool,
 )
+from app.tools.supplier_risk import (
+    DeliveryMetricsCalculatorTool,
+    DeliveryRecord,
+    DeliveryRecordValidatorTool,
+    SupplierDeliveryLoaderTool,
+    SupplierRiskEvaluation,
+    SupplierRiskEvaluatorTool,
+    SupplierRiskMetrics,
+    SupplierRiskReporterTool,
+    get_wf011_definition,
+    register_wf011_extension,
+)
 from app.tools.vendor_processing import (
     CleanDatasetProducerTool,
     ColumnDetectorTool,
@@ -191,6 +203,13 @@ def create_default_tool_registry() -> ToolRegistry:
     registry.register(ErrorIdentifierTool())
     registry.register(SlowStepsIdentifierTool())
     registry.register(RecommendationsGeneratorTool())
+
+    # WF011: Supplier Delivery Risk Assessment
+    registry.register(SupplierDeliveryLoaderTool())
+    registry.register(DeliveryRecordValidatorTool())
+    registry.register(DeliveryMetricsCalculatorTool())
+    registry.register(SupplierRiskEvaluatorTool())
+    registry.register(SupplierRiskReporterTool())
 
     return registry
 
@@ -298,4 +317,15 @@ __all__ = [
     "ErrorIdentifierTool",
     "SlowStepsIdentifierTool",
     "RecommendationsGeneratorTool",
+    # WF011
+    "DeliveryRecord",
+    "SupplierRiskMetrics",
+    "SupplierRiskEvaluation",
+    "SupplierDeliveryLoaderTool",
+    "DeliveryRecordValidatorTool",
+    "DeliveryMetricsCalculatorTool",
+    "SupplierRiskEvaluatorTool",
+    "SupplierRiskReporterTool",
+    "get_wf011_definition",
+    "register_wf011_extension",
 ]

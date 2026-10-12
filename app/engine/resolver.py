@@ -440,4 +440,31 @@ def create_default_step_resolver() -> ConfigurableStepResolver:
         tool_name="recommendations_generator",
     )
 
+    # WF011: Supplier Delivery Risk Assessment
+    resolver.bind(
+        workflow_id="WF011",
+        step_name="Load supplier delivery records",
+        tool_name="supplier_delivery_loader",
+    )
+    resolver.bind(
+        workflow_id="WF011",
+        step_name="Validate delivery records",
+        tool_name="delivery_record_validator",
+    )
+    resolver.bind(
+        workflow_id="WF011",
+        step_name="Calculate supplier delivery metrics",
+        tool_name="delivery_metrics_calculator",
+    )
+    resolver.bind(
+        workflow_id="WF011",
+        step_name="Evaluate supplier risk levels",
+        tool_name="supplier_risk_evaluator",
+    )
+    resolver.bind(
+        workflow_id="WF011",
+        step_name="Generate supplier risk report",
+        tool_name="supplier_risk_reporter",
+    )
+
     return resolver

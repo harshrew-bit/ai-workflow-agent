@@ -1,12 +1,17 @@
 """Reusable LLM provider abstractions with sanitized error handling."""
 
 from abc import ABC, abstractmethod
+from socket import timeout
+from dotenv import load_dotenv
 import io
 import json
 import os
 from typing import Any, Dict, List, Optional
 import urllib.error
 import urllib.request
+import ssl
+import certifi
+load_dotenv()
 
 
 class LLMProvider(ABC):
@@ -227,7 +232,11 @@ class GeminiProvider(LLMProvider):
         )
 
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            with urllib.request.urlopen(
+                req,
+                timeout=timeout,
+                context=ssl.create_default_context(cafile=certifi.where()),
+            ) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 return data["candidates"][0]["content"]["parts"][0]["text"]
         except urllib.error.HTTPError as exc:

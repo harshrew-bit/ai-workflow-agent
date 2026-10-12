@@ -33,6 +33,13 @@ def assessment_workbook_path() -> Path:
 
 
 @pytest.fixture
+def assessment_workflows(assessment_workbook_path: Path):
+    """Load the ten official workflows from data/workflows.xlsx."""
+    from app.registry.loader import load_workflows_from_excel
+    return load_workflows_from_excel(assessment_workbook_path)
+
+
+@pytest.fixture
 def make_excel_file(tmp_path: Path) -> Callable[..., Path]:
     """Factory fixture to create temporary Excel workbooks for testing."""
 

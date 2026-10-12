@@ -310,6 +310,32 @@ def format_report_for_display(report: Any) -> str:
                 lines.append("\n  [Notice: Performance metrics computed from local execution logs, not production telemetry (SIMULATED)]")
             lines.append("")
 
+        # WF011: Supplier Delivery Risk Assessment
+        if "supplier_evaluations" in report.final_output:
+            supp_evals = report.final_output.get("supplier_evaluations", [])
+            dist = report.final_output.get("risk_distribution", {})
+            lines.append(f"\n  Supplier Delivery Risk Assessment ({len(supp_evals)} suppliers assessed):")
+            lines.append(
+                f"    {'SUPPLIER NAME':<30} {'RISK LEVEL':<12} {'SCORE':<8} {'LATE RATE':<12} {'AVG DELAY':<12} {'RECOMMENDED ACTION':<32}"
+            )
+            lines.append("    " + "-" * 110)
+            for se in supp_evals:
+                s_name = se.get("supplier_name", "")[:28]
+                r_level = se.get("risk_level", "LOW")
+                r_score = f"{se.get('risk_score', 0):.1f}"
+                l_rate = f"{se.get('late_delivery_rate', 0):.1%}"
+                a_delay = f"{se.get('average_delay_days', 0):.1f}d"
+                act = se.get("recommended_action", "")[:30]
+                lines.append(f"    {s_name:<30} {r_level:<12} {r_score:<8} {l_rate:<12} {a_delay:<12} {act:<32}")
+            lines.append("")
+            lines.append(f"  Risk Breakdown: {dist.get('high', 0)} High Risk, {dist.get('medium', 0)} Medium Risk, {dist.get('low', 0)} Low Risk")
+            high_supps = report.final_output.get("high_risk_suppliers", [])
+            if high_supps:
+                lines.append(f"  [!] High Risk Suppliers Flagged: {', '.join(high_supps)}")
+            if report.final_output.get("is_simulated"):
+                lines.append("  [Notice: Supplier delivery risk assessment evaluated from simulated delivery logs (SIMULATED)]")
+            lines.append("")
+
         summary = report.final_output.get("summary")
         if summary:
             lines.append(f"  Summary: {summary}")
@@ -479,7 +505,17 @@ def main() -> None:
     parser.add_argument(
         "--mock-route",
         default=None,
-        help="Simulate router selection with a workflow ID (e.g. 'WF001' to 'WF010')",
+        help="Simulate router selection with a workflow ID (e.g. 'WF001' to 'WF011')",
+    )
+    parser.add_argument(
+        "--enable-wf011",
+        action="store_true",
+        help="Enable demonstration extension WF011 (Supplier Delivery Risk Assessment)",
+    )
+    parser.add_argument(
+        "--supplier-csv",
+        default=None,
+        help="Supplier delivery records CSV path (WF011)",
     )
 
     args = parser.parse_args()
@@ -498,6 +534,14 @@ def main() -> None:
         router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
 
     orchestrator = WorkflowOrchestrator(router=router)
+
+    if args.enable_wf011 or args.mock_route == "WF011":
+        from app.tools.supplier_risk import register_wf011_extension
+        register_wf011_extension(
+            registry=orchestrator.registry,
+            tool_registry=orchestrator.tool_registry,
+            step_resolver=orchestrator.step_resolver,
+        )
 
     runtime_inputs = {}
     if args.csv_path:
@@ -574,6 +618,10 @@ def main() -> None:
         runtime_inputs["failure_threshold"] = args.failure_threshold
     if args.time_threshold is not None:
         runtime_inputs["time_threshold_seconds"] = args.time_threshold
+
+    # WF011 inputs
+    if args.supplier_csv:
+        runtime_inputs["supplier_csv_path"] = args.supplier_csv
 
     report = orchestrator.run(args.request, **runtime_inputs)
 

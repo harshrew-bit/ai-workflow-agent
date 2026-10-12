@@ -228,19 +228,44 @@ python3 -m app.main --mock-route WF009 --task-desc "Modernize legacy COBOL batch
 # WF010: Workflow Performance Report
 python3 -m app.main --mock-route WF010 "Which workflows are failing most often?"
 
+# WF011: Supplier Delivery Risk Assessment (Demonstration Extension)
+python3 -m app.main --mock-route WF011 "Assess supplier delivery risk"
+
 # Output as structured JSON
 python3 -m app.main --mock-route WF002 --json "Validate prices"
 ```
 
 ---
 
-## Extensibility Design
+## Extensibility Design & Adding New Workflows (WF011+)
 
-The system does **not** hardcode workflow IDs (WF001–WF010) into routing or engine logic:
-- The registry accepts any valid `WorkflowDefinition` programmatically or via Excel.
-- The `LLMWorkflowRouter` constructs its prompt dynamically from whatever workflows are supplied in `available_workflows`. Adding an 11th workflow (`WF011`) makes it immediately eligible for natural-language routing without changing router code.
-- Hallucinated or unregistered workflow IDs returned by the model are strictly rejected by registry validation.
-- Tool bindings are mapped through `ConfigurableStepResolver`; business rules are evaluated deterministically by tools, not the router.
+The system demonstrates zero-engine-modification extensibility. Adding an 11th workflow (`WF011 — Supplier Delivery Risk Assessment`) or any subsequent workflow requires **no changes to `GenericWorkflowEngine` or `WorkflowOrchestrator`**.
+
+### Distinction: Data-Only Configuration vs. Plugin Registration
+
+The architecture cleanly decouples catalog metadata from executable domain capabilities:
+
+1. **Data-Only Configuration (Workflow Catalog Discovery)**:
+   - A new workflow definition can be added as a row in an Excel workbook (`Workflows` sheet) or registered programmatically as a `WorkflowDefinition` object via `workflow_registry.register(wf)`.
+   - The `LLMWorkflowRouter` automatically inspects the registered catalog (`list_all()`), includes the new workflow in its dynamic system prompt, and routes queries to it with zero router code changes.
+2. **Plugin Registration (Step Tools & Execution)**:
+   - The concrete step logic lives in self-contained domain tools inheriting from `BaseTool`.
+   - Domain tools are registered into `ToolRegistry` (`tool_registry.register(tool)`).
+   - Step names are mapped to tools via `ConfigurableStepResolver` (`step_resolver.bind(workflow_id, step_name, tool_name)`).
+
+### Files Changed to Add a New Workflow
+
+To add a new workflow (e.g. WF011):
+- **Only 1 new domain module is created**:
+  - `app/tools/supplier_risk.py` (defines domain models, `BaseTool` implementations, and `get_wf011_definition()` / `register_wf011_extension()`).
+- **Standard registration points (optional for default global registries)**:
+  - `app/tools/__init__.py`: imports domain tools and registers them in `create_default_tool_registry()`.
+  - `app/engine/resolver.py`: binds step names in `create_default_step_resolver()`.
+- **Zero changes to core execution components**:
+  - `app/engine/base.py` (`GenericWorkflowEngine`): **0 lines changed**.
+  - `app/orchestrator.py` (`WorkflowOrchestrator`): **0 lines changed**.
+  - `app/agent/router.py` (`LLMWorkflowRouter`): **0 lines changed**.
+  - `data/workflows.xlsx`: **Unmodified** (official assessment workbook preserved).
 
 ---
 
@@ -327,6 +352,7 @@ pytest tests/test_wf007_campaign_brief.py
 pytest tests/test_wf008_seo_keywords.py
 pytest tests/test_wf009_task_assignment.py
 pytest tests/test_wf010_performance_report.py
+pytest tests/test_wf011_extensibility.py
 pytest tests/test_orchestrator_wf008_wf010.py
 pytest tests/test_orchestrator_wf005_wf007.py
 pytest tests/test_orchestrator_wf002_wf004.py

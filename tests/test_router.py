@@ -272,7 +272,7 @@ def test_openai_error_sanitization_does_not_leak_response_body_or_secrets(monkey
         b'"internal_trace": "/var/secrets/openai_account.json"}}'
     )
 
-    def mock_urlopen(req, timeout=30.0):
+    def mock_urlopen(req, timeout=30.0, context=None):
         fp = io.BytesIO(sensitive_body)
         raise urllib.error.HTTPError(
             url="https://api.openai.com/v1/chat/completions",
@@ -312,7 +312,7 @@ def test_gemini_error_sanitization_does_not_leak_response_body_or_secrets(monkey
 
     captured_requests = []
 
-    def mock_urlopen(req, timeout=30.0):
+    def mock_urlopen(req, timeout=30.0, context=None):
         captured_requests.append(req)
         fp = io.BytesIO(sensitive_body)
         raise urllib.error.HTTPError(

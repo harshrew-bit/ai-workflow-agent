@@ -7,6 +7,8 @@ requires-python = ">=3.12"
 dependencies = [
     "openpyxl>=3.1.5",
     "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "certifi>=2024.2.2",
 ]
 
 [project.optional-dependencies]
@@ -15,7 +17,12 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+
 minversion = "8.0"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --strict-markers"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["tests*", "data*", "frontend*"]
