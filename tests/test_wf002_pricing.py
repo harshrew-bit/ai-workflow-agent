@@ -208,3 +208,73 @@ def test_step_by_step_wf002_tools_cascading():
     assert out5["exception_count"] == 3  # SKU-002 (+15%), SKU-004 (-15%), SKU-006 (+25%)
     assert len(out5["unmatched_vendor_records"]) == 1
     assert len(out5["unmatched_internal_records"]) == 1
+
+@pytest.mark.parametrize("raw_price", ["nan", "inf", "-inf"])
+def test_non_finite_internal_prices_rejected(tmp_path: Path, raw_price: str):
+    csv_path = tmp_path / "non_finite_internal.csv"
+    csv_path.write_text(
+        f"sku,product_name,internal_price\nSKU-1,Test,{raw_price}\n"
+    )
+
+    with pytest.raises(ValueError, match="Invalid price value"):
+        load_internal_prices_csv(csv_path)
+
+
+@pytest.mark.parametrize("raw_price", ["nan", "inf", "-inf"])
+def test_non_finite_vendor_prices_rejected(tmp_path: Path, raw_price: str):
+    csv_path = tmp_path / "non_finite_vendor.csv"
+    csv_path.write_text(
+        f"sku,vendor_name,vendor_price\nSKU-1,Vendor,{raw_price}\n"
+    )
+
+    with pytest.raises(ValueError, match="Invalid vendor price"):
+        load_vendor_prices_csv(csv_path)
+
+def test_currency_mismatch_is_rejected():
+    internal = [
+        InternalPriceRecord(
+            sku="SKU-1",
+            product_name="Test Product",
+            internal_price=100.0,
+            currency="USD",
+        )
+    ]
+    vendor = [
+        VendorPriceRecord(
+            sku="SKU-1",
+            vendor_name="Test Vendor",
+            vendor_price=110.0,
+            currency="EUR",
+        )
+    ]
+
+    with pytest.raises(ValueError, match="Currency mismatch"):
+        match_prices_by_sku(internal, vendor)
+
+
+def test_duplicate_internal_skus_are_rejected():
+    internal = [
+        InternalPriceRecord(
+            sku="SKU-1", product_name="Product A", internal_price=100.0
+        ),
+        InternalPriceRecord(
+            sku="sku-1", product_name="Product A duplicate", internal_price=120.0
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="Duplicate internal SKU"):
+        match_prices_by_sku(internal, [])
+
+
+def test_duplicate_vendor_skus_are_rejected():
+    vendor = [
+        VendorPriceRecord(
+            sku="SKU-1", vendor_name="Vendor A", vendor_price=100.0
+        ),
+        VendorPriceRecord(
+            sku="sku-1", vendor_name="Vendor B", vendor_price=110.0
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="Duplicate vendor SKU"):
+        match_prices_by_sku([], vendor)

@@ -6,6 +6,7 @@ exceptions exceeding 10% strictly as defined in data/workflows.xlsx.
 """
 
 import csv
+import math
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -107,6 +108,9 @@ def load_internal_prices_csv(csv_path: Union[str, Path]) -> List[InternalPriceRe
         raw_price = row.get(price_col, "").strip().replace("$", "").replace(",", "")
         try:
             price = float(raw_price)
+            # Reject NaN and positive/negative infinity
+            if not math.isfinite(price):
+                raise ValueError
             if price <= 0:
                 raise ValueError
         except (ValueError, TypeError):
@@ -155,6 +159,9 @@ def load_vendor_prices_csv(csv_path: Union[str, Path]) -> List[VendorPriceRecord
         raw_price = row.get(price_col, "").strip().replace("$", "").replace(",", "")
         try:
             price = float(raw_price)
+            # Reject NaN and positive/negative infinity
+            if not math.isfinite(price):
+                raise ValueError
             if price <= 0:
                 raise ValueError
         except (ValueError, TypeError):
@@ -182,8 +189,27 @@ def match_prices_by_sku(
     vendor_records: List[VendorPriceRecord],
 ) -> Dict[str, Any]:
     """Match internal and vendor records by SKU, detecting unmatched items."""
-    internal_map = {item.sku.strip().upper(): item for item in internal_records}
-    vendor_map = {item.sku.strip().upper(): item for item in vendor_records}
+
+    internal_map = {}
+    for item in internal_records:
+        key = item.sku.strip().upper()
+        if key in internal_map:
+            raise ValueError(
+                f"Duplicate internal SKU detected: '{item.sku}'. "
+                "Each SKU must appear only once."
+            )
+        internal_map[key] = item
+
+    vendor_map = {}
+    for item in vendor_records:
+        key = item.sku.strip().upper()
+        if key in vendor_map:
+            raise ValueError(
+                f"Duplicate vendor SKU detected: '{item.sku}'. "
+                "Each SKU must appear only once."
+            )
+        vendor_map[key] = item
+
 
     matched_pairs: List[Dict[str, Any]] = []
     unmatched_vendor: List[Dict[str, Any]] = []
@@ -192,6 +218,14 @@ def match_prices_by_sku(
     for v_sku_upper, v_rec in vendor_map.items():
         if v_sku_upper in internal_map:
             i_rec = internal_map[v_sku_upper]
+            if i_rec.currency.strip().upper() != v_rec.currency.strip().upper():
+                raise ValueError(
+                    f"Currency mismatch for SKU '{i_rec.sku}': "
+                    f"internal currency '{i_rec.currency}', "
+                    f"vendor currency '{v_rec.currency}'. "
+                    "Prices must use the same currency before comparison."
+                )
+
             matched_pairs.append({
                 "sku": i_rec.sku,
                 "product_name": i_rec.product_name,
