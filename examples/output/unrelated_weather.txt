@@ -1,0 +1,16 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               What is the weather in Paris?
+Status:                NEEDS_CLARIFICATION
+Selected Workflow:     None (None)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.00
+Routing Reasoning:     Query could not be matched to any registered workflow via offline routing. Clarification required.
+----------------------------------------------------------------------
+
+[!] CLARIFICATION REQUIRED:
+    - Query could not be matched to any registered workflow via offline routing. Clarification required.
+
+No tools were executed.
+======================================================================

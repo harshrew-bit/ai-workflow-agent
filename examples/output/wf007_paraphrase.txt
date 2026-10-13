@@ -1,0 +1,16 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Draft a comprehensive marketing brief including audience messaging and channel checklist.
+Status:                NEEDS_CLARIFICATION
+Selected Workflow:     WF007 (Marketing Campaign Brief)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.90
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF007 (Marketing Campaign Brief): matched terms [brief, channel, checklist, market, messag].
+----------------------------------------------------------------------
+
+[!] CLARIFICATION REQUIRED:
+    - Required input 'campaign_goal' is missing. Please provide a specific campaign goal before generating the campaign brief.
+
+No tools were executed.
+======================================================================

@@ -1,0 +1,25 @@
+{
+  "request": "Match this new task to an engineer based on skills and current capacity.",
+  "selected_workflow_id": "WF009",
+  "selected_workflow_name": "Employee Task Assignment",
+  "routing_confidence": 0.85,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF009 (Employee Task Assignment): matched terms [current, employee, skill, task].",
+  "status": "needs_clarification",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Understand task requirements",
+      "status": "needs_clarification",
+      "output_summary": null,
+      "output": null,
+      "error": "Required input 'task_description' is missing. Please describe the task to assign."
+    }
+  ],
+  "final_output": null,
+  "errors": [
+    "Required input 'task_description' is missing. Please describe the task to assign."
+  ],
+  "clarification_required": true,
+  "routing_mode": "offline",
+  "warnings": []
+}

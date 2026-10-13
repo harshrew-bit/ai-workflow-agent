@@ -1,0 +1,31 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Clean the supplier CSV file, detect columns, and filter out invalid rows.
+Status:                SUCCESS
+Selected Workflow:     WF003 (Vendor File Processing)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.99
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF003 (Vendor File Processing): matched terms [clean, column, csv, detect, file, invalid, row, vendor].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Read file — Read 8 raw record(s) from 'sample_vendor_catalog.csv'.
+  [✓] Step 2: Detect columns — Detected 5 column(s): Item_SKU, Item_Title, Category, Unit_Price, Quantity_Available.
+  [✓] Step 3: Normalize column names — Normalized 5 column(s) across 8 row(s).
+  [✓] Step 4: Validate required fields — Validated required fields: 4 passed, 4 failed.
+  [✓] Step 5: Identify invalid rows — Identified 4 invalid row(s) requiring remediation.
+  [✓] Step 6: Produce cleaned dataset — Processed vendor file: 4 valid record(s) cleaned, 4 invalid row(s) flagged. Wrote /Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv, /Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv and /Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json.
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Valid Records Cleaned: 4
+  Invalid Rows Flagged:  4
+
+  Invalid Rows Report:
+    - Row 2: Missing required field: SKU is blank or missing.
+    - Row 3: Missing required field: product_name is blank or missing.
+    - Row 5: Missing required field: SKU is blank or missing.; Missing required field: product_name is blank or missing.
+    - Row 7: Invalid price '-5.00': price must be non-negative.
+
+  Summary: Processed vendor file: 4 valid record(s) cleaned, 4 invalid row(s) flagged. Wrote /Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv, /Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv and /Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json.
+======================================================================

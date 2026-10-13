@@ -1,0 +1,146 @@
+{
+  "request": "Can you check tracking and shipping status for customer order ORD-1002?",
+  "selected_workflow_id": "WF005",
+  "selected_workflow_name": "Customer Order Status",
+  "routing_confidence": 0.85,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF005 (Customer Order Status): matched terms [customer, order, shipment, statu].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Validate identifier",
+      "status": "completed",
+      "output_summary": "Validated identifier 'ORD-1002' (type: order_id).",
+      "output": {
+        "identifier": "ORD-1002",
+        "identifier_type": "order_id",
+        "is_valid": true,
+        "summary": "Validated identifier 'ORD-1002' (type: order_id)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "search order data",
+      "status": "completed",
+      "output_summary": "Found 1 order(s) for 'ORD-1002'.",
+      "output": {
+        "matching_orders": [
+          {
+            "order_id": "ORD-1002",
+            "customer_email": "bob@example.com",
+            "order_date": "2026-10-05",
+            "status": "DELIVERED",
+            "items": "Mechanical Gaming Keyboard (1)",
+            "total_amount": 79.5,
+            "currency": "USD"
+          }
+        ],
+        "order_found": true,
+        "identifier": "ORD-1002",
+        "summary": "Found 1 order(s) for 'ORD-1002'."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "retrieve order status",
+      "status": "completed",
+      "output_summary": "Retrieved status for 1 order(s).",
+      "output": {
+        "order_statuses": [
+          {
+            "order_id": "ORD-1002",
+            "status": "DELIVERED",
+            "order_date": "2026-10-05",
+            "items": "Mechanical Gaming Keyboard (1)",
+            "total_amount": 79.5,
+            "currency": "USD"
+          }
+        ],
+        "order_found": true,
+        "summary": "Retrieved status for 1 order(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "retrieve shipment information",
+      "status": "completed",
+      "output_summary": "Retrieved 1 shipment record(s).",
+      "output": {
+        "shipment_details": [
+          {
+            "shipment_id": "SHP-5002",
+            "order_id": "ORD-1002",
+            "carrier": "GlobalParcel",
+            "tracking_number": "TRK-123456789",
+            "estimated_delivery": "2026-10-07",
+            "shipment_status": "DELIVERED",
+            "last_location": "Front Porch - Seattle WA"
+          }
+        ],
+        "has_shipment": true,
+        "summary": "Retrieved 1 shipment record(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "summarize current status",
+      "status": "completed",
+      "output_summary": "Order ORD-1002 is currently DELIVERED (Shipment: DELIVERED, Carrier: GlobalParcel, Tracking: TRK-123456789). Items: Mechanical Gaming Keyboard (1).",
+      "output": {
+        "order_found": true,
+        "order_id": "ORD-1002",
+        "orders": [
+          {
+            "order_id": "ORD-1002",
+            "order_status": "DELIVERED",
+            "order_date": "2026-10-05",
+            "items": "Mechanical Gaming Keyboard (1)",
+            "total_amount": 79.5,
+            "currency": "USD",
+            "has_shipment": true,
+            "carrier": "GlobalParcel",
+            "tracking_number": "TRK-123456789",
+            "estimated_delivery": "2026-10-07",
+            "shipment_status": "DELIVERED",
+            "last_location": "Front Porch - Seattle WA"
+          }
+        ],
+        "summary": "Order ORD-1002 is currently DELIVERED (Shipment: DELIVERED, Carrier: GlobalParcel, Tracking: TRK-123456789). Items: Mechanical Gaming Keyboard (1).",
+        "request_another_identifier": false,
+        "is_simulated": true
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "order_found": true,
+    "order_id": "ORD-1002",
+    "orders": [
+      {
+        "order_id": "ORD-1002",
+        "order_status": "DELIVERED",
+        "order_date": "2026-10-05",
+        "items": "Mechanical Gaming Keyboard (1)",
+        "total_amount": 79.5,
+        "currency": "USD",
+        "has_shipment": true,
+        "carrier": "GlobalParcel",
+        "tracking_number": "TRK-123456789",
+        "estimated_delivery": "2026-10-07",
+        "shipment_status": "DELIVERED",
+        "last_location": "Front Porch - Seattle WA"
+      }
+    ],
+    "summary": "Order ORD-1002 is currently DELIVERED (Shipment: DELIVERED, Carrier: GlobalParcel, Tracking: TRK-123456789). Items: Mechanical Gaming Keyboard (1).",
+    "request_another_identifier": false,
+    "is_simulated": true
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}

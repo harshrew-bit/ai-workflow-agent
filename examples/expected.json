@@ -1,0 +1,134 @@
+{
+  "wf001_restock_check": {
+    "request": "Which products need restocking?",
+    "expected_workflow_id": "WF001",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf001_paraphrase": {
+    "request": "Check inventory and tell me which products require restocking.",
+    "expected_workflow_id": "WF001",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf002_price_validation": {
+    "request": "Find products where vendor price differs by more than 10%.",
+    "expected_workflow_id": "WF002",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf002_paraphrase": {
+    "request": "Compare our internal catalog prices with supplier costs and flag large differences.",
+    "expected_workflow_id": "WF002",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf003_vendor_processing": {
+    "request": "Process this vendor spreadsheet and show invalid rows.",
+    "expected_workflow_id": "WF003",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf003_paraphrase": {
+    "request": "Clean the supplier CSV file, detect columns, and filter out invalid rows.",
+    "expected_workflow_id": "WF003",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf004_product_description": {
+    "request": "Generate SEO content for this product.",
+    "expected_workflow_id": "WF004",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf004_paraphrase": {
+    "request": "Write product descriptions, bullet points, and SEO metadata for our latest product.",
+    "expected_workflow_id": "WF004",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf005_order_status": {
+    "request": "Where is order ORD-1001?",
+    "expected_workflow_id": "WF005",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf005_paraphrase": {
+    "request": "Can you check tracking and shipping status for customer order ORD-1002?",
+    "expected_workflow_id": "WF005",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf006_duplicate_detection": {
+    "request": "Find likely duplicate products in the catalog.",
+    "expected_workflow_id": "WF006",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf006_paraphrase": {
+    "request": "Detect duplicate catalog listings that have matching titles or identical SKUs.",
+    "expected_workflow_id": "WF006",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf007_campaign_brief": {
+    "request": "Create a campaign brief for the new collection.",
+    "expected_workflow_id": "WF007",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf007_paraphrase": {
+    "request": "Draft a comprehensive marketing brief including audience messaging and channel checklist.",
+    "expected_workflow_id": "WF007",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf008_seo_keywords": {
+    "request": "Classify these keywords and map them to pages.",
+    "expected_workflow_id": "WF008",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf008_paraphrase": {
+    "request": "Group SEO search queries by user intent and assign keyword priorities.",
+    "expected_workflow_id": "WF008",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf009_task_assignment": {
+    "request": "Assign this urgent task to the best available developer.",
+    "expected_workflow_id": "WF009",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf009_paraphrase": {
+    "request": "Match this new task to an engineer based on skills and current capacity.",
+    "expected_workflow_id": "WF009",
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "wf010_performance_report": {
+    "request": "Which workflows are failing most often?",
+    "expected_workflow_id": "WF010",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "wf010_paraphrase": {
+    "request": "Show execution health report, error rates, and slowest steps across automated pipelines.",
+    "expected_workflow_id": "WF010",
+    "expected_status": "success",
+    "expected_exit_code": 0
+  },
+  "unrelated_weather": {
+    "request": "What is the weather in Paris?",
+    "expected_workflow_id": null,
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  },
+  "unrelated_poem": {
+    "request": "Write me a poem about cats.",
+    "expected_workflow_id": null,
+    "expected_status": "needs_clarification",
+    "expected_exit_code": 4
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "request": "Generate SEO content for this product.",
+  "selected_workflow_id": "WF004",
+  "selected_workflow_name": "Product Description Generator",
+  "routing_confidence": 0.85,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF004 (Product Description Generator): matched terms [content, generate, product, seo].",
+  "status": "needs_clarification",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Validate required attributes",
+      "status": "needs_clarification",
+      "output_summary": null,
+      "output": null,
+      "error": "Required attribute 'product_name' is missing or empty. A valid product name is required to generate descriptions."
+    }
+  ],
+  "final_output": null,
+  "errors": [
+    "Required attribute 'product_name' is missing or empty. A valid product name is required to generate descriptions."
+  ],
+  "clarification_required": true,
+  "routing_mode": "offline",
+  "warnings": []
+}

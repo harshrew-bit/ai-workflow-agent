@@ -1,0 +1,16 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Assign this urgent task to the best available developer.
+Status:                NEEDS_CLARIFICATION
+Selected Workflow:     WF009 (Employee Task Assignment)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.80
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF009 (Employee Task Assignment): matched terms [assign, employee, task].
+----------------------------------------------------------------------
+
+[!] CLARIFICATION REQUIRED:
+    - Required input 'task_description' is missing. Please describe the task to assign.
+
+No tools were executed.
+======================================================================

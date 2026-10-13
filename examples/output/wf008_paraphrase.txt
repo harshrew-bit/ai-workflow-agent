@@ -1,0 +1,42 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Group SEO search queries by user intent and assign keyword priorities.
+Status:                SUCCESS
+Selected Workflow:     WF008 (SEO Keyword Classification)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.80
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF008 (SEO Keyword Classification): matched terms [intent, keyword, seo].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Read keywords — Read 13 keyword record(s).
+  [✓] Step 2: Remove duplicates — Deduplicated keyword list: 12 unique keywords (1 duplicates removed).
+  [✓] Step 3: Classify search intent — Classified 12 keyword(s): 3 transactional, 4 commercial, 3 informational, 2 navigational.
+  [✓] Step 4: Map keywords to categories — Mapped 12 keyword(s) across 6 product category/categories.
+  [✓] Step 5: Identify high-priority keywords — Assigned priorities: 6 HIGH, 2 MEDIUM, 4 LOW.
+  [✓] Step 6: Export results — Successfully processed and classified 12 keyword(s). Found 6 high-priority keyword(s) for immediate content/landing page optimization.
+----------------------------------------------------------------------
+Final Structured Result:
+
+  SEO Keyword Classification (12 unique keywords processed):
+  KEYWORD                            INTENT          CATEGORY                 PRIORITY   TARGET PAGE                 
+  -------------------------------------------------------------------------------------------------------------------
+  how to clean mechanical keyboard   INFORMATIONAL   Keyboards & Input        MEDIUM     /guides/how-to-clean-mecha  
+  buy keychron k2 wireless           TRANSACTIONAL   Keyboards & Input        HIGH       /products/keyboards         
+  best mechanical keyboard for cod   COMMERCIAL      Keyboards & Input        HIGH       /collections/keyboards      
+  logitech mx master 3s official w   NAVIGATIONAL    Mice & Ergonomics        LOW        /brand/mice                 
+  keychron k2 wireless               COMMERCIAL      Keyboards & Input        MEDIUM     /collections/keyboards      
+  ergonomic office chair setup gui   INFORMATIONAL   Office Furniture & Erg   LOW        /guides/ergonomic-office-c  
+  order logitech mx master 3s disc   TRANSACTIONAL   Mice & Ergonomics        HIGH       /products/mice              
+  sony wh-1000xm5 review vs bose     COMMERCIAL      Audio & Headphones       HIGH       /collections/audio          
+  top noise cancelling headphones    COMMERCIAL      Audio & Headphones       HIGH       /collections/audio          
+  logitech support customer portal   NAVIGATIONAL    General Tech             LOW        /support                    
+
+  High Priority:   6 keyword(s)
+  Medium Priority: 2 keyword(s)
+  Low Priority:    4 keyword(s)
+  Intent Distribution: 3 Transactional, 4 Commercial, 3 Informational, 2 Navigational
+  [Notice: SEO keyword classification generated via deterministic rule set (SIMULATED)]
+
+  Summary: Successfully processed and classified 12 keyword(s). Found 6 high-priority keyword(s) for immediate content/landing page optimization.
+======================================================================

@@ -1,0 +1,146 @@
+{
+  "request": "Where is order ORD-1001?",
+  "selected_workflow_id": "WF005",
+  "selected_workflow_name": "Customer Order Status",
+  "routing_confidence": 0.7,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF005 (Customer Order Status): matched terms [order].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Validate identifier",
+      "status": "completed",
+      "output_summary": "Validated identifier 'ORD-1001' (type: order_id).",
+      "output": {
+        "identifier": "ORD-1001",
+        "identifier_type": "order_id",
+        "is_valid": true,
+        "summary": "Validated identifier 'ORD-1001' (type: order_id)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "search order data",
+      "status": "completed",
+      "output_summary": "Found 1 order(s) for 'ORD-1001'.",
+      "output": {
+        "matching_orders": [
+          {
+            "order_id": "ORD-1001",
+            "customer_email": "alice@example.com",
+            "order_date": "2026-10-01",
+            "status": "SHIPPED",
+            "items": "Wireless Ergonomic Mouse (1); USB-C Hub (1)",
+            "total_amount": 69.99,
+            "currency": "USD"
+          }
+        ],
+        "order_found": true,
+        "identifier": "ORD-1001",
+        "summary": "Found 1 order(s) for 'ORD-1001'."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "retrieve order status",
+      "status": "completed",
+      "output_summary": "Retrieved status for 1 order(s).",
+      "output": {
+        "order_statuses": [
+          {
+            "order_id": "ORD-1001",
+            "status": "SHIPPED",
+            "order_date": "2026-10-01",
+            "items": "Wireless Ergonomic Mouse (1); USB-C Hub (1)",
+            "total_amount": 69.99,
+            "currency": "USD"
+          }
+        ],
+        "order_found": true,
+        "summary": "Retrieved status for 1 order(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "retrieve shipment information",
+      "status": "completed",
+      "output_summary": "Retrieved 1 shipment record(s).",
+      "output": {
+        "shipment_details": [
+          {
+            "shipment_id": "SHP-5001",
+            "order_id": "ORD-1001",
+            "carrier": "FastShip Express",
+            "tracking_number": "TRK-987654321",
+            "estimated_delivery": "2026-10-15",
+            "shipment_status": "IN_TRANSIT",
+            "last_location": "Distribution Center - Chicago IL"
+          }
+        ],
+        "has_shipment": true,
+        "summary": "Retrieved 1 shipment record(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "summarize current status",
+      "status": "completed",
+      "output_summary": "Order ORD-1001 is currently SHIPPED (Shipment: IN_TRANSIT, Carrier: FastShip Express, Tracking: TRK-987654321). Items: Wireless Ergonomic Mouse (1); USB-C Hub (1).",
+      "output": {
+        "order_found": true,
+        "order_id": "ORD-1001",
+        "orders": [
+          {
+            "order_id": "ORD-1001",
+            "order_status": "SHIPPED",
+            "order_date": "2026-10-01",
+            "items": "Wireless Ergonomic Mouse (1); USB-C Hub (1)",
+            "total_amount": 69.99,
+            "currency": "USD",
+            "has_shipment": true,
+            "carrier": "FastShip Express",
+            "tracking_number": "TRK-987654321",
+            "estimated_delivery": "2026-10-15",
+            "shipment_status": "IN_TRANSIT",
+            "last_location": "Distribution Center - Chicago IL"
+          }
+        ],
+        "summary": "Order ORD-1001 is currently SHIPPED (Shipment: IN_TRANSIT, Carrier: FastShip Express, Tracking: TRK-987654321). Items: Wireless Ergonomic Mouse (1); USB-C Hub (1).",
+        "request_another_identifier": false,
+        "is_simulated": true
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "order_found": true,
+    "order_id": "ORD-1001",
+    "orders": [
+      {
+        "order_id": "ORD-1001",
+        "order_status": "SHIPPED",
+        "order_date": "2026-10-01",
+        "items": "Wireless Ergonomic Mouse (1); USB-C Hub (1)",
+        "total_amount": 69.99,
+        "currency": "USD",
+        "has_shipment": true,
+        "carrier": "FastShip Express",
+        "tracking_number": "TRK-987654321",
+        "estimated_delivery": "2026-10-15",
+        "shipment_status": "IN_TRANSIT",
+        "last_location": "Distribution Center - Chicago IL"
+      }
+    ],
+    "summary": "Order ORD-1001 is currently SHIPPED (Shipment: IN_TRANSIT, Carrier: FastShip Express, Tracking: TRK-987654321). Items: Wireless Ergonomic Mouse (1); USB-C Hub (1).",
+    "request_another_identifier": false,
+    "is_simulated": true
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}

@@ -1,0 +1,50 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Show execution health report, error rates, and slowest steps across automated pipelines.
+Status:                SUCCESS
+Selected Workflow:     WF010 (Workflow Performance Report)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.90
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF010 (Workflow Performance Report): matched terms [error, perform, report, step, workflow].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Load execution logs — Loaded 39 workflow execution log record(s).
+  [✓] Step 2: Calculate success/failure rate — Overall Success Rate: 87.2% (34/39), Failure Rate: 12.8% (5/39). Workflows exceeding 10.0% failure threshold: WF003, WF005.
+  [✓] Step 3: Calculate average execution time — Overall Avg Execution Time: 2.81s. Workflows exceeding 5.0s threshold: WF003.
+  [✓] Step 4: Identify frequent errors — Identified 5 failure(s) across 4 distinct error type(s).
+  [✓] Step 5: Identify slow steps — Identified 1 step(s) with average latency exceeding 4.0s.
+  [✓] Step 6: Generate recommendations — Generated 5 recommendation(s) across 7 monitored workflow(s). Flagged 2 high-failure workflow(s) and 1 slow workflow(s).
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Workflow Performance & Reliability Summary:
+    Overall Success Rate: 87.2%
+    Overall Failure Rate: 12.8%
+    Overall Average Time: 2.81s
+    Monitored Workflows:  7
+    [!] Flagged High Failure (>10%): WF003, WF005
+    [!] Flagged Slow Latency (>5.0s): WF003
+
+  Workflow Health Matrix:
+    WORKFLOW NAME                           RUNS     SUCCESS    FAILURE    AVG TIME   STATUS      
+    --------------------------------------------------------------------------------------------
+    WF001    Inventory Restock Check        5        100.0%     0.0%       0.52s      HEALTHY     
+    WF002    Product Price Validation       10       90.0%      10.0%      1.21s      HEALTHY     
+    WF003    Vendor File Processing         12       75.0%      25.0%      6.15s      CRITICAL    
+    WF004    Product Description Generato   3        100.0%     0.0%       2.10s      HEALTHY     
+    WF005    Customer Order Status          5        80.0%      20.0%      1.02s      HIGH FAILURE
+    WF006    Duplicate Product Detection    2        100.0%     0.0%       3.25s      HEALTHY     
+    WF007    Marketing Campaign Brief       2        100.0%     0.0%       1.50s      HEALTHY     
+
+  Key Improvement Recommendations:
+    - [HIGH] WF003: Implement retry policies, strict schema validation, or robust error recovery in WF003.
+    - [HIGH] WF005: Implement retry policies, strict schema validation, or robust error recovery in WF005.
+    - [MEDIUM] WF003: Profile step execution in WF003, optimize file streaming, or add caching for repetitive operations.
+    - [HIGH] WF003: Add upstream input sanitization or fallback handling for this error type.
+    - [MEDIUM] WF003: Refactor I/O or parallelize chunk processing to reduce latency.
+
+  [Notice: Performance metrics computed from local execution logs, not production telemetry (SIMULATED)]
+
+  Summary: Generated 5 recommendation(s) across 7 monitored workflow(s). Flagged 2 high-failure workflow(s) and 1 slow workflow(s).
+======================================================================

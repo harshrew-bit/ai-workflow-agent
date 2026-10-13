@@ -1,0 +1,1001 @@
+{
+  "request": "Group SEO search queries by user intent and assign keyword priorities.",
+  "selected_workflow_id": "WF008",
+  "selected_workflow_name": "SEO Keyword Classification",
+  "routing_confidence": 0.8,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF008 (SEO Keyword Classification): matched terms [intent, keyword, seo].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Read keywords",
+      "status": "completed",
+      "output_summary": "Read 13 keyword record(s).",
+      "output": {
+        "raw_keywords": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low"
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High"
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium"
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low"
+          },
+          {
+            "keyword": "Keychron K2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High"
+          },
+          {
+            "keyword": "BUY Keychron K2 Wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High"
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low"
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High"
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium"
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High"
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low"
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High"
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low"
+          }
+        ],
+        "total_keywords_read": 13,
+        "summary": "Read 13 keyword record(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "remove duplicates",
+      "status": "completed",
+      "output_summary": "Deduplicated keyword list: 12 unique keywords (1 duplicates removed).",
+      "output": {
+        "deduplicated_keywords": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low"
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High"
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium"
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low"
+          },
+          {
+            "keyword": "keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High"
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low"
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High"
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium"
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High"
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low"
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High"
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low"
+          }
+        ],
+        "duplicates_removed": 1,
+        "total_unique_keywords": 12,
+        "summary": "Deduplicated keyword list: 12 unique keywords (1 duplicates removed)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "classify search intent",
+      "status": "completed",
+      "output_summary": "Classified 12 keyword(s): 3 transactional, 4 commercial, 3 informational, 2 navigational.",
+      "output": {
+        "classified_keywords": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low",
+            "intent": "informational"
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "transactional"
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium",
+            "intent": "commercial"
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low",
+            "intent": "navigational"
+          },
+          {
+            "keyword": "keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "commercial"
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low",
+            "intent": "informational"
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High",
+            "intent": "transactional"
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium",
+            "intent": "commercial"
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High",
+            "intent": "commercial"
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low",
+            "intent": "navigational"
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High",
+            "intent": "transactional"
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low",
+            "intent": "informational"
+          }
+        ],
+        "intent_counts": {
+          "transactional": 3,
+          "commercial": 4,
+          "navigational": 2,
+          "informational": 3
+        },
+        "summary": "Classified 12 keyword(s): 3 transactional, 4 commercial, 3 informational, 2 navigational."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "map keywords to categories",
+      "status": "completed",
+      "output_summary": "Mapped 12 keyword(s) across 6 product category/categories.",
+      "output": {
+        "mapped_keywords": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Keyboards & Input",
+            "target_page": "/guides/how-to-clean-mechanical-keyboard"
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Keyboards & Input",
+            "target_page": "/products/keyboards"
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards"
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/brand/mice"
+          },
+          {
+            "keyword": "keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards"
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Office Furniture & Ergonomics",
+            "target_page": "/guides/ergonomic-office-chair-setup-guide"
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Mice & Ergonomics",
+            "target_page": "/products/mice"
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio"
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio"
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "General Tech",
+            "target_page": "/support"
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Docks & Connectivity",
+            "target_page": "/products/accessories"
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/guides/what-is-an-ergonomic-vertical-mouse"
+          }
+        ],
+        "category_counts": {
+          "Keyboards & Input": 4,
+          "Mice & Ergonomics": 3,
+          "Office Furniture & Ergonomics": 1,
+          "Audio & Headphones": 2,
+          "General Tech": 1,
+          "Docks & Connectivity": 1
+        },
+        "summary": "Mapped 12 keyword(s) across 6 product category/categories."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "identify high-priority keywords",
+      "status": "completed",
+      "output_summary": "Assigned priorities: 6 HIGH, 2 MEDIUM, 4 LOW.",
+      "output": {
+        "prioritized_keywords": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Keyboards & Input",
+            "target_page": "/guides/how-to-clean-mechanical-keyboard",
+            "priority": "MEDIUM",
+            "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Keyboards & Input",
+            "target_page": "/products/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/brand/mice",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards",
+            "priority": "MEDIUM",
+            "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Office Furniture & Ergonomics",
+            "target_page": "/guides/ergonomic-office-chair-setup-guide",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Mice & Ergonomics",
+            "target_page": "/products/mice",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "General Tech",
+            "target_page": "/support",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Docks & Connectivity",
+            "target_page": "/products/accessories",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/guides/what-is-an-ergonomic-vertical-mouse",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          }
+        ],
+        "high_priority_count": 6,
+        "medium_priority_count": 2,
+        "low_priority_count": 4,
+        "summary": "Assigned priorities: 6 HIGH, 2 MEDIUM, 4 LOW."
+      },
+      "error": null
+    },
+    {
+      "step_number": 6,
+      "step_name": "export results",
+      "status": "completed",
+      "output_summary": "Successfully processed and classified 12 keyword(s). Found 6 high-priority keyword(s) for immediate content/landing page optimization.",
+      "output": {
+        "total_keywords": 12,
+        "high_priority_count": 6,
+        "medium_priority_count": 2,
+        "low_priority_count": 4,
+        "intent_counts": {
+          "transactional": 3,
+          "commercial": 4,
+          "navigational": 2,
+          "informational": 3
+        },
+        "category_counts": {
+          "Keyboards & Input": 4,
+          "Mice & Ergonomics": 3,
+          "Office Furniture & Ergonomics": 1,
+          "Audio & Headphones": 2,
+          "General Tech": 1,
+          "Docks & Connectivity": 1
+        },
+        "keyword_records": [
+          {
+            "keyword": "how to clean mechanical keyboard",
+            "search_volume": 8500,
+            "cpc": 0.45,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Keyboards & Input",
+            "target_page": "/guides/how-to-clean-mechanical-keyboard",
+            "priority": "MEDIUM",
+            "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+          },
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Keyboards & Input",
+            "target_page": "/products/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "logitech mx master 3s official website",
+            "search_volume": 9800,
+            "cpc": 0.85,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/brand/mice",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards",
+            "priority": "MEDIUM",
+            "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+          },
+          {
+            "keyword": "ergonomic office chair setup guide",
+            "search_volume": 4300,
+            "cpc": 0.6,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Office Furniture & Ergonomics",
+            "target_page": "/guides/ergonomic-office-chair-setup-guide",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Mice & Ergonomics",
+            "target_page": "/products/mice",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "logitech support customer portal",
+            "search_volume": 6200,
+            "cpc": 0.3,
+            "competition": "Low",
+            "intent": "navigational",
+            "category": "General Tech",
+            "target_page": "/support",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          },
+          {
+            "keyword": "purchase usb-c docking station 4k",
+            "search_volume": 7800,
+            "cpc": 2.8,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Docks & Connectivity",
+            "target_page": "/products/accessories",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "what is an ergonomic vertical mouse",
+            "search_volume": 5100,
+            "cpc": 0.5,
+            "competition": "Low",
+            "intent": "informational",
+            "category": "Mice & Ergonomics",
+            "target_page": "/guides/what-is-an-ergonomic-vertical-mouse",
+            "priority": "LOW",
+            "priority_reasoning": "Navigational or lower-volume informational discovery."
+          }
+        ],
+        "high_priority_recommendations": [
+          {
+            "keyword": "buy keychron k2 wireless",
+            "search_volume": 14200,
+            "cpc": 2.15,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Keyboards & Input",
+            "target_page": "/products/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "best mechanical keyboard for coding",
+            "search_volume": 22000,
+            "cpc": 1.8,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Keyboards & Input",
+            "target_page": "/collections/keyboards",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "order logitech mx master 3s discount",
+            "search_volume": 11000,
+            "cpc": 2.4,
+            "competition": "High",
+            "intent": "transactional",
+            "category": "Mice & Ergonomics",
+            "target_page": "/products/mice",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "sony wh-1000xm5 review vs bose",
+            "search_volume": 18500,
+            "cpc": 1.95,
+            "competition": "Medium",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          },
+          {
+            "keyword": "top noise cancelling headphones 2026",
+            "search_volume": 29000,
+            "cpc": 2.1,
+            "competition": "High",
+            "intent": "commercial",
+            "category": "Audio & Headphones",
+            "target_page": "/collections/audio",
+            "priority": "HIGH",
+            "priority_reasoning": "High commercial conversion intent or high search volume."
+          }
+        ],
+        "is_simulated": true,
+        "summary": "Successfully processed and classified 12 keyword(s). Found 6 high-priority keyword(s) for immediate content/landing page optimization."
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "total_keywords": 12,
+    "high_priority_count": 6,
+    "medium_priority_count": 2,
+    "low_priority_count": 4,
+    "intent_counts": {
+      "transactional": 3,
+      "commercial": 4,
+      "navigational": 2,
+      "informational": 3
+    },
+    "category_counts": {
+      "Keyboards & Input": 4,
+      "Mice & Ergonomics": 3,
+      "Office Furniture & Ergonomics": 1,
+      "Audio & Headphones": 2,
+      "General Tech": 1,
+      "Docks & Connectivity": 1
+    },
+    "keyword_records": [
+      {
+        "keyword": "how to clean mechanical keyboard",
+        "search_volume": 8500,
+        "cpc": 0.45,
+        "competition": "Low",
+        "intent": "informational",
+        "category": "Keyboards & Input",
+        "target_page": "/guides/how-to-clean-mechanical-keyboard",
+        "priority": "MEDIUM",
+        "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+      },
+      {
+        "keyword": "buy keychron k2 wireless",
+        "search_volume": 14200,
+        "cpc": 2.15,
+        "competition": "High",
+        "intent": "transactional",
+        "category": "Keyboards & Input",
+        "target_page": "/products/keyboards",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "best mechanical keyboard for coding",
+        "search_volume": 22000,
+        "cpc": 1.8,
+        "competition": "Medium",
+        "intent": "commercial",
+        "category": "Keyboards & Input",
+        "target_page": "/collections/keyboards",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "logitech mx master 3s official website",
+        "search_volume": 9800,
+        "cpc": 0.85,
+        "competition": "Low",
+        "intent": "navigational",
+        "category": "Mice & Ergonomics",
+        "target_page": "/brand/mice",
+        "priority": "LOW",
+        "priority_reasoning": "Navigational or lower-volume informational discovery."
+      },
+      {
+        "keyword": "keychron k2 wireless",
+        "search_volume": 14200,
+        "cpc": 2.15,
+        "competition": "High",
+        "intent": "commercial",
+        "category": "Keyboards & Input",
+        "target_page": "/collections/keyboards",
+        "priority": "MEDIUM",
+        "priority_reasoning": "Moderate consideration intent or substantial informational discovery volume."
+      },
+      {
+        "keyword": "ergonomic office chair setup guide",
+        "search_volume": 4300,
+        "cpc": 0.6,
+        "competition": "Low",
+        "intent": "informational",
+        "category": "Office Furniture & Ergonomics",
+        "target_page": "/guides/ergonomic-office-chair-setup-guide",
+        "priority": "LOW",
+        "priority_reasoning": "Navigational or lower-volume informational discovery."
+      },
+      {
+        "keyword": "order logitech mx master 3s discount",
+        "search_volume": 11000,
+        "cpc": 2.4,
+        "competition": "High",
+        "intent": "transactional",
+        "category": "Mice & Ergonomics",
+        "target_page": "/products/mice",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "sony wh-1000xm5 review vs bose",
+        "search_volume": 18500,
+        "cpc": 1.95,
+        "competition": "Medium",
+        "intent": "commercial",
+        "category": "Audio & Headphones",
+        "target_page": "/collections/audio",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "top noise cancelling headphones 2026",
+        "search_volume": 29000,
+        "cpc": 2.1,
+        "competition": "High",
+        "intent": "commercial",
+        "category": "Audio & Headphones",
+        "target_page": "/collections/audio",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "logitech support customer portal",
+        "search_volume": 6200,
+        "cpc": 0.3,
+        "competition": "Low",
+        "intent": "navigational",
+        "category": "General Tech",
+        "target_page": "/support",
+        "priority": "LOW",
+        "priority_reasoning": "Navigational or lower-volume informational discovery."
+      },
+      {
+        "keyword": "purchase usb-c docking station 4k",
+        "search_volume": 7800,
+        "cpc": 2.8,
+        "competition": "High",
+        "intent": "transactional",
+        "category": "Docks & Connectivity",
+        "target_page": "/products/accessories",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "what is an ergonomic vertical mouse",
+        "search_volume": 5100,
+        "cpc": 0.5,
+        "competition": "Low",
+        "intent": "informational",
+        "category": "Mice & Ergonomics",
+        "target_page": "/guides/what-is-an-ergonomic-vertical-mouse",
+        "priority": "LOW",
+        "priority_reasoning": "Navigational or lower-volume informational discovery."
+      }
+    ],
+    "high_priority_recommendations": [
+      {
+        "keyword": "buy keychron k2 wireless",
+        "search_volume": 14200,
+        "cpc": 2.15,
+        "competition": "High",
+        "intent": "transactional",
+        "category": "Keyboards & Input",
+        "target_page": "/products/keyboards",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "best mechanical keyboard for coding",
+        "search_volume": 22000,
+        "cpc": 1.8,
+        "competition": "Medium",
+        "intent": "commercial",
+        "category": "Keyboards & Input",
+        "target_page": "/collections/keyboards",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "order logitech mx master 3s discount",
+        "search_volume": 11000,
+        "cpc": 2.4,
+        "competition": "High",
+        "intent": "transactional",
+        "category": "Mice & Ergonomics",
+        "target_page": "/products/mice",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "sony wh-1000xm5 review vs bose",
+        "search_volume": 18500,
+        "cpc": 1.95,
+        "competition": "Medium",
+        "intent": "commercial",
+        "category": "Audio & Headphones",
+        "target_page": "/collections/audio",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      },
+      {
+        "keyword": "top noise cancelling headphones 2026",
+        "search_volume": 29000,
+        "cpc": 2.1,
+        "competition": "High",
+        "intent": "commercial",
+        "category": "Audio & Headphones",
+        "target_page": "/collections/audio",
+        "priority": "HIGH",
+        "priority_reasoning": "High commercial conversion intent or high search volume."
+      }
+    ],
+    "is_simulated": true,
+    "summary": "Successfully processed and classified 12 keyword(s). Found 6 high-priority keyword(s) for immediate content/landing page optimization."
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}
