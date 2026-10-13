@@ -61,10 +61,12 @@ python -m app.main "What is the weather in Paris?"
 
 ## Live LLM Routing: Status
 
-- **Status in this environment**: **NOT VERIFIED**.
-- **Reason**: Neither `GEMINI_API_KEY` nor `OPENAI_API_KEY` was configured in the local execution environment.
-- **Verification protocol**: The system cleanly falls back to the deterministic offline router (`app/agent/offline_router.py`), reporting `Routing Mode: OFFLINE`. No live API completions were performed, and no synthetic or fabricated live outputs are claimed.
-- **How to verify live**: See [`examples/live/README.md`](file:///Users/harshkumar/Desktop/ai-workflow-agent/examples/live/README.md) for full setup instructions and commands to test live LLM routing once credentials are provided.
+- **Status**: **VERIFIED — WF002 end-to-end**.
+- **Provider**: Google Gemini API using `gemini-2.5-flash-lite`, configured through environment variables.
+- **Verification result**: Live LLM routing selected `WF002 (Product Price Validation)` and the complete workflow executed successfully using the sample internal and vendor price CSVs.
+- **Observed output**: 7 products matched and compared; 3 exceptions exceeded the strict 10% price-difference threshold. Unmatched SKUs were also reported.
+- **Verification scope**: Live API execution has been verified for WF002. The other official workflows have been exercised using local sample data and offline tests; this does not imply that all workflows have been individually verified with a live LLM.
+- **Offline behavior**: The deterministic offline router remains available when live LLM configuration is unavailable. See [`examples/live/README.md`](examples/live/README.md) for setup instructions and live-routing verification commands.
 
 ---
 
@@ -380,7 +382,7 @@ Set the following in `.env` or export in your shell:
 ```env
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 *Implementation detail*: `GeminiProvider` sends the API key in the `x-goog-api-key` HTTP header rather than query parameters, preventing credentials from appearing in URL logs or tracebacks. It uses `certifi.where()` to establish secure SSL connections without requiring the external Google GenAI SDK.
@@ -745,6 +747,28 @@ pytest tests/test_wf011_extensibility.py
 ```bash
 git diff --check
 ```
+### Run the Offline Benchmark Suite
+
+Run the 22 benchmark requests and verify their expected workflow IDs, statuses, exit codes, and offline routing mode:
+
+```bash
+bash scripts/run_examples.sh
+```
+
+The script writes text and JSON reports to `examples/output/`. These benchmark results verify deterministic offline routing and execution contracts; they do not measure live LLM routing quality or prove that every workflow has been tested against a live API.
+
+### Live API Verification
+
+Configure your credentials as described in [LLM Provider Configuration](#llm-provider-configuration), then run a representative live request:
+
+```bash
+python -m app.main \
+  "Find products where vendor price differs by more than 10%." \
+  --internal-csv data/sample_internal_prices.csv \
+  --vendor-csv data/sample_vendor_prices.csv
+```
+
+A successful run should select `WF002 (Product Price Validation)` and report the price-validation results. Live API availability can vary, so use the output of the actual run when reporting its status.
 
 ---
 
