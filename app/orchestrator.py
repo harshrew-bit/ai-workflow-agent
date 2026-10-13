@@ -130,12 +130,6 @@ class WorkflowOrchestrator:
             )
             reasoning = f"{reasoning} {note}".strip()
 
-        # For WF002, the decision threshold is fixed at 10% by definition in data/workflows.xlsx.
-        # Prevent any runtime input or router-extracted argument from overriding it.
-        if workflow.workflow_id == "WF002":
-            merged_inputs.pop("threshold", None)
-            merged_inputs.pop("threshold_percentage", None)
-
         # 5. Execute via generic execution engine
         exec_result = self.engine.execute(workflow, **merged_inputs)
 

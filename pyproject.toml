@@ -25,4 +25,4 @@ addopts = "-v --strict-markers"
 
 [tool.setuptools.packages.find]
 include = ["app*"]
-exclude = ["tests*", "data*", "frontend*"]
+exclude = ["tests*", "data*"]

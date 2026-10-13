@@ -486,6 +486,7 @@ def test_orchestrator_wf002_threshold_cannot_be_overridden_to_15_percent(tmp_pat
         internal_csv_path=str(int_csv),
         vendor_csv_path=str(ven_csv),
         threshold=15.0,
+        threshold_percentage=15.0,
     )
 
     assert report.status == "success"
