@@ -139,7 +139,7 @@ class WorkflowOrchestrator:
             summary = None
             if s.status == ExecutionStatus.COMPLETED and s.output is not None:
                 if isinstance(s.output, dict):
-                    if "summary" in s.output:
+                    if "summary" in s.output and s.output["summary"]:
                         summary = str(s.output["summary"])
                     elif "total_loaded" in s.output:
                         summary = f"Loaded {s.output['total_loaded']} inventory records."
@@ -148,7 +148,11 @@ class WorkflowOrchestrator:
                     elif "restock_items" in s.output:
                         summary = f"Calculated reorders for {len(s.output['restock_items'])} items."
                     else:
-                        summary = f"Step output completed with {len(s.output)} fields."
+                        list_keys = [k for k, v in s.output.items() if isinstance(v, list)]
+                        if list_keys:
+                            summary = f"Processed {len(s.output[list_keys[0]])} items ({', '.join(s.output.keys())})."
+                        else:
+                            summary = f"Completed step ({', '.join(s.output.keys())})."
                 else:
                     summary = str(s.output)[:120]
 

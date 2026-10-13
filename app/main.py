@@ -10,6 +10,14 @@ from typing import Any, Dict
 from app.orchestrator import WorkflowOrchestrator
 
 
+def to_sentence_case(s: str) -> str:
+    """Format step name to sentence case for display while preserving original string in models/JSON."""
+    if not s:
+        return ""
+    stripped = s.strip()
+    return stripped[:1].upper() + stripped[1:]
+
+
 def format_report_for_display(report: Any) -> str:
     """Format an ExecutionReport into a clear, clean human-readable terminal output."""
     lines = []
@@ -34,9 +42,10 @@ def format_report_for_display(report: Any) -> str:
     lines.append("Step-by-Step Execution:")
     for step in report.steps:
         status_icon = "[✓]" if step.status == "completed" else "[✗]"
+        display_name = to_sentence_case(step.step_name)
         summary_text = f" — {step.output_summary}" if step.output_summary else ""
         error_text = f" [ERROR: {step.error}]" if step.error else ""
-        lines.append(f"  {status_icon} Step {step.step_number}: {step.step_name}{summary_text}{error_text}")
+        lines.append(f"  {status_icon} Step {step.step_number}: {display_name}{summary_text}{error_text}")
 
     lines.append("-" * 70)
     lines.append("Final Structured Result:")

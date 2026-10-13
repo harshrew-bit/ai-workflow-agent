@@ -203,6 +203,7 @@ class InventoryLoaderTool(BaseTool):
             "inventory_items": [r.model_dump() for r in records],
             "total_loaded": len(records),
             "csv_path": str(target_path),
+            "summary": f"Loaded {len(records)} inventory item(s) from '{target_path}'.",
         }
 
 
@@ -230,6 +231,7 @@ class StockThresholdComparatorTool(BaseTool):
             items_raw = []
 
         compared = []
+        low_count = 0
         for raw in items_raw:
             curr = raw.get("current_stock", 0)
             threshold = (
@@ -237,13 +239,19 @@ class StockThresholdComparatorTool(BaseTool):
                 if threshold_override is not None
                 else raw.get("minimum_stock", 0)
             )
+            is_low = curr < threshold
+            if is_low:
+                low_count += 1
             compared.append({
                 **raw,
-                "is_low_stock": curr < threshold,
+                "is_low_stock": is_low,
                 "effective_threshold": threshold,
             })
 
-        return {"compared_items": compared}
+        return {
+            "compared_items": compared,
+            "summary": f"Compared {len(compared)} product(s) against minimum stock; {low_count} below threshold.",
+        }
 
 
 class LowStockIdentifierTool(BaseTool):
@@ -272,6 +280,7 @@ class LowStockIdentifierTool(BaseTool):
         return {
             "low_stock_items": low_stock,
             "low_stock_count": len(low_stock),
+            "summary": f"Identified {len(low_stock)} product(s) requiring restock.",
         }
 
 
@@ -298,10 +307,12 @@ class ReorderQuantityCalculatorTool(BaseTool):
             items_raw = []
 
         restock_list = []
+        total_units = 0
         for raw in items_raw:
             curr = raw.get("current_stock", 0)
             effective_min = raw.get("effective_threshold", raw.get("minimum_stock", 0))
             reorder_qty = max(0, effective_min - curr)
+            total_units += reorder_qty
             restock_list.append({
                 "product_id": raw.get("product_id"),
                 "product_name": raw.get("product_name"),
@@ -312,7 +323,10 @@ class ReorderQuantityCalculatorTool(BaseTool):
                 "supplier": raw.get("supplier", ""),
             })
 
-        return {"restock_items": restock_list}
+        return {
+            "restock_items": restock_list,
+            "summary": f"Calculated reorder quantities for {len(restock_list)} product(s) ({total_units} total units).",
+        }
 
 
 class RestockReportGeneratorTool(BaseTool):
