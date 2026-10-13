@@ -179,11 +179,11 @@
           "Quantity_Available": "stock"
         },
         "normalized_headers": [
-          "price",
           "category",
+          "price",
           "product_name",
-          "stock",
-          "sku"
+          "sku",
+          "stock"
         ],
         "summary": "Normalized 5 column(s) across 8 row(s)."
       },

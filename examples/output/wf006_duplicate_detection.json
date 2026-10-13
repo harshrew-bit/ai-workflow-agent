@@ -105,12 +105,12 @@
             "raw_name": "Logitech MX Master 3S Wireless Mouse",
             "normalized_name": "logitech mx master 3s wireless mouse",
             "tokens": [
-              "mx",
-              "wireless",
               "3s",
               "logitech",
               "master",
-              "mouse"
+              "mouse",
+              "mx",
+              "wireless"
             ],
             "category": "electronics",
             "brand": "logitech",
@@ -123,12 +123,12 @@
             "raw_name": "Logitech MX Master 3S Mouse - Graphite",
             "normalized_name": "logitech mx master 3s mouse - graphite",
             "tokens": [
-              "mx",
               "3s",
+              "graphite",
               "logitech",
               "master",
-              "graphite",
-              "mouse"
+              "mouse",
+              "mx"
             ],
             "category": "electronics",
             "brand": "logitech",
@@ -141,11 +141,11 @@
             "raw_name": "Keychron K2 Mechanical Keyboard RGB",
             "normalized_name": "keychron k2 mechanical keyboard rgb",
             "tokens": [
-              "keychron",
-              "rgb",
-              "mechanical",
+              "k2",
               "keyboard",
-              "k2"
+              "keychron",
+              "mechanical",
+              "rgb"
             ],
             "category": "electronics",
             "brand": "keychron",
@@ -158,12 +158,12 @@
             "raw_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
             "normalized_name": "keychron k2 wireless mechanical keyboard (rgb)",
             "tokens": [
-              "keychron",
-              "rgb",
-              "wireless",
-              "mechanical",
+              "k2",
               "keyboard",
-              "k2"
+              "keychron",
+              "mechanical",
+              "rgb",
+              "wireless"
             ],
             "category": "electronics",
             "brand": "keychron",
@@ -176,12 +176,12 @@
             "raw_name": "Sony WH-1000XM5 Noise Canceling Headphones",
             "normalized_name": "sony wh-1000xm5 noise canceling headphones",
             "tokens": [
-              "sony",
               "1000xm5",
               "canceling",
-              "wh",
+              "headphones",
               "noise",
-              "headphones"
+              "sony",
+              "wh"
             ],
             "category": "audio",
             "brand": "sony",
@@ -194,11 +194,11 @@
             "raw_name": "Sony WH 1000XM5 Headphones - Silver",
             "normalized_name": "sony wh 1000xm5 headphones - silver",
             "tokens": [
-              "sony",
               "1000xm5",
-              "wh",
+              "headphones",
               "silver",
-              "headphones"
+              "sony",
+              "wh"
             ],
             "category": "audio",
             "brand": "sony",
@@ -211,12 +211,12 @@
             "raw_name": "Apple MacBook Pro 16-inch M3 Max",
             "normalized_name": "apple macbook pro 16-inch m3 max",
             "tokens": [
-              "max",
-              "m3",
-              "macbook",
               "16",
               "apple",
               "inch",
+              "m3",
+              "macbook",
+              "max",
               "pro"
             ],
             "category": "computers",
@@ -230,13 +230,13 @@
             "raw_name": "Dell UltraSharp 27 4K USB-C Hub Monitor",
             "normalized_name": "dell ultrasharp 27 4k usb-c hub monitor",
             "tokens": [
-              "4k",
-              "hub",
-              "dell",
-              "ultrasharp",
               "27",
-              "usb",
-              "monitor"
+              "4k",
+              "dell",
+              "hub",
+              "monitor",
+              "ultrasharp",
+              "usb"
             ],
             "category": "displays",
             "brand": "dell",
@@ -249,11 +249,11 @@
             "raw_name": "Anker 737 Power Bank 24000mAh",
             "normalized_name": "anker 737 power bank 24000mah",
             "tokens": [
-              "power",
-              "737",
               "24000mah",
+              "737",
               "anker",
-              "bank"
+              "bank",
+              "power"
             ],
             "category": "accessories",
             "brand": "anker",
