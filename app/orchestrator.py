@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
+from app.agent.offline_router import OfflineWorkflowRouter
+from app.agent.provider import is_live_llm_configured
 from app.agent.router import LLMWorkflowRouter, RoutingDecision, WorkflowRouter
 from app.engine.base import GenericWorkflowEngine
 from app.engine.resolver import ConfigurableStepResolver, StepResolver, create_default_step_resolver
@@ -45,7 +47,13 @@ class WorkflowOrchestrator:
         self.registry = (
             registry if registry is not None else WorkflowRegistry.from_excel(wb_path)
         )
-        self.router = router if router is not None else LLMWorkflowRouter()
+        if router is not None:
+            self.router = router
+        elif is_live_llm_configured():
+            self.router = LLMWorkflowRouter()
+        else:
+            self.router = OfflineWorkflowRouter()
+
         self.tool_registry = (
             tool_registry
             if tool_registry is not None
@@ -76,6 +84,14 @@ class WorkflowOrchestrator:
             self.registry.list_all(),
         )
 
+        # Fallback to deterministic offline router if live LLM router was inactive / unconfigured
+        if (
+            routing_decision.requires_clarification
+            and "Live LLM provider is not configured" in (routing_decision.reasoning or "")
+        ):
+            offline_router = OfflineWorkflowRouter()
+            routing_decision = offline_router.route(clean_request, self.registry.list_all())
+
         # 2. Check for clarification, low confidence, or missing selection
         if routing_decision.requires_clarification or not routing_decision.workflow_id:
             return ExecutionReport(
@@ -89,6 +105,7 @@ class WorkflowOrchestrator:
                 final_output=None,
                 errors=[routing_decision.reasoning] if routing_decision.reasoning else [],
                 clarification_required=True,
+                routing_mode=routing_decision.routing_mode,
             )
 
         # 3. Validate selected ID against registry
@@ -108,6 +125,7 @@ class WorkflowOrchestrator:
                 final_output=None,
                 errors=[err],
                 clarification_required=True,
+                routing_mode=routing_decision.routing_mode,
             )
 
         # 4. Prepare execution inputs.
@@ -191,4 +209,5 @@ class WorkflowOrchestrator:
             final_output=exec_result.output,
             errors=errors,
             clarification_required=needs_clarification,
+            routing_mode=routing_decision.routing_mode,
         )

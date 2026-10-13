@@ -30,3 +30,11 @@ class ExecutionReport(BaseModel):
     final_output: Optional[Any] = None
     errors: List[str] = Field(default_factory=list)
     clarification_required: bool = False
+    routing_mode: str = Field(
+        default="offline",
+        description="Routing mode: 'llm', 'offline', or 'forced'",
+    )
+    warnings: List[str] = Field(
+        default_factory=list,
+        description="Non-fatal warnings or advisories generated during execution",
+    )
