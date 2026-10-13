@@ -34,7 +34,7 @@ class NormalizedProduct(BaseModel):
     normalized_sku: str
     raw_name: str
     normalized_name: str
-    tokens: Set[str]
+    tokens: List[str]
     category: str
     brand: str
     price: float
@@ -64,12 +64,14 @@ def _tokenize(text: str) -> Set[str]:
     return {w for w in words if len(w) > 1}
 
 
-def _calculate_similarity(tokens1: Set[str], tokens2: Set[str]) -> float:
-    """Compute Dice token overlap coefficient between two token sets."""
-    if not tokens1 or not tokens2:
+def _calculate_similarity(tokens1: Union[Set[str], List[str]], tokens2: Union[Set[str], List[str]]) -> float:
+    """Compute Dice token overlap coefficient between two token collections."""
+    s1 = set(tokens1)
+    s2 = set(tokens2)
+    if not s1 or not s2:
         return 0.0
-    intersection = len(tokens1.intersection(tokens2))
-    return round((2.0 * intersection) / (len(tokens1) + len(tokens2)), 4)
+    intersection = len(s1.intersection(s2))
+    return round((2.0 * intersection) / (len(s1) + len(s2)), 4)
 
 
 def load_catalog_csv(file_path: Union[str, Path]) -> List[CatalogProduct]:
@@ -130,7 +132,7 @@ def normalize_catalog_products(products: List[CatalogProduct]) -> List[Normalize
                 normalized_sku=norm_sku,
                 raw_name=p.product_name,
                 normalized_name=norm_name,
-                tokens=tokens,
+                tokens=sorted(list(tokens)),
                 category=p.category.lower().strip(),
                 brand=p.brand.lower().strip(),
                 price=p.price,
@@ -355,7 +357,7 @@ class AttributeComparatorTool(BaseTool):
                 normalized_sku=p["normalized_sku"],
                 raw_name=p["raw_name"],
                 normalized_name=p["normalized_name"],
-                tokens=set(p.get("tokens", [])),
+                tokens=sorted(list(set(p.get("tokens", [])))),
                 category=p["category"],
                 brand=p["brand"],
                 price=p["price"],

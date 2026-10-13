@@ -1,0 +1,665 @@
+{
+  "request": "Compare our internal catalog prices with supplier costs and flag large differences.",
+  "selected_workflow_id": "WF002",
+  "selected_workflow_name": "Product Price Validation",
+  "routing_confidence": 0.9,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF002 (Product Price Validation): matched terms [compare, flag, internal, price, vendor].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Load product prices",
+      "status": "completed",
+      "output_summary": "Loaded 8 internal product(s) and 8 vendor record(s).",
+      "output": {
+        "internal_prices": [
+          {
+            "sku": "SKU-001",
+            "product_name": "Wireless Ergonomic Mouse",
+            "internal_price": "25.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "internal_price": "80.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-003",
+            "product_name": "USB-C Multiport Hub",
+            "internal_price": "40.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "internal_price": "300.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-005",
+            "product_name": "Noise-Canceling Headphones",
+            "internal_price": "150.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "internal_price": "10.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-007",
+            "product_name": "Aluminum Laptop Stand",
+            "internal_price": "35.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-008",
+            "product_name": "1080p HD Pro Webcam",
+            "internal_price": "50.00",
+            "currency": "USD"
+          }
+        ],
+        "vendor_prices": [
+          {
+            "sku": "SKU-001",
+            "vendor_name": "Alpha Suppliers",
+            "vendor_price": "26.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-002",
+            "vendor_name": "KeyCraft Wholesale",
+            "vendor_price": "92.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-003",
+            "vendor_name": "ConnectPro Direct",
+            "vendor_price": "44.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-004",
+            "vendor_name": "VisionTech Displays",
+            "vendor_price": "255.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-005",
+            "vendor_name": "AudioWave Systems",
+            "vendor_price": "145.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-006",
+            "vendor_name": "CableLine Global",
+            "vendor_price": "12.50",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-007",
+            "vendor_name": "ErgoDesk Co",
+            "vendor_price": "38.50",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-099",
+            "vendor_name": "NewVendor Imports",
+            "vendor_price": "19.99",
+            "currency": "USD"
+          }
+        ],
+        "total_internal": 8,
+        "total_vendor": 8,
+        "summary": "Loaded 8 internal product(s) and 8 vendor record(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "match products by SKU",
+      "status": "completed",
+      "output_summary": "Matched 7 product(s) by SKU. 1 vendor record(s) unmatched.",
+      "output": {
+        "matched_pairs": [
+          {
+            "sku": "SKU-001",
+            "product_name": "Wireless Ergonomic Mouse",
+            "vendor_name": "Alpha Suppliers",
+            "internal_price": "25.00",
+            "vendor_price": "26.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "vendor_name": "KeyCraft Wholesale",
+            "internal_price": "80.00",
+            "vendor_price": "92.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-003",
+            "product_name": "USB-C Multiport Hub",
+            "vendor_name": "ConnectPro Direct",
+            "internal_price": "40.00",
+            "vendor_price": "44.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "vendor_name": "VisionTech Displays",
+            "internal_price": "300.00",
+            "vendor_price": "255.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-005",
+            "product_name": "Noise-Canceling Headphones",
+            "vendor_name": "AudioWave Systems",
+            "internal_price": "150.00",
+            "vendor_price": "145.00",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "vendor_name": "CableLine Global",
+            "internal_price": "10.00",
+            "vendor_price": "12.50",
+            "currency": "USD"
+          },
+          {
+            "sku": "SKU-007",
+            "product_name": "Aluminum Laptop Stand",
+            "vendor_name": "ErgoDesk Co",
+            "internal_price": "35.00",
+            "vendor_price": "38.50",
+            "currency": "USD"
+          }
+        ],
+        "unmatched_vendor": [
+          {
+            "sku": "SKU-099",
+            "vendor_name": "NewVendor Imports",
+            "vendor_price": "19.99",
+            "reason": "SKU not found in internal product catalog"
+          }
+        ],
+        "unmatched_internal": [
+          {
+            "sku": "SKU-008",
+            "product_name": "1080p HD Pro Webcam",
+            "internal_price": "50.00",
+            "reason": "SKU not found in vendor price list"
+          }
+        ],
+        "match_count": 7,
+        "summary": "Matched 7 product(s) by SKU. 1 vendor record(s) unmatched."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "compare internal and vendor prices",
+      "status": "completed",
+      "output_summary": "Compared prices for 7 matched product(s).",
+      "output": {
+        "compared_products": [
+          {
+            "sku": "SKU-001",
+            "product_name": "Wireless Ergonomic Mouse",
+            "vendor_name": "Alpha Suppliers",
+            "internal_price": "25.00",
+            "vendor_price": "26.00",
+            "currency": "USD",
+            "price_difference": 1.0
+          },
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "vendor_name": "KeyCraft Wholesale",
+            "internal_price": "80.00",
+            "vendor_price": "92.00",
+            "currency": "USD",
+            "price_difference": 12.0
+          },
+          {
+            "sku": "SKU-003",
+            "product_name": "USB-C Multiport Hub",
+            "vendor_name": "ConnectPro Direct",
+            "internal_price": "40.00",
+            "vendor_price": "44.00",
+            "currency": "USD",
+            "price_difference": 4.0
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "vendor_name": "VisionTech Displays",
+            "internal_price": "300.00",
+            "vendor_price": "255.00",
+            "currency": "USD",
+            "price_difference": -45.0
+          },
+          {
+            "sku": "SKU-005",
+            "product_name": "Noise-Canceling Headphones",
+            "vendor_name": "AudioWave Systems",
+            "internal_price": "150.00",
+            "vendor_price": "145.00",
+            "currency": "USD",
+            "price_difference": -5.0
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "vendor_name": "CableLine Global",
+            "internal_price": "10.00",
+            "vendor_price": "12.50",
+            "currency": "USD",
+            "price_difference": 2.5
+          },
+          {
+            "sku": "SKU-007",
+            "product_name": "Aluminum Laptop Stand",
+            "vendor_name": "ErgoDesk Co",
+            "internal_price": "35.00",
+            "vendor_price": "38.50",
+            "currency": "USD",
+            "price_difference": 3.5
+          }
+        ],
+        "summary": "Compared prices for 7 matched product(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "calculate percentage difference",
+      "status": "completed",
+      "output_summary": "Calculated percentage differences for 7 product(s).",
+      "output": {
+        "price_evaluations": [
+          {
+            "sku": "SKU-001",
+            "product_name": "Wireless Ergonomic Mouse",
+            "vendor_name": "Alpha Suppliers",
+            "internal_price": "25.00",
+            "vendor_price": "26.00",
+            "currency": "USD",
+            "price_difference": 1.0,
+            "percentage_difference": 4.0
+          },
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "vendor_name": "KeyCraft Wholesale",
+            "internal_price": "80.00",
+            "vendor_price": "92.00",
+            "currency": "USD",
+            "price_difference": 12.0,
+            "percentage_difference": 15.0
+          },
+          {
+            "sku": "SKU-003",
+            "product_name": "USB-C Multiport Hub",
+            "vendor_name": "ConnectPro Direct",
+            "internal_price": "40.00",
+            "vendor_price": "44.00",
+            "currency": "USD",
+            "price_difference": 4.0,
+            "percentage_difference": 10.0
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "vendor_name": "VisionTech Displays",
+            "internal_price": "300.00",
+            "vendor_price": "255.00",
+            "currency": "USD",
+            "price_difference": -45.0,
+            "percentage_difference": 15.0
+          },
+          {
+            "sku": "SKU-005",
+            "product_name": "Noise-Canceling Headphones",
+            "vendor_name": "AudioWave Systems",
+            "internal_price": "150.00",
+            "vendor_price": "145.00",
+            "currency": "USD",
+            "price_difference": -5.0,
+            "percentage_difference": 3.33
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "vendor_name": "CableLine Global",
+            "internal_price": "10.00",
+            "vendor_price": "12.50",
+            "currency": "USD",
+            "price_difference": 2.5,
+            "percentage_difference": 25.0
+          },
+          {
+            "sku": "SKU-007",
+            "product_name": "Aluminum Laptop Stand",
+            "vendor_name": "ErgoDesk Co",
+            "internal_price": "35.00",
+            "vendor_price": "38.50",
+            "currency": "USD",
+            "price_difference": 3.5,
+            "percentage_difference": 10.0
+          }
+        ],
+        "summary": "Calculated percentage differences for 7 product(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "flag exceptions",
+      "status": "completed",
+      "output_summary": "Validated 7 products: 3 exception(s) exceeding 10.0% threshold.",
+      "output": {
+        "matched_products": [
+          {
+            "sku": "SKU-001",
+            "product_name": "Wireless Ergonomic Mouse",
+            "vendor_name": "Alpha Suppliers",
+            "internal_price": "25.00",
+            "vendor_price": "26.00",
+            "currency": "USD",
+            "price_difference": 1.0,
+            "percentage_difference": 4.0,
+            "is_exception": false,
+            "validation_status": "COMPLIANT"
+          },
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "vendor_name": "KeyCraft Wholesale",
+            "internal_price": "80.00",
+            "vendor_price": "92.00",
+            "currency": "USD",
+            "price_difference": 12.0,
+            "percentage_difference": 15.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          },
+          {
+            "sku": "SKU-003",
+            "product_name": "USB-C Multiport Hub",
+            "vendor_name": "ConnectPro Direct",
+            "internal_price": "40.00",
+            "vendor_price": "44.00",
+            "currency": "USD",
+            "price_difference": 4.0,
+            "percentage_difference": 10.0,
+            "is_exception": false,
+            "validation_status": "COMPLIANT"
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "vendor_name": "VisionTech Displays",
+            "internal_price": "300.00",
+            "vendor_price": "255.00",
+            "currency": "USD",
+            "price_difference": -45.0,
+            "percentage_difference": 15.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          },
+          {
+            "sku": "SKU-005",
+            "product_name": "Noise-Canceling Headphones",
+            "vendor_name": "AudioWave Systems",
+            "internal_price": "150.00",
+            "vendor_price": "145.00",
+            "currency": "USD",
+            "price_difference": -5.0,
+            "percentage_difference": 3.33,
+            "is_exception": false,
+            "validation_status": "COMPLIANT"
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "vendor_name": "CableLine Global",
+            "internal_price": "10.00",
+            "vendor_price": "12.50",
+            "currency": "USD",
+            "price_difference": 2.5,
+            "percentage_difference": 25.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          },
+          {
+            "sku": "SKU-007",
+            "product_name": "Aluminum Laptop Stand",
+            "vendor_name": "ErgoDesk Co",
+            "internal_price": "35.00",
+            "vendor_price": "38.50",
+            "currency": "USD",
+            "price_difference": 3.5,
+            "percentage_difference": 10.0,
+            "is_exception": false,
+            "validation_status": "COMPLIANT"
+          }
+        ],
+        "exceptions": [
+          {
+            "sku": "SKU-002",
+            "product_name": "Mechanical Gaming Keyboard",
+            "vendor_name": "KeyCraft Wholesale",
+            "internal_price": "80.00",
+            "vendor_price": "92.00",
+            "currency": "USD",
+            "price_difference": 12.0,
+            "percentage_difference": 15.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          },
+          {
+            "sku": "SKU-004",
+            "product_name": "27-inch 4K Monitor",
+            "vendor_name": "VisionTech Displays",
+            "internal_price": "300.00",
+            "vendor_price": "255.00",
+            "currency": "USD",
+            "price_difference": -45.0,
+            "percentage_difference": 15.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          },
+          {
+            "sku": "SKU-006",
+            "product_name": "Braided HDMI Cable 2m",
+            "vendor_name": "CableLine Global",
+            "internal_price": "10.00",
+            "vendor_price": "12.50",
+            "currency": "USD",
+            "price_difference": 2.5,
+            "percentage_difference": 25.0,
+            "is_exception": true,
+            "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+          }
+        ],
+        "exception_count": 3,
+        "total_matched": 7,
+        "unmatched_vendor_records": [
+          {
+            "sku": "SKU-099",
+            "vendor_name": "NewVendor Imports",
+            "vendor_price": "19.99",
+            "reason": "SKU not found in internal product catalog"
+          }
+        ],
+        "unmatched_internal_records": [
+          {
+            "sku": "SKU-008",
+            "product_name": "1080p HD Pro Webcam",
+            "internal_price": "50.00",
+            "reason": "SKU not found in vendor price list"
+          }
+        ],
+        "summary": "Validated 7 products: 3 exception(s) exceeding 10.0% threshold."
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "matched_products": [
+      {
+        "sku": "SKU-001",
+        "product_name": "Wireless Ergonomic Mouse",
+        "vendor_name": "Alpha Suppliers",
+        "internal_price": "25.00",
+        "vendor_price": "26.00",
+        "currency": "USD",
+        "price_difference": 1.0,
+        "percentage_difference": 4.0,
+        "is_exception": false,
+        "validation_status": "COMPLIANT"
+      },
+      {
+        "sku": "SKU-002",
+        "product_name": "Mechanical Gaming Keyboard",
+        "vendor_name": "KeyCraft Wholesale",
+        "internal_price": "80.00",
+        "vendor_price": "92.00",
+        "currency": "USD",
+        "price_difference": 12.0,
+        "percentage_difference": 15.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      },
+      {
+        "sku": "SKU-003",
+        "product_name": "USB-C Multiport Hub",
+        "vendor_name": "ConnectPro Direct",
+        "internal_price": "40.00",
+        "vendor_price": "44.00",
+        "currency": "USD",
+        "price_difference": 4.0,
+        "percentage_difference": 10.0,
+        "is_exception": false,
+        "validation_status": "COMPLIANT"
+      },
+      {
+        "sku": "SKU-004",
+        "product_name": "27-inch 4K Monitor",
+        "vendor_name": "VisionTech Displays",
+        "internal_price": "300.00",
+        "vendor_price": "255.00",
+        "currency": "USD",
+        "price_difference": -45.0,
+        "percentage_difference": 15.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      },
+      {
+        "sku": "SKU-005",
+        "product_name": "Noise-Canceling Headphones",
+        "vendor_name": "AudioWave Systems",
+        "internal_price": "150.00",
+        "vendor_price": "145.00",
+        "currency": "USD",
+        "price_difference": -5.0,
+        "percentage_difference": 3.33,
+        "is_exception": false,
+        "validation_status": "COMPLIANT"
+      },
+      {
+        "sku": "SKU-006",
+        "product_name": "Braided HDMI Cable 2m",
+        "vendor_name": "CableLine Global",
+        "internal_price": "10.00",
+        "vendor_price": "12.50",
+        "currency": "USD",
+        "price_difference": 2.5,
+        "percentage_difference": 25.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      },
+      {
+        "sku": "SKU-007",
+        "product_name": "Aluminum Laptop Stand",
+        "vendor_name": "ErgoDesk Co",
+        "internal_price": "35.00",
+        "vendor_price": "38.50",
+        "currency": "USD",
+        "price_difference": 3.5,
+        "percentage_difference": 10.0,
+        "is_exception": false,
+        "validation_status": "COMPLIANT"
+      }
+    ],
+    "exceptions": [
+      {
+        "sku": "SKU-002",
+        "product_name": "Mechanical Gaming Keyboard",
+        "vendor_name": "KeyCraft Wholesale",
+        "internal_price": "80.00",
+        "vendor_price": "92.00",
+        "currency": "USD",
+        "price_difference": 12.0,
+        "percentage_difference": 15.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      },
+      {
+        "sku": "SKU-004",
+        "product_name": "27-inch 4K Monitor",
+        "vendor_name": "VisionTech Displays",
+        "internal_price": "300.00",
+        "vendor_price": "255.00",
+        "currency": "USD",
+        "price_difference": -45.0,
+        "percentage_difference": 15.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      },
+      {
+        "sku": "SKU-006",
+        "product_name": "Braided HDMI Cable 2m",
+        "vendor_name": "CableLine Global",
+        "internal_price": "10.00",
+        "vendor_price": "12.50",
+        "currency": "USD",
+        "price_difference": 2.5,
+        "percentage_difference": 25.0,
+        "is_exception": true,
+        "validation_status": "EXCEPTION_EXCEEDS_10_PERCENT"
+      }
+    ],
+    "exception_count": 3,
+    "total_matched": 7,
+    "unmatched_vendor_records": [
+      {
+        "sku": "SKU-099",
+        "vendor_name": "NewVendor Imports",
+        "vendor_price": "19.99",
+        "reason": "SKU not found in internal product catalog"
+      }
+    ],
+    "unmatched_internal_records": [
+      {
+        "sku": "SKU-008",
+        "product_name": "1080p HD Pro Webcam",
+        "internal_price": "50.00",
+        "reason": "SKU not found in vendor price list"
+      }
+    ],
+    "summary": "Validated 7 products: 3 exception(s) exceeding 10.0% threshold."
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}

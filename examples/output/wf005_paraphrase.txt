@@ -1,0 +1,35 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Can you check tracking and shipping status for customer order ORD-1002?
+Status:                SUCCESS
+Selected Workflow:     WF005 (Customer Order Status)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.85
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF005 (Customer Order Status): matched terms [customer, order, shipment, statu].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Validate identifier — Validated identifier 'ORD-1002' (type: order_id).
+  [✓] Step 2: Search order data — Found 1 order(s) for 'ORD-1002'.
+  [✓] Step 3: Retrieve order status — Retrieved status for 1 order(s).
+  [✓] Step 4: Retrieve shipment information — Retrieved 1 shipment record(s).
+  [✓] Step 5: Summarize current status — Order ORD-1002 is currently DELIVERED (Shipment: DELIVERED, Carrier: GlobalParcel, Tracking: TRK-123456789). Items: Mechanical Gaming Keyboard (1).
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Order Status & Fulfillment Details:
+    Order ID:           ORD-1002
+    Order Status:       DELIVERED
+    Order Date:         2026-10-05
+    Items:              Mechanical Gaming Keyboard (1)
+    Total Amount:       $79.50 USD
+    Shipment Status:    DELIVERED
+    Carrier:            GlobalParcel
+    Tracking Number:    TRK-123456789
+    Estimated Delivery: 2026-10-07
+    Current Location:   Front Porch - Seattle WA
+
+  [Notice: Order & fulfillment data retrieved from local simulated records (SIMULATED)]
+
+  Summary: Order ORD-1002 is currently DELIVERED (Shipment: DELIVERED, Carrier: GlobalParcel, Tracking: TRK-123456789). Items: Mechanical Gaming Keyboard (1).
+======================================================================

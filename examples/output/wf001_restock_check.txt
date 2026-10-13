@@ -1,0 +1,29 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Which products need restocking?
+Status:                SUCCESS
+Selected Workflow:     WF001 (Inventory Restock Check)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.80
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF001 (Inventory Restock Check): matched terms [ne, product, restock].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Load inventory — Loaded 7 inventory item(s) from 'data/sample_inventory.csv'.
+  [✓] Step 2: Compare current stock with minimum threshold — Compared 7 product(s) against minimum stock; 4 below threshold.
+  [✓] Step 3: Identify low-stock products — Identified 4 product(s) requiring restock.
+  [✓] Step 4: Calculate reorder quantity — Calculated reorder quantities for 4 product(s) (61 total units).
+  [✓] Step 5: Generate restock list — 4 of 7 product(s) require restocking.
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Products Requiring Restock:
+  PRODUCT ID   NAME                           CURRENT  MINIMUM  REORDER 
+  --------------------------------------------------------------------
+  PRD-001      Wireless Ergonomic Mouse       5        20       15      
+  PRD-003      USB-C Multiport Hub            0        30       30      
+  PRD-005      Noise-Canceling Headphones     3        12       9       
+  PRD-007      Aluminum Laptop Stand          8        15       7       
+
+  Summary: 4 of 7 product(s) require restocking.
+======================================================================

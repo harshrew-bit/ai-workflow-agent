@@ -1,0 +1,16 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Create a campaign brief for the new collection.
+Status:                NEEDS_CLARIFICATION
+Selected Workflow:     WF007 (Marketing Campaign Brief)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.80
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF007 (Marketing Campaign Brief): matched terms [brief, campaign, create].
+----------------------------------------------------------------------
+
+[!] CLARIFICATION REQUIRED:
+    - Required input 'campaign_goal' is missing. Please provide a specific campaign goal before generating the campaign brief.
+
+No tools were executed.
+======================================================================

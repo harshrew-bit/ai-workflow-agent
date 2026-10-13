@@ -1,0 +1,37 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Find products where vendor price differs by more than 10%.
+Status:                SUCCESS
+Selected Workflow:     WF002 (Product Price Validation)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.80
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF002 (Product Price Validation): matched terms [price, product, vendor].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Load product prices — Loaded 8 internal product(s) and 8 vendor record(s).
+  [✓] Step 2: Match products by SKU — Matched 7 product(s) by SKU. 1 vendor record(s) unmatched.
+  [✓] Step 3: Compare internal and vendor prices — Compared prices for 7 matched product(s).
+  [✓] Step 4: Calculate percentage difference — Calculated percentage differences for 7 product(s).
+  [✓] Step 5: Flag exceptions — Validated 7 products: 3 exception(s) exceeding 10.0% threshold.
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Price Validation Results:
+  SKU        NAME                         INTERNAL   VENDOR     DIFF %   STATUS              
+  ----------------------------------------------------------------------------------------
+  SKU-001    Wireless Ergonomic Mouse     $25.00     $26.00     4.0    % COMPLIANT           
+  SKU-002    Mechanical Gaming Keyboard   $80.00     $92.00     15.0   % EXCEPTION (>10%)    
+  SKU-003    USB-C Multiport Hub          $40.00     $44.00     10.0   % COMPLIANT           
+  SKU-004    27-inch 4K Monitor           $300.00    $255.00    15.0   % EXCEPTION (>10%)    
+  SKU-005    Noise-Canceling Headphones   $150.00    $145.00    3.3    % COMPLIANT           
+  SKU-006    Braided HDMI Cable 2m        $10.00     $12.50     25.0   % EXCEPTION (>10%)    
+  SKU-007    Aluminum Laptop Stand        $35.00     $38.50     10.0   % COMPLIANT           
+
+  Exceptions Flagged: 3 item(s)
+  Unmatched Vendor SKUs: 1 record(s)
+    - SKU-099: SKU not found in internal product catalog
+  Unmatched Internal SKUs: 1 record(s)
+    - SKU-008: SKU not found in vendor price list
+  Summary: Validated 7 products: 3 exception(s) exceeding 10.0% threshold.
+======================================================================

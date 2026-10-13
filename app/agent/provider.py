@@ -296,3 +296,11 @@ def get_llm_provider(
         }),
         **kwargs,
     )
+
+
+def is_live_llm_configured() -> bool:
+    """Return True if live LLM credentials (Gemini or OpenAI) are active in the environment."""
+    provider_name = os.getenv("LLM_PROVIDER", "").strip().lower()
+    if provider_name in ("gemini", "openai"):
+        return True
+    return bool(os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY"))

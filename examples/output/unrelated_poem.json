@@ -1,0 +1,16 @@
+{
+  "request": "Write me a poem about cats.",
+  "selected_workflow_id": null,
+  "selected_workflow_name": null,
+  "routing_confidence": 0.0,
+  "routing_reasoning": "Query could not be matched to any registered workflow via offline routing. Clarification required.",
+  "status": "needs_clarification",
+  "steps": [],
+  "final_output": null,
+  "errors": [
+    "Query could not be matched to any registered workflow via offline routing. Clarification required."
+  ],
+  "clarification_required": true,
+  "routing_mode": "offline",
+  "warnings": []
+}

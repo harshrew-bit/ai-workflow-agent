@@ -33,6 +33,10 @@ class RoutingDecision(BaseModel):
     extracted_inputs: Dict[str, Any] = Field(default_factory=dict)
     requires_clarification: bool = False
     raw_response: Optional[str] = None
+    routing_mode: str = Field(
+        default="llm",
+        description="Routing mode: 'llm', 'offline', or 'forced'",
+    )
 
 
 class WorkflowRouter(ABC):

@@ -1,0 +1,541 @@
+{
+  "request": "Detect duplicate catalog listings that have matching titles or identical SKUs.",
+  "selected_workflow_id": "WF006",
+  "selected_workflow_name": "Duplicate Product Detection",
+  "routing_confidence": 0.75,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF006 (Duplicate Product Detection): matched terms [duplicate, sku].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Load products",
+      "status": "completed",
+      "output_summary": "Loaded 9 product(s) from 'sample_products_catalog.csv'.",
+      "output": {
+        "raw_products": [
+          {
+            "product_id": "PRD-01",
+            "sku": "SKU-1001",
+            "product_name": "Logitech MX Master 3S Wireless Mouse",
+            "category": "Electronics",
+            "brand": "Logitech",
+            "price": 99.99
+          },
+          {
+            "product_id": "PRD-02",
+            "sku": "SKU-1001",
+            "product_name": "Logitech MX Master 3S Mouse - Graphite",
+            "category": "Electronics",
+            "brand": "Logitech",
+            "price": 99.99
+          },
+          {
+            "product_id": "PRD-03",
+            "sku": "SKU-2001",
+            "product_name": "Keychron K2 Mechanical Keyboard RGB",
+            "category": "Electronics",
+            "brand": "Keychron",
+            "price": 79.99
+          },
+          {
+            "product_id": "PRD-04",
+            "sku": "SKU-2002",
+            "product_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+            "category": "Electronics",
+            "brand": "Keychron",
+            "price": 79.99
+          },
+          {
+            "product_id": "PRD-05",
+            "sku": "SKU-3001",
+            "product_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+            "category": "Audio",
+            "brand": "Sony",
+            "price": 399.99
+          },
+          {
+            "product_id": "PRD-06",
+            "sku": "SKU-3002",
+            "product_name": "Sony WH 1000XM5 Headphones - Silver",
+            "category": "Audio",
+            "brand": "Sony",
+            "price": 399.99
+          },
+          {
+            "product_id": "PRD-07",
+            "sku": "SKU-4001",
+            "product_name": "Apple MacBook Pro 16-inch M3 Max",
+            "category": "Computers",
+            "brand": "Apple",
+            "price": 3499.0
+          },
+          {
+            "product_id": "PRD-08",
+            "sku": "SKU-5001",
+            "product_name": "Dell UltraSharp 27 4K USB-C Hub Monitor",
+            "category": "Displays",
+            "brand": "Dell",
+            "price": 549.99
+          },
+          {
+            "product_id": "PRD-09",
+            "sku": "SKU-6001",
+            "product_name": "Anker 737 Power Bank 24000mAh",
+            "category": "Accessories",
+            "brand": "Anker",
+            "price": 149.99
+          }
+        ],
+        "total_products_loaded": 9,
+        "summary": "Loaded 9 product(s) from 'sample_products_catalog.csv'."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "normalize names/SKUs",
+      "status": "completed",
+      "output_summary": "Normalized 9 catalog product records.",
+      "output": {
+        "normalized_products": [
+          {
+            "product_id": "PRD-01",
+            "raw_sku": "SKU-1001",
+            "normalized_sku": "SKU1001",
+            "raw_name": "Logitech MX Master 3S Wireless Mouse",
+            "normalized_name": "logitech mx master 3s wireless mouse",
+            "tokens": [
+              "3s",
+              "logitech",
+              "master",
+              "mouse",
+              "mx",
+              "wireless"
+            ],
+            "category": "electronics",
+            "brand": "logitech",
+            "price": 99.99
+          },
+          {
+            "product_id": "PRD-02",
+            "raw_sku": "SKU-1001",
+            "normalized_sku": "SKU1001",
+            "raw_name": "Logitech MX Master 3S Mouse - Graphite",
+            "normalized_name": "logitech mx master 3s mouse - graphite",
+            "tokens": [
+              "3s",
+              "graphite",
+              "logitech",
+              "master",
+              "mouse",
+              "mx"
+            ],
+            "category": "electronics",
+            "brand": "logitech",
+            "price": 99.99
+          },
+          {
+            "product_id": "PRD-03",
+            "raw_sku": "SKU-2001",
+            "normalized_sku": "SKU2001",
+            "raw_name": "Keychron K2 Mechanical Keyboard RGB",
+            "normalized_name": "keychron k2 mechanical keyboard rgb",
+            "tokens": [
+              "k2",
+              "keyboard",
+              "keychron",
+              "mechanical",
+              "rgb"
+            ],
+            "category": "electronics",
+            "brand": "keychron",
+            "price": 79.99
+          },
+          {
+            "product_id": "PRD-04",
+            "raw_sku": "SKU-2002",
+            "normalized_sku": "SKU2002",
+            "raw_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+            "normalized_name": "keychron k2 wireless mechanical keyboard (rgb)",
+            "tokens": [
+              "k2",
+              "keyboard",
+              "keychron",
+              "mechanical",
+              "rgb",
+              "wireless"
+            ],
+            "category": "electronics",
+            "brand": "keychron",
+            "price": 79.99
+          },
+          {
+            "product_id": "PRD-05",
+            "raw_sku": "SKU-3001",
+            "normalized_sku": "SKU3001",
+            "raw_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+            "normalized_name": "sony wh-1000xm5 noise canceling headphones",
+            "tokens": [
+              "1000xm5",
+              "canceling",
+              "headphones",
+              "noise",
+              "sony",
+              "wh"
+            ],
+            "category": "audio",
+            "brand": "sony",
+            "price": 399.99
+          },
+          {
+            "product_id": "PRD-06",
+            "raw_sku": "SKU-3002",
+            "normalized_sku": "SKU3002",
+            "raw_name": "Sony WH 1000XM5 Headphones - Silver",
+            "normalized_name": "sony wh 1000xm5 headphones - silver",
+            "tokens": [
+              "1000xm5",
+              "headphones",
+              "silver",
+              "sony",
+              "wh"
+            ],
+            "category": "audio",
+            "brand": "sony",
+            "price": 399.99
+          },
+          {
+            "product_id": "PRD-07",
+            "raw_sku": "SKU-4001",
+            "normalized_sku": "SKU4001",
+            "raw_name": "Apple MacBook Pro 16-inch M3 Max",
+            "normalized_name": "apple macbook pro 16-inch m3 max",
+            "tokens": [
+              "16",
+              "apple",
+              "inch",
+              "m3",
+              "macbook",
+              "max",
+              "pro"
+            ],
+            "category": "computers",
+            "brand": "apple",
+            "price": 3499.0
+          },
+          {
+            "product_id": "PRD-08",
+            "raw_sku": "SKU-5001",
+            "normalized_sku": "SKU5001",
+            "raw_name": "Dell UltraSharp 27 4K USB-C Hub Monitor",
+            "normalized_name": "dell ultrasharp 27 4k usb-c hub monitor",
+            "tokens": [
+              "27",
+              "4k",
+              "dell",
+              "hub",
+              "monitor",
+              "ultrasharp",
+              "usb"
+            ],
+            "category": "displays",
+            "brand": "dell",
+            "price": 549.99
+          },
+          {
+            "product_id": "PRD-09",
+            "raw_sku": "SKU-6001",
+            "normalized_sku": "SKU6001",
+            "raw_name": "Anker 737 Power Bank 24000mAh",
+            "normalized_name": "anker 737 power bank 24000mah",
+            "tokens": [
+              "24000mah",
+              "737",
+              "anker",
+              "bank",
+              "power"
+            ],
+            "category": "accessories",
+            "brand": "anker",
+            "price": 149.99
+          }
+        ],
+        "summary": "Normalized 9 catalog product records."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "compare identifiers",
+      "status": "completed",
+      "output_summary": "Identified 1 exact duplicate SKU group(s).",
+      "output": {
+        "exact_sku_matches": [
+          {
+            "sku": "SKU1001",
+            "duplicate_count": 2,
+            "products": [
+              "PRD-01",
+              "PRD-02"
+            ]
+          }
+        ],
+        "exact_duplicate_sku_count": 1,
+        "summary": "Identified 1 exact duplicate SKU group(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "compare product attributes",
+      "status": "completed",
+      "output_summary": "Found 3 duplicate candidate pair(s).",
+      "output": {
+        "duplicate_candidates": [
+          {
+            "primary_product_id": "PRD-01",
+            "primary_sku": "SKU-1001",
+            "primary_name": "Logitech MX Master 3S Wireless Mouse",
+            "duplicate_product_id": "PRD-02",
+            "duplicate_sku": "SKU-1001",
+            "duplicate_name": "Logitech MX Master 3S Mouse - Graphite",
+            "match_type": "exact_sku_match",
+            "confidence": "definite",
+            "similarity_score": 1.0,
+            "matching_fields": [
+              "sku"
+            ],
+            "explanation": "Definite duplicate: Identical SKU found across multiple records."
+          },
+          {
+            "primary_product_id": "PRD-03",
+            "primary_sku": "SKU-2001",
+            "primary_name": "Keychron K2 Mechanical Keyboard RGB",
+            "duplicate_product_id": "PRD-04",
+            "duplicate_sku": "SKU-2002",
+            "duplicate_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+            "match_type": "high_attribute_similarity",
+            "confidence": "likely",
+            "similarity_score": 0.91,
+            "matching_fields": [
+              "product_name",
+              "brand",
+              "category"
+            ],
+            "explanation": "Likely duplicate: High token similarity (91%) with matching brand 'Keychron'."
+          },
+          {
+            "primary_product_id": "PRD-05",
+            "primary_sku": "SKU-3001",
+            "primary_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+            "duplicate_product_id": "PRD-06",
+            "duplicate_sku": "SKU-3002",
+            "duplicate_name": "Sony WH 1000XM5 Headphones - Silver",
+            "match_type": "possible_attribute_similarity",
+            "confidence": "possible",
+            "similarity_score": 0.73,
+            "matching_fields": [
+              "product_name"
+            ],
+            "explanation": "Possible duplicate: Moderate name overlap (73%); manual verification recommended."
+          }
+        ],
+        "total_candidates_found": 3,
+        "summary": "Found 3 duplicate candidate pair(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "group likely duplicates",
+      "status": "completed",
+      "output_summary": "Grouped duplicates: 1 definite, 1 likely, 1 possible.",
+      "output": {
+        "grouped_duplicates": {
+          "definite": [
+            {
+              "primary_product_id": "PRD-01",
+              "primary_sku": "SKU-1001",
+              "primary_name": "Logitech MX Master 3S Wireless Mouse",
+              "duplicate_product_id": "PRD-02",
+              "duplicate_sku": "SKU-1001",
+              "duplicate_name": "Logitech MX Master 3S Mouse - Graphite",
+              "match_type": "exact_sku_match",
+              "confidence": "definite",
+              "similarity_score": 1.0,
+              "matching_fields": [
+                "sku"
+              ],
+              "explanation": "Definite duplicate: Identical SKU found across multiple records."
+            }
+          ],
+          "likely": [
+            {
+              "primary_product_id": "PRD-03",
+              "primary_sku": "SKU-2001",
+              "primary_name": "Keychron K2 Mechanical Keyboard RGB",
+              "duplicate_product_id": "PRD-04",
+              "duplicate_sku": "SKU-2002",
+              "duplicate_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+              "match_type": "high_attribute_similarity",
+              "confidence": "likely",
+              "similarity_score": 0.91,
+              "matching_fields": [
+                "product_name",
+                "brand",
+                "category"
+              ],
+              "explanation": "Likely duplicate: High token similarity (91%) with matching brand 'Keychron'."
+            }
+          ],
+          "possible": [
+            {
+              "primary_product_id": "PRD-05",
+              "primary_sku": "SKU-3001",
+              "primary_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+              "duplicate_product_id": "PRD-06",
+              "duplicate_sku": "SKU-3002",
+              "duplicate_name": "Sony WH 1000XM5 Headphones - Silver",
+              "match_type": "possible_attribute_similarity",
+              "confidence": "possible",
+              "similarity_score": 0.73,
+              "matching_fields": [
+                "product_name"
+              ],
+              "explanation": "Possible duplicate: Moderate name overlap (73%); manual verification recommended."
+            }
+          ]
+        },
+        "summary": "Grouped duplicates: 1 definite, 1 likely, 1 possible."
+      },
+      "error": null
+    },
+    {
+      "step_number": 6,
+      "step_name": "assign confidence",
+      "status": "completed",
+      "output_summary": "Detected 3 duplicate group(s) across catalog: 1 definite (exact SKU), 1 likely (high similarity), 1 possible.",
+      "output": {
+        "duplicate_candidates": [
+          {
+            "primary_product_id": "PRD-01",
+            "primary_sku": "SKU-1001",
+            "primary_name": "Logitech MX Master 3S Wireless Mouse",
+            "duplicate_product_id": "PRD-02",
+            "duplicate_sku": "SKU-1001",
+            "duplicate_name": "Logitech MX Master 3S Mouse - Graphite",
+            "match_type": "exact_sku_match",
+            "confidence": "definite",
+            "similarity_score": 1.0,
+            "matching_fields": [
+              "sku"
+            ],
+            "explanation": "Definite duplicate: Identical SKU found across multiple records."
+          },
+          {
+            "primary_product_id": "PRD-03",
+            "primary_sku": "SKU-2001",
+            "primary_name": "Keychron K2 Mechanical Keyboard RGB",
+            "duplicate_product_id": "PRD-04",
+            "duplicate_sku": "SKU-2002",
+            "duplicate_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+            "match_type": "high_attribute_similarity",
+            "confidence": "likely",
+            "similarity_score": 0.91,
+            "matching_fields": [
+              "product_name",
+              "brand",
+              "category"
+            ],
+            "explanation": "Likely duplicate: High token similarity (91%) with matching brand 'Keychron'."
+          },
+          {
+            "primary_product_id": "PRD-05",
+            "primary_sku": "SKU-3001",
+            "primary_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+            "duplicate_product_id": "PRD-06",
+            "duplicate_sku": "SKU-3002",
+            "duplicate_name": "Sony WH 1000XM5 Headphones - Silver",
+            "match_type": "possible_attribute_similarity",
+            "confidence": "possible",
+            "similarity_score": 0.73,
+            "matching_fields": [
+              "product_name"
+            ],
+            "explanation": "Possible duplicate: Moderate name overlap (73%); manual verification recommended."
+          }
+        ],
+        "total_duplicates_found": 3,
+        "definite_duplicates_count": 1,
+        "likely_duplicates_count": 1,
+        "possible_duplicates_count": 1,
+        "methodology": "Matching Method: (1) Exact normalized SKU equality marks definite duplicates. (2) Token Dice similarity >= 0.75 with matching brand marks likely duplicates. (3) Token Dice similarity between 0.65-0.74 marks possible duplicates. Limitations: Token-based matching does not parse semantic synonyms (e.g. 'lap desk' vs 'bed tray') and requires manual review for possible duplicates.",
+        "limitations": "Matching Method: (1) Exact normalized SKU equality marks definite duplicates. (2) Token Dice similarity >= 0.75 with matching brand marks likely duplicates. (3) Token Dice similarity between 0.65-0.74 marks possible duplicates. Limitations: Token-based matching does not parse semantic synonyms (e.g. 'lap desk' vs 'bed tray') and requires manual review for possible duplicates.",
+        "summary": "Detected 3 duplicate group(s) across catalog: 1 definite (exact SKU), 1 likely (high similarity), 1 possible."
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "duplicate_candidates": [
+      {
+        "primary_product_id": "PRD-01",
+        "primary_sku": "SKU-1001",
+        "primary_name": "Logitech MX Master 3S Wireless Mouse",
+        "duplicate_product_id": "PRD-02",
+        "duplicate_sku": "SKU-1001",
+        "duplicate_name": "Logitech MX Master 3S Mouse - Graphite",
+        "match_type": "exact_sku_match",
+        "confidence": "definite",
+        "similarity_score": 1.0,
+        "matching_fields": [
+          "sku"
+        ],
+        "explanation": "Definite duplicate: Identical SKU found across multiple records."
+      },
+      {
+        "primary_product_id": "PRD-03",
+        "primary_sku": "SKU-2001",
+        "primary_name": "Keychron K2 Mechanical Keyboard RGB",
+        "duplicate_product_id": "PRD-04",
+        "duplicate_sku": "SKU-2002",
+        "duplicate_name": "Keychron K2 Wireless Mechanical Keyboard (RGB)",
+        "match_type": "high_attribute_similarity",
+        "confidence": "likely",
+        "similarity_score": 0.91,
+        "matching_fields": [
+          "product_name",
+          "brand",
+          "category"
+        ],
+        "explanation": "Likely duplicate: High token similarity (91%) with matching brand 'Keychron'."
+      },
+      {
+        "primary_product_id": "PRD-05",
+        "primary_sku": "SKU-3001",
+        "primary_name": "Sony WH-1000XM5 Noise Canceling Headphones",
+        "duplicate_product_id": "PRD-06",
+        "duplicate_sku": "SKU-3002",
+        "duplicate_name": "Sony WH 1000XM5 Headphones - Silver",
+        "match_type": "possible_attribute_similarity",
+        "confidence": "possible",
+        "similarity_score": 0.73,
+        "matching_fields": [
+          "product_name"
+        ],
+        "explanation": "Possible duplicate: Moderate name overlap (73%); manual verification recommended."
+      }
+    ],
+    "total_duplicates_found": 3,
+    "definite_duplicates_count": 1,
+    "likely_duplicates_count": 1,
+    "possible_duplicates_count": 1,
+    "methodology": "Matching Method: (1) Exact normalized SKU equality marks definite duplicates. (2) Token Dice similarity >= 0.75 with matching brand marks likely duplicates. (3) Token Dice similarity between 0.65-0.74 marks possible duplicates. Limitations: Token-based matching does not parse semantic synonyms (e.g. 'lap desk' vs 'bed tray') and requires manual review for possible duplicates.",
+    "limitations": "Matching Method: (1) Exact normalized SKU equality marks definite duplicates. (2) Token Dice similarity >= 0.75 with matching brand marks likely duplicates. (3) Token Dice similarity between 0.65-0.74 marks possible duplicates. Limitations: Token-based matching does not parse semantic synonyms (e.g. 'lap desk' vs 'bed tray') and requires manual review for possible duplicates.",
+    "summary": "Detected 3 duplicate group(s) across catalog: 1 definite (exact SKU), 1 likely (high similarity), 1 possible."
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}

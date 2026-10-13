@@ -1,0 +1,35 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Where is order ORD-1001?
+Status:                SUCCESS
+Selected Workflow:     WF005 (Customer Order Status)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.70
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF005 (Customer Order Status): matched terms [order].
+----------------------------------------------------------------------
+Step-by-Step Execution:
+  [✓] Step 1: Validate identifier — Validated identifier 'ORD-1001' (type: order_id).
+  [✓] Step 2: Search order data — Found 1 order(s) for 'ORD-1001'.
+  [✓] Step 3: Retrieve order status — Retrieved status for 1 order(s).
+  [✓] Step 4: Retrieve shipment information — Retrieved 1 shipment record(s).
+  [✓] Step 5: Summarize current status — Order ORD-1001 is currently SHIPPED (Shipment: IN_TRANSIT, Carrier: FastShip Express, Tracking: TRK-987654321). Items: Wireless Ergonomic Mouse (1); USB-C Hub (1).
+----------------------------------------------------------------------
+Final Structured Result:
+
+  Order Status & Fulfillment Details:
+    Order ID:           ORD-1001
+    Order Status:       SHIPPED
+    Order Date:         2026-10-01
+    Items:              Wireless Ergonomic Mouse (1); USB-C Hub (1)
+    Total Amount:       $69.99 USD
+    Shipment Status:    IN_TRANSIT
+    Carrier:            FastShip Express
+    Tracking Number:    TRK-987654321
+    Estimated Delivery: 2026-10-15
+    Current Location:   Distribution Center - Chicago IL
+
+  [Notice: Order & fulfillment data retrieved from local simulated records (SIMULATED)]
+
+  Summary: Order ORD-1001 is currently SHIPPED (Shipment: IN_TRANSIT, Carrier: FastShip Express, Tracking: TRK-987654321). Items: Wireless Ergonomic Mouse (1); USB-C Hub (1).
+======================================================================

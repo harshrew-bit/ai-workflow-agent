@@ -201,8 +201,8 @@ def test_cli_mock_route_wf001(monkeypatch, capsys):
     assert "4 of 7 product(s) require restocking" in captured.out
 
 
-def test_cli_unconfigured_requests_clarification(monkeypatch, capsys):
-    """Test CLI default without API key safely requests clarification without executing tools."""
+def test_cli_unconfigured_routes_offline_to_wf001(monkeypatch, capsys):
+    """Test CLI default without API key routes known request to WF001 via offline router."""
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("LLM_PROVIDER", raising=False)
@@ -213,11 +213,32 @@ def test_cli_unconfigured_requests_clarification(monkeypatch, capsys):
         "sys.argv",
         ["app.main", "Which products need restocking?"],
     )
+    main()
+
+    captured = capsys.readouterr()
+    assert "SUCCESS" in captured.out
+    assert "WF001 (Inventory Restock Check)" in captured.out
+    assert "OFFLINE" in captured.out
+    assert "PRD-001" in captured.out
+
+
+def test_cli_unconfigured_requests_clarification_on_unrelated_query(monkeypatch, capsys):
+    """Test CLI default without API key safely requests clarification on unrelated query without executing tools."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+
+    from app.main import main
+
+    monkeypatch.setattr(
+        "sys.argv",
+        ["app.main", "What is the weather in Paris?"],
+    )
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 4  # exit code 4 = needs clarification (documented contract)
 
     captured = capsys.readouterr()
     assert "NEEDS_CLARIFICATION" in captured.out
-    assert "Live LLM provider is not configured" in captured.out
+    assert "OFFLINE" in captured.out
     assert "No tools were executed." in captured.out

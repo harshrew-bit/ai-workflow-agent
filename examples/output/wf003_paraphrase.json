@@ -1,0 +1,606 @@
+{
+  "request": "Clean the supplier CSV file, detect columns, and filter out invalid rows.",
+  "selected_workflow_id": "WF003",
+  "selected_workflow_name": "Vendor File Processing",
+  "routing_confidence": 0.99,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF003 (Vendor File Processing): matched terms [clean, column, csv, detect, file, invalid, row, vendor].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Read file",
+      "status": "completed",
+      "output_summary": "Read 8 raw record(s) from 'sample_vendor_catalog.csv'.",
+      "output": {
+        "raw_headers": [
+          "Item_SKU",
+          "Item_Title",
+          "Category",
+          "Unit_Price",
+          "Quantity_Available"
+        ],
+        "raw_rows": [
+          {
+            "Item_SKU": "VND-101",
+            "Item_Title": "Wireless Keyboard",
+            "Category": "Electronics",
+            "Unit_Price": "45.99",
+            "Quantity_Available": "150"
+          },
+          {
+            "Item_SKU": "",
+            "Item_Title": "Ergonomic Mouse",
+            "Category": "Electronics",
+            "Unit_Price": "24.50",
+            "Quantity_Available": "80"
+          },
+          {
+            "Item_SKU": "VND-103",
+            "Item_Title": "",
+            "Category": "Office Supplies",
+            "Unit_Price": "12.00",
+            "Quantity_Available": "200"
+          },
+          {
+            "Item_SKU": "VND-104",
+            "Item_Title": "Monitor Riser Stand",
+            "Category": "Office Furniture",
+            "Unit_Price": "34.00",
+            "Quantity_Available": "45"
+          },
+          {
+            "Item_SKU": "",
+            "Item_Title": "",
+            "Category": "Accessories",
+            "Unit_Price": "15.00",
+            "Quantity_Available": "10"
+          },
+          {
+            "Item_SKU": "VND-106",
+            "Item_Title": "USB-C Charging Hub",
+            "Category": "Electronics",
+            "Unit_Price": "39.95",
+            "Quantity_Available": "120"
+          },
+          {
+            "Item_SKU": "VND-107",
+            "Item_Title": "Desk Mat Extended",
+            "Category": "Accessories",
+            "Unit_Price": "-5.00",
+            "Quantity_Available": "50"
+          },
+          {
+            "Item_SKU": "VND-108",
+            "Item_Title": "Noise Canceling Earbuds",
+            "Category": "Audio",
+            "Unit_Price": "89.00",
+            "Quantity_Available": "35"
+          }
+        ],
+        "file_path": "data/sample_vendor_catalog.csv",
+        "total_rows_read": 8,
+        "summary": "Read 8 raw record(s) from 'sample_vendor_catalog.csv'."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "detect columns",
+      "status": "completed",
+      "output_summary": "Detected 5 column(s): Item_SKU, Item_Title, Category, Unit_Price, Quantity_Available.",
+      "output": {
+        "raw_headers": [
+          "Item_SKU",
+          "Item_Title",
+          "Category",
+          "Unit_Price",
+          "Quantity_Available"
+        ],
+        "detected_columns": [
+          "sku",
+          "product_name",
+          "category",
+          "price",
+          "stock"
+        ],
+        "summary": "Detected 5 column(s): Item_SKU, Item_Title, Category, Unit_Price, Quantity_Available."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "normalize column names",
+      "status": "completed",
+      "output_summary": "Normalized 5 column(s) across 8 row(s).",
+      "output": {
+        "normalized_rows": [
+          {
+            "sku": "VND-101",
+            "product_name": "Wireless Keyboard",
+            "category": "Electronics",
+            "price": "45.99",
+            "stock": "150"
+          },
+          {
+            "sku": "",
+            "product_name": "Ergonomic Mouse",
+            "category": "Electronics",
+            "price": "24.50",
+            "stock": "80"
+          },
+          {
+            "sku": "VND-103",
+            "product_name": "",
+            "category": "Office Supplies",
+            "price": "12.00",
+            "stock": "200"
+          },
+          {
+            "sku": "VND-104",
+            "product_name": "Monitor Riser Stand",
+            "category": "Office Furniture",
+            "price": "34.00",
+            "stock": "45"
+          },
+          {
+            "sku": "",
+            "product_name": "",
+            "category": "Accessories",
+            "price": "15.00",
+            "stock": "10"
+          },
+          {
+            "sku": "VND-106",
+            "product_name": "USB-C Charging Hub",
+            "category": "Electronics",
+            "price": "39.95",
+            "stock": "120"
+          },
+          {
+            "sku": "VND-107",
+            "product_name": "Desk Mat Extended",
+            "category": "Accessories",
+            "price": "-5.00",
+            "stock": "50"
+          },
+          {
+            "sku": "VND-108",
+            "product_name": "Noise Canceling Earbuds",
+            "category": "Audio",
+            "price": "89.00",
+            "stock": "35"
+          }
+        ],
+        "column_mapping": {
+          "Item_SKU": "sku",
+          "Item_Title": "product_name",
+          "Category": "category",
+          "Unit_Price": "price",
+          "Quantity_Available": "stock"
+        },
+        "normalized_headers": [
+          "category",
+          "price",
+          "product_name",
+          "sku",
+          "stock"
+        ],
+        "summary": "Normalized 5 column(s) across 8 row(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "validate required fields",
+      "status": "completed",
+      "output_summary": "Validated required fields: 4 passed, 4 failed.",
+      "output": {
+        "preliminary_valid": [
+          {
+            "sku": "VND-101",
+            "product_name": "Wireless Keyboard",
+            "price": 45.99,
+            "category": "Electronics",
+            "stock": 150,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-104",
+            "product_name": "Monitor Riser Stand",
+            "price": 34.0,
+            "category": "Office Furniture",
+            "stock": 45,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-106",
+            "product_name": "USB-C Charging Hub",
+            "price": 39.95,
+            "category": "Electronics",
+            "stock": 120,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-108",
+            "product_name": "Noise Canceling Earbuds",
+            "price": 89.0,
+            "category": "Audio",
+            "stock": 35,
+            "extra_fields": {}
+          }
+        ],
+        "preliminary_invalid": [
+          {
+            "row_number": 2,
+            "raw_data": {
+              "sku": "",
+              "product_name": "Ergonomic Mouse",
+              "category": "Electronics",
+              "price": "24.50",
+              "stock": "80"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing."
+            ]
+          },
+          {
+            "row_number": 3,
+            "raw_data": {
+              "sku": "VND-103",
+              "product_name": "",
+              "category": "Office Supplies",
+              "price": "12.00",
+              "stock": "200"
+            },
+            "errors": [
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 5,
+            "raw_data": {
+              "sku": "",
+              "product_name": "",
+              "category": "Accessories",
+              "price": "15.00",
+              "stock": "10"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing.",
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 7,
+            "raw_data": {
+              "sku": "VND-107",
+              "product_name": "Desk Mat Extended",
+              "category": "Accessories",
+              "price": "-5.00",
+              "stock": "50"
+            },
+            "errors": [
+              "Invalid price '-5.00': price must be non-negative."
+            ]
+          }
+        ],
+        "valid_count": 4,
+        "invalid_count": 4,
+        "summary": "Validated required fields: 4 passed, 4 failed."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "identify invalid rows",
+      "status": "completed",
+      "output_summary": "Identified 4 invalid row(s) requiring remediation.",
+      "output": {
+        "valid_rows": [
+          {
+            "sku": "VND-101",
+            "product_name": "Wireless Keyboard",
+            "price": 45.99,
+            "category": "Electronics",
+            "stock": 150,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-104",
+            "product_name": "Monitor Riser Stand",
+            "price": 34.0,
+            "category": "Office Furniture",
+            "stock": 45,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-106",
+            "product_name": "USB-C Charging Hub",
+            "price": 39.95,
+            "category": "Electronics",
+            "stock": 120,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-108",
+            "product_name": "Noise Canceling Earbuds",
+            "price": 89.0,
+            "category": "Audio",
+            "stock": 35,
+            "extra_fields": {}
+          }
+        ],
+        "invalid_rows": [
+          {
+            "row_number": 2,
+            "raw_data": {
+              "sku": "",
+              "product_name": "Ergonomic Mouse",
+              "category": "Electronics",
+              "price": "24.50",
+              "stock": "80"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing."
+            ]
+          },
+          {
+            "row_number": 3,
+            "raw_data": {
+              "sku": "VND-103",
+              "product_name": "",
+              "category": "Office Supplies",
+              "price": "12.00",
+              "stock": "200"
+            },
+            "errors": [
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 5,
+            "raw_data": {
+              "sku": "",
+              "product_name": "",
+              "category": "Accessories",
+              "price": "15.00",
+              "stock": "10"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing.",
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 7,
+            "raw_data": {
+              "sku": "VND-107",
+              "product_name": "Desk Mat Extended",
+              "category": "Accessories",
+              "price": "-5.00",
+              "stock": "50"
+            },
+            "errors": [
+              "Invalid price '-5.00': price must be non-negative."
+            ]
+          }
+        ],
+        "valid_count": 4,
+        "invalid_count": 4,
+        "summary": "Identified 4 invalid row(s) requiring remediation."
+      },
+      "error": null
+    },
+    {
+      "step_number": 6,
+      "step_name": "produce cleaned dataset",
+      "status": "completed",
+      "output_summary": "Processed vendor file: 4 valid record(s) cleaned, 4 invalid row(s) flagged. Wrote /Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv, /Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv and /Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json.",
+      "output": {
+        "cleaned_records": [
+          {
+            "sku": "VND-101",
+            "product_name": "Wireless Keyboard",
+            "price": 45.99,
+            "category": "Electronics",
+            "stock": 150,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-104",
+            "product_name": "Monitor Riser Stand",
+            "price": 34.0,
+            "category": "Office Furniture",
+            "stock": 45,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-106",
+            "product_name": "USB-C Charging Hub",
+            "price": 39.95,
+            "category": "Electronics",
+            "stock": 120,
+            "extra_fields": {}
+          },
+          {
+            "sku": "VND-108",
+            "product_name": "Noise Canceling Earbuds",
+            "price": 89.0,
+            "category": "Audio",
+            "stock": 35,
+            "extra_fields": {}
+          }
+        ],
+        "invalid_records": [
+          {
+            "row_number": 2,
+            "raw_data": {
+              "sku": "",
+              "product_name": "Ergonomic Mouse",
+              "category": "Electronics",
+              "price": "24.50",
+              "stock": "80"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing."
+            ]
+          },
+          {
+            "row_number": 3,
+            "raw_data": {
+              "sku": "VND-103",
+              "product_name": "",
+              "category": "Office Supplies",
+              "price": "12.00",
+              "stock": "200"
+            },
+            "errors": [
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 5,
+            "raw_data": {
+              "sku": "",
+              "product_name": "",
+              "category": "Accessories",
+              "price": "15.00",
+              "stock": "10"
+            },
+            "errors": [
+              "Missing required field: SKU is blank or missing.",
+              "Missing required field: product_name is blank or missing."
+            ]
+          },
+          {
+            "row_number": 7,
+            "raw_data": {
+              "sku": "VND-107",
+              "product_name": "Desk Mat Extended",
+              "category": "Accessories",
+              "price": "-5.00",
+              "stock": "50"
+            },
+            "errors": [
+              "Invalid price '-5.00': price must be non-negative."
+            ]
+          }
+        ],
+        "total_processed": 8,
+        "valid_count": 4,
+        "invalid_count": 4,
+        "output_files": {
+          "cleaned_csv": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv",
+          "invalid_rows_csv": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv",
+          "validation_summary_json": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json"
+        },
+        "summary": "Processed vendor file: 4 valid record(s) cleaned, 4 invalid row(s) flagged. Wrote /Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv, /Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv and /Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json."
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "cleaned_records": [
+      {
+        "sku": "VND-101",
+        "product_name": "Wireless Keyboard",
+        "price": 45.99,
+        "category": "Electronics",
+        "stock": 150,
+        "extra_fields": {}
+      },
+      {
+        "sku": "VND-104",
+        "product_name": "Monitor Riser Stand",
+        "price": 34.0,
+        "category": "Office Furniture",
+        "stock": 45,
+        "extra_fields": {}
+      },
+      {
+        "sku": "VND-106",
+        "product_name": "USB-C Charging Hub",
+        "price": 39.95,
+        "category": "Electronics",
+        "stock": 120,
+        "extra_fields": {}
+      },
+      {
+        "sku": "VND-108",
+        "product_name": "Noise Canceling Earbuds",
+        "price": 89.0,
+        "category": "Audio",
+        "stock": 35,
+        "extra_fields": {}
+      }
+    ],
+    "invalid_records": [
+      {
+        "row_number": 2,
+        "raw_data": {
+          "sku": "",
+          "product_name": "Ergonomic Mouse",
+          "category": "Electronics",
+          "price": "24.50",
+          "stock": "80"
+        },
+        "errors": [
+          "Missing required field: SKU is blank or missing."
+        ]
+      },
+      {
+        "row_number": 3,
+        "raw_data": {
+          "sku": "VND-103",
+          "product_name": "",
+          "category": "Office Supplies",
+          "price": "12.00",
+          "stock": "200"
+        },
+        "errors": [
+          "Missing required field: product_name is blank or missing."
+        ]
+      },
+      {
+        "row_number": 5,
+        "raw_data": {
+          "sku": "",
+          "product_name": "",
+          "category": "Accessories",
+          "price": "15.00",
+          "stock": "10"
+        },
+        "errors": [
+          "Missing required field: SKU is blank or missing.",
+          "Missing required field: product_name is blank or missing."
+        ]
+      },
+      {
+        "row_number": 7,
+        "raw_data": {
+          "sku": "VND-107",
+          "product_name": "Desk Mat Extended",
+          "category": "Accessories",
+          "price": "-5.00",
+          "stock": "50"
+        },
+        "errors": [
+          "Invalid price '-5.00': price must be non-negative."
+        ]
+      }
+    ],
+    "total_processed": 8,
+    "valid_count": 4,
+    "invalid_count": 4,
+    "output_files": {
+      "cleaned_csv": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv",
+      "invalid_rows_csv": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv",
+      "validation_summary_json": "/Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json"
+    },
+    "summary": "Processed vendor file: 4 valid record(s) cleaned, 4 invalid row(s) flagged. Wrote /Users/harshkumar/Desktop/ai-workflow-agent/outputs/cleaned_sample_vendor_catalog.csv, /Users/harshkumar/Desktop/ai-workflow-agent/outputs/invalid_rows_sample_vendor_catalog.csv and /Users/harshkumar/Desktop/ai-workflow-agent/outputs/validation_summary_sample_vendor_catalog.json."
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}

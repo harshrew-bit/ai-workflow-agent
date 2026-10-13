@@ -299,7 +299,7 @@ class ColumnNormalizerTool(BaseTool):
         return {
             "normalized_rows": normalized,
             "column_mapping": col_mapping,
-            "normalized_headers": list(set(col_mapping.values())),
+            "normalized_headers": sorted(list(set(col_mapping.values()))),
             "summary": f"Normalized {len(headers)} column(s) across {len(normalized)} row(s).",
         }
 

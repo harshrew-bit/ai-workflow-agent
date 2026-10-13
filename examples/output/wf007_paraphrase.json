@@ -1,0 +1,25 @@
+{
+  "request": "Draft a comprehensive marketing brief including audience messaging and channel checklist.",
+  "selected_workflow_id": "WF007",
+  "selected_workflow_name": "Marketing Campaign Brief",
+  "routing_confidence": 0.9,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF007 (Marketing Campaign Brief): matched terms [brief, channel, checklist, market, messag].",
+  "status": "needs_clarification",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Validate inputs",
+      "status": "needs_clarification",
+      "output_summary": null,
+      "output": null,
+      "error": "Required input 'campaign_goal' is missing. Please provide a specific campaign goal before generating the campaign brief."
+    }
+  ],
+  "final_output": null,
+  "errors": [
+    "Required input 'campaign_goal' is missing. Please provide a specific campaign goal before generating the campaign brief."
+  ],
+  "clarification_required": true,
+  "routing_mode": "offline",
+  "warnings": []
+}

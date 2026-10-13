@@ -2,22 +2,26 @@
 
 A modular, Excel-driven AI workflow automation system built with **Python 3.12**, **Pydantic v2**, and **openpyxl**.
 
-The system dynamically loads and validates business workflow definitions directly from an Excel workbook (`data/workflows.xlsx`), routes natural-language requests using an LLM-powered router (supporting **Google Gemini**, **OpenAI-compatible APIs**, or an offline **fallback**), resolves human-readable steps to registered domain tools, and executes them through a completely generic, reusable execution engine.
+The system dynamically loads and validates business workflow definitions directly from an Excel workbook (`data/workflows.xlsx`), routes natural-language requests using an LLM-powered router (supporting **Google Gemini**, **OpenAI-compatible APIs**, or an offline **fallback**), resolves human-readable steps to registered domain tools, and executes them through a generic, reusable execution engine.
 
 ---
 
 ## Table of Contents
 
+- [Quick Demo (No API Key Needed)](#quick-demo-no-api-key-needed)
+- [Live LLM Routing: Status](#live-llm-routing-status)
 - [Key Features & Technology Stack](#key-features--technology-stack)
 - [Architecture Overview](#architecture-overview)
+- [Deterministic Offline Router & Scoring](#deterministic-offline-router--scoring)
 - [Project Structure](#project-structure)
 - [Official Workflow Catalog (WF001 – WF010)](#official-workflow-catalog-wf001--wf010)
 - [Setup & Installation](#setup--installation)
 - [LLM Provider Configuration](#llm-provider-configuration)
 - [CLI Usage](#cli-usage)
-  - [Live LLM Routing](#1-live-llm-routing)
-  - [Deterministic Demonstration Mode (`--mock-route`)](#2-deterministic-demonstration-mode---mock-route)
-  - [Structured JSON Output](#3-structured-json-output)
+  - [Offline Natural Language Routing](#1-offline-natural-language-routing)
+  - [Live LLM Routing](#2-live-llm-routing)
+  - [Deterministic Demonstration Mode (`--mock-route`)](#3-deterministic-demonstration-mode---mock-route)
+  - [Structured JSON Output](#4-structured-json-output)
 - [Routing, Confidence & Clarification Policy](#routing-confidence--clarification-policy)
 - [Tool Execution, Data Safety & Simulation Transparency](#tool-execution-data-safety--simulation-transparency)
 - [Demonstration Extension: WF011 Supplier Delivery Risk Assessment](#demonstration-extension-wf011-supplier-delivery-risk-assessment)
@@ -25,6 +29,44 @@ The system dynamically loads and validates business workflow definitions directl
 - [Testing & Verification](#testing--verification)
 - [Sample Datasets](#sample-datasets)
 - [Limitations & Future Improvements](#limitations--future-improvements)
+
+---
+
+## Quick Demo (No API Key Needed)
+
+The agent runs fully offline out of the box using deterministic token matching against the official workbook definitions. Try these three commands in your terminal:
+
+### 1. Inventory Restock Check (WF001)
+```bash
+python -m app.main "Check today's inventory and identify products that need restocking."
+```
+- **Expected Outcome**: Status `SUCCESS`, Selected Workflow `WF001 (Inventory Restock Check)`, `Routing Mode: OFFLINE`.
+- **Result**: Identifies 4 low-stock items (`PRD-001`, `PRD-003`, `PRD-005`, `PRD-007`) requiring 61 total reorder units, exits with code `0`.
+
+### 2. Customer Order Status (WF005)
+```bash
+python -m app.main "Where is order ORD-1001?"
+```
+- **Expected Outcome**: Status `SUCCESS`, Selected Workflow `WF005 (Customer Order Status)`, `Routing Mode: OFFLINE`.
+- **Result**: Extracts order ID `ORD-1001`, returns status `SHIPPED` with carrier tracking details (`FastShip Express`, `TRK-987654321`), exits with code `0`.
+
+### 3. Off-Topic Query Rejection
+```bash
+python -m app.main "What is the weather in Paris?"
+```
+- **Expected Outcome**: Status `NEEDS_CLARIFICATION`, Selected Workflow `None`, `Routing Mode: OFFLINE`.
+- **Result**: Cleanly flags that the request cannot be matched to any registered workflow, executes zero domain tools, exits with code `4`.
+
+---
+
+## Live LLM Routing: Status
+
+- **Status**: **VERIFIED — WF002 end-to-end**.
+- **Provider**: Google Gemini API using `gemini-2.5-flash-lite`, configured through environment variables.
+- **Verification result**: Live LLM routing selected `WF002 (Product Price Validation)` and the complete workflow executed successfully using the sample internal and vendor price CSVs.
+- **Observed output**: 7 products matched and compared; 3 exceptions exceeded the strict 10% price-difference threshold. Unmatched SKUs were also reported.
+- **Verification scope**: Live API execution has been verified for WF002. The other official workflows have been exercised using local sample data and offline tests; this does not imply that all workflows have been individually verified with a live LLM.
+- **Offline behavior**: The deterministic offline router remains available when live LLM configuration is unavailable. See [`examples/live/README.md`](examples/live/README.md) for setup instructions and live-routing verification commands.
 
 ---
 
@@ -48,7 +90,7 @@ The system dynamically loads and validates business workflow definitions directl
 | Excel Ingestion | **openpyxl** (`openpyxl>=3.1.5`) | Workbook parsing and header validation |
 | Environment Config | **python-dotenv** (`python-dotenv>=1.0.0`) | `.env` file discovery and loading |
 | TLS / Certificates | **certifi** (`certifi>=2024.2.2`) | Mozilla root CA bundle for secure Gemini HTTPS requests |
-| Test Framework | **pytest** (`pytest>=8.0.0`) | Automated test suite (241 passing tests) |
+| Test Framework | **pytest** (`pytest>=8.0.0`) | Automated test suite (run `pytest -q`) |
 
 ---
 
@@ -161,7 +203,15 @@ ai-workflow-agent/
 │   ├── sample_vendor_catalog.csv# Unprocessed vendor feed with bad rows (WF003)
 │   ├── sample_vendor_prices.csv # Vendor quotes (WF002)
 │   └── sample_workflow_logs.csv # Execution telemetry logs (WF010)
-├── tests/                       # 24 test modules (241 passing tests)
+├── examples/                    # Benchmark requests, expected outputs, and live docs
+│   ├── requests.md              # Catalog of 22 benchmark test requests
+│   ├── expected.json            # Reference expected workflows, statuses, exit codes
+│   ├── live/                    # Live LLM routing verification guide
+│   └── output/                  # Generated benchmark text and JSON outputs
+├── scripts/                     # Verification runner scripts (Bash & PowerShell)
+│   ├── run_examples.sh          # Offline benchmark verification runner (Bash)
+│   └── run_examples.ps1         # Offline benchmark verification runner (PowerShell)
+├── tests/                       # Comprehensive automated test suite (run pytest -q)
 ├── .env.example                 # Documented environment configuration template
 ├── .gitignore                   # Ignore patterns for secrets, venv, caches
 ├── pyproject.toml               # Project metadata, dependencies, and pytest config
@@ -332,7 +382,7 @@ Set the following in `.env` or export in your shell:
 ```env
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=your_actual_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-flash-lite
 ```
 
 *Implementation detail*: `GeminiProvider` sends the API key in the `x-goog-api-key` HTTP header rather than query parameters, preventing credentials from appearing in URL logs or tracebacks. It uses `certifi.where()` to establish secure SSL connections without requiring the external Google GenAI SDK.
@@ -363,30 +413,40 @@ The command-line interface is accessed via `python -m app.main`. View all option
 python -m app.main --help
 ```
 
-### 1. Live LLM Routing
+### 1. Offline Natural Language Routing (Default)
+
+When no live API keys (`GEMINI_API_KEY` or `OPENAI_API_KEY`) are set, the system automatically uses the **deterministic offline router**:
+
+```bash
+# Workflow queries route automatically based on explainable token overlap:
+python -m app.main "Which products need restocking?"
+python -m app.main "Where is order ORD-1001?"
+python -m app.main "Find products where vendor price differs by more than 10%."
+
+# Off-topic requests are rejected safely:
+python -m app.main "What is the weather in Paris?"
+# Result: Status: NEEDS_CLARIFICATION — No tools executed (exit code 4).
+```
+
+### 2. Live LLM Routing
 
 When configured with an active Gemini or OpenAI API key, queries are routed through the live model:
 
 ```bash
-# Example with Gemini configured in .env:
+# Example with Gemini configured in environment:
 python -m app.main "Which products need restocking?"
 
 # Example with explicit arguments:
 python -m app.main --order-id "ORD-1001" "Where is my order?"
 ```
 
-If the request is ambiguous or unrecognized, the router returns a clarification request:
-```bash
-python -m app.main "Can you bake me a chocolate cake?"
-# Result: Status: NEEDS_CLARIFICATION — No tools executed.
-```
-
-### 2. Deterministic Demonstration Mode (`--mock-route`)
+### 3. Deterministic Demonstration Mode (`--mock-route`)
 
 To evaluate workflow tool execution, boundary conditions, and reports deterministically without calling live external LLM APIs, pass `--mock-route <WORKFLOW_ID>`.
 
 > [!NOTE]
-> `--mock-route WFxxx` forces deterministic workflow selection for testing and demonstration. It does **not** evaluate live LLM semantic routing.
+> `--mock-route WFxxx` forces deterministic workflow selection for testing and demonstration. It displays `Routing Mode: FORCED (--mock-route; this is not a routing decision)`.
+> If the query matches another workflow significantly better than the forced workflow, a visible advisory warning is printed (e.g., `[WARNING] Forced route selected WF003, but request appears to match WF001`).
 
 ```bash
 # WF001: Inventory Restock Check
@@ -400,7 +460,7 @@ python -m app.main --mock-route WF002 "Find products where vendor price differs 
 python -m app.main --mock-route WF003 "Process this vendor spreadsheet and show invalid rows."
 
 # WF004: Product Description Generator
-# Without a product name the workflow FAILS (exit 1); inputs are never invented
+# Without a product name the workflow requires clarification (exit 4); inputs are never invented
 python -m app.main --mock-route WF004 "Generate SEO content for this product."
 python -m app.main --mock-route WF004 --product-name "Ergonomic Desk Chair" --color "Black" --material "Mesh" "Generate copy"
 
@@ -431,7 +491,7 @@ python -m app.main --mock-route WF010 "Which workflows are failing most often?"
 python -m app.main --mock-route WF011 "Assess supplier delivery risk"
 ```
 
-### 3. Structured JSON Output
+### 4. Structured JSON Output
 
 Append `--json` to any CLI command to output the full machine-readable `ExecutionReport`:
 
@@ -443,10 +503,10 @@ python -m app.main --mock-route WF001 --json "Which products need restocking?"
 
 ## Routing, Confidence & Clarification Policy
 
-`LLMWorkflowRouter` applies the following validation policy to all decisions:
+`LLMWorkflowRouter` and `OfflineWorkflowRouter` apply the following validation policy to all decisions:
 
 1. **Confidence Semantics**:
-   The `confidence` score in `RoutingDecision` represents the **model-reported routing certainty score** (0.0 to 1.0) returned by the LLM, **not a mathematically calibrated probability**. The system compares this score directly against `confidence_threshold` (default `0.70`).
+   The `confidence` score in `RoutingDecision` represents the **model-reported routing certainty score** (0.0 to 1.0) returned by the LLM (or normalized token score in offline mode), **not a mathematically calibrated probability**. The system compares this score directly against `confidence_threshold` (default `0.70`).
 2. **Registry Verification (Zero Hallucination Tolerance)**:
    The selected `workflow_id` must match a workflow currently registered in the catalog. If the model returns an unregistered or invented ID (e.g., `WF999`), the decision is rejected, `workflow_id` is set to `None`, `confidence` is reset to `0.0`, and `requires_clarification` is set to `True`.
 3. **Threshold Enforcement**:
@@ -455,8 +515,35 @@ python -m app.main --mock-route WF001 --json "Which products need restocking?"
    If the user query does not match any registered workflow trigger or lacks critical parameters, the router returns `workflow_id = None` and `requires_clarification = True`.
 5. **Sanitized Provider Error Handling**:
    Network errors, timeouts, or HTTP errors are sanitized to prevent secret leakage. Raw HTTP response bodies, request URLs containing credentials, and authorization headers are never exposed in exceptions or user-facing reasoning.
-6. **Explicit Unconfigured Fallback**:
-   When no live LLM credentials are present, the system defaults to a safe fallback provider that returns `workflow_id = None`, `requires_clarification = True`, and explicitly states that automated live LLM routing is inactive. It never silently pretends a live model completed the routing.
+6. **Automatic Offline Router Fallback**:
+   When no live LLM credentials are configured (`GEMINI_API_KEY` and `OPENAI_API_KEY` are unset), the orchestrator automatically delegates natural-language routing to `OfflineWorkflowRouter` (`app/agent/offline_router.py`), reporting `Routing Mode: OFFLINE`.
+
+---
+
+## Deterministic Offline Router & Scoring
+
+When running without live API credentials, natural language queries are routed through `OfflineWorkflowRouter` (`app/agent/offline_router.py`).
+
+### How Scoring Works
+1. **Source of Truth**: Queries are scored against the active `WorkflowRegistry` loaded directly from `data/workflows.xlsx`.
+2. **Explainable Tokenization**:
+   - Lowercases query text and strips punctuation.
+   - Filters common English stopwords and conversational fillers (`check`, `please`, `help`, `show`, `user`, etc.).
+   - Normalizes morphological inflections: plurals (`-ies`, `-es`, `-s`), gerunds (`-ing`), and past tense (`-ed`).
+   - Maps domain synonyms to normalized concepts (`stock` → `inventory`, `supplier` → `vendor`, `developer` → `employee`, `failures` → `fail`, etc.).
+3. **Field Weighting**:
+   - `workflow.trigger`: Weight **3.5** (primary trigger intent)
+   - `workflow.workflow_name`: Weight **2.5** (domain name)
+   - `workflow.parsed_steps`: Weight **1.5** (step actions and entities)
+   - `workflow.tools_required`: Weight **1.0** (tool identifiers)
+4. **Confidence & Decision Rules**:
+   - A workflow is selected if its score meets or exceeds the threshold (**3.0**) and strictly exceeds the second-highest candidate.
+   - Ambiguous queries, score ties, low-scoring queries, or off-topic queries (e.g., *"What is the weather in Paris?"*) return `status: needs_clarification` (exit code 4) and execute zero domain tools.
+   - The execution report reasoning details the matched terms (e.g., `matched terms [identify, inventory, product, restock]`).
+
+### Limitations
+- **Vocabulary Coverage**: Token matching relies on word roots and synonym dictionaries; queries phrased with entirely disjoint vocabulary or figurative expressions cannot be mapped.
+- **Complex Semantic Reasoning**: The offline router does not perform contextual reasoning, multi-turn dialogue, or creative extraction beyond regex patterns. Live LLM routing is recommended for open-ended interactions.
 
 ---
 
@@ -574,60 +661,48 @@ The system demonstrates zero-engine-modification extensibility. Adding an additi
 - **`app/agent/router.py` (`LLMWorkflowRouter`)**: **0 lines changed**.
 - **`data/workflows.xlsx`**: Preserved unchanged.
 
-### What Must Be Created
-Adding a new workflow involves two clear steps:
+### The 6-Step Extension Checklist (Verified by WF011)
 
-1. **Define the Workflow Metadata (Catalog Configuration)**:
-   Create a `WorkflowDefinition` programmatically or add a row to an Excel catalog:
-   ```python
-   from app.models.workflow import WorkflowDefinition
+Adding a new workflow requires following these 6 extension points without altering core execution engine abstractions:
 
-   wf = WorkflowDefinition(
-       Workflow_ID="WF012",
-       Workflow_Name="Invoice Discrepancy Reconciliation",
-       Trigger="Reconcile vendor invoices against purchase orders",
-       Inputs="Invoice CSV, PO database",
-       Steps="Load invoice -> Match PO -> Compare amounts -> Flag discrepancy",
-       Decision_Logic="Flag discrepancy if invoice amount exceeds PO by > 5%",
-       Tools_Required="invoice_loader, po_matcher, amount_comparator, discrepancy_flagger",
-       Expected_Output="Reconciliation report with flagged variances",
-   )
-   ```
+1. **Workflow Definition**: Define the workflow schema either by adding a row to an Excel catalog or instantiating a `WorkflowDefinition` model (e.g., `WF011` in `app/registry.py`).
+2. **Domain Tools**: Implement tool classes inheriting from `BaseTool` with typed metadata and execute logic in `app/tools/<domain>.py`.
+3. **Tool Registry**: Register the domain tools in `ToolRegistry` via `create_default_tool_registry()` in `app/registry.py`.
+4. **Step Resolver**: Bind each human-readable workflow step to its registered tool name in `ConfigurableStepResolver` via `create_default_step_resolver()` in `app/registry.py`.
+5. **CLI Options**: Expose any domain-specific CLI arguments in `app/main.py` if arguments are exposed to users.
+6. **Automated Tests**: Add end-to-end and unit regression tests covering normal execution, boundaries, and errors in `tests/test_<domain>.py`.
 
-2. **Implement and Register the Step Tools (Plugin Registration)**:
-   Create domain tools inheriting from `BaseTool`:
-   ```python
-   from app.tools.base import BaseTool, ToolMetadata
+```python
+# Example: Registering tools and bindings in app/registry.py
+from app.tools.base import BaseTool, ToolMetadata
 
-   class InvoiceLoaderTool(BaseTool):
-       @property
-       def metadata(self) -> ToolMetadata:
-           return ToolMetadata(name="invoice_loader", description="Loads invoice records")
+class InvoiceLoaderTool(BaseTool):
+    @property
+    def metadata(self) -> ToolMetadata:
+        return ToolMetadata(name="invoice_loader", description="Loads invoice records")
 
-       def execute(self, **kwargs):
-           return {"invoices_loaded": 10}
-   ```
-   Register the tools, step bindings, and workflow definition:
-   ```python
-   # Register tool
-   tool_registry.register(InvoiceLoaderTool())
+    def execute(self, **kwargs):
+        return {"invoices_loaded": 10}
 
-   # Bind human-readable step to tool
-   step_resolver.bind(
-       workflow_id="WF012",
-       step_name="Load invoice",
-       tool_name="invoice_loader",
-   )
+# 1. Register tool in ToolRegistry
+tool_registry.register(InvoiceLoaderTool())
 
-   # Register workflow in catalog
-   workflow_registry.register(wf)
-   ```
+# 2. Bind human-readable step in ConfigurableStepResolver
+step_resolver.bind(
+    workflow_id="WF012",
+    step_name="Load invoice",
+    tool_name="invoice_loader",
+)
+
+# 3. Register workflow definition in WorkflowRegistry
+workflow_registry.register(wf)
+```
 
 ---
 
 ## Testing & Verification
 
-The test suite contains **241 automated tests** with a 100% pass rate (verified with `pytest -q`).
+Run the automated test suite with `pytest -q` to view the current passing test count and verify complete pass status:
 
 ### Run All Tests
 ```bash
@@ -672,6 +747,28 @@ pytest tests/test_wf011_extensibility.py
 ```bash
 git diff --check
 ```
+### Run the Offline Benchmark Suite
+
+Run the 22 benchmark requests and verify their expected workflow IDs, statuses, exit codes, and offline routing mode:
+
+```bash
+bash scripts/run_examples.sh
+```
+
+The script writes text and JSON reports to `examples/output/`. These benchmark results verify deterministic offline routing and execution contracts; they do not measure live LLM routing quality or prove that every workflow has been tested against a live API.
+
+### Live API Verification
+
+Configure your credentials as described in [LLM Provider Configuration](#llm-provider-configuration), then run a representative live request:
+
+```bash
+python -m app.main \
+  "Find products where vendor price differs by more than 10%." \
+  --internal-csv data/sample_internal_prices.csv \
+  --vendor-csv data/sample_vendor_prices.csv
+```
+
+A successful run should select `WF002 (Product Price Validation)` and report the price-validation results. Live API availability can vary, so use the output of the actual run when reporting its status.
 
 ---
 

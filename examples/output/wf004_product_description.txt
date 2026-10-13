@@ -1,0 +1,16 @@
+======================================================================
+ AI WORKFLOW AUTOMATION — EXECUTION REPORT
+======================================================================
+Request:               Generate SEO content for this product.
+Status:                NEEDS_CLARIFICATION
+Selected Workflow:     WF004 (Product Description Generator)
+Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)
+Routing Confidence:    0.85
+Routing Reasoning:     Offline keyword match against trigger/metadata for WF004 (Product Description Generator): matched terms [content, generate, product, seo].
+----------------------------------------------------------------------
+
+[!] CLARIFICATION REQUIRED:
+    - Required attribute 'product_name' is missing or empty. A valid product name is required to generate descriptions.
+
+No tools were executed.
+======================================================================

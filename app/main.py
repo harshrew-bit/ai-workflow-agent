@@ -10,6 +10,14 @@ from typing import Any, Dict
 from app.orchestrator import WorkflowOrchestrator
 
 
+def to_sentence_case(s: str) -> str:
+    """Format step name to sentence case for display while preserving original string in models/JSON."""
+    if not s:
+        return ""
+    stripped = s.strip()
+    return stripped[:1].upper() + stripped[1:]
+
+
 def format_report_for_display(report: Any) -> str:
     """Format an ExecutionReport into a clear, clean human-readable terminal output."""
     lines = []
@@ -19,6 +27,18 @@ def format_report_for_display(report: Any) -> str:
     lines.append(f"Request:               {report.request}")
     lines.append(f"Status:                {report.status.upper()}")
     lines.append(f"Selected Workflow:     {report.selected_workflow_id or 'None'} ({report.selected_workflow_name or 'None'})")
+    routing_mode = getattr(report, "routing_mode", "offline")
+    if routing_mode == "forced":
+        lines.append("Routing Mode:          FORCED (--mock-route; this is not a routing decision)")
+    elif routing_mode == "offline":
+        lines.append("Routing Mode:          OFFLINE (keyword/trigger match; set GEMINI_API_KEY for LLM routing)")
+    else:
+        lines.append(f"Routing Mode:          {routing_mode.upper()}")
+
+    warnings = getattr(report, "warnings", [])
+    for warn in warnings:
+        lines.append(warn)
+
     lines.append(f"Routing Confidence:    {report.routing_confidence:.2f}")
     lines.append(f"Routing Reasoning:     {report.routing_reasoning}")
     lines.append("-" * 70)
@@ -34,9 +54,10 @@ def format_report_for_display(report: Any) -> str:
     lines.append("Step-by-Step Execution:")
     for step in report.steps:
         status_icon = "[✓]" if step.status == "completed" else "[✗]"
+        display_name = to_sentence_case(step.step_name)
         summary_text = f" — {step.output_summary}" if step.output_summary else ""
         error_text = f" [ERROR: {step.error}]" if step.error else ""
-        lines.append(f"  {status_icon} Step {step.step_number}: {step.step_name}{summary_text}{error_text}")
+        lines.append(f"  {status_icon} Step {step.step_number}: {display_name}{summary_text}{error_text}")
 
     lines.append("-" * 70)
     lines.append("Final Structured Result:")
@@ -673,6 +694,25 @@ def main() -> None:
             runtime_inputs.setdefault(key, value)
 
     report = orchestrator.run(args.request, **runtime_inputs)
+
+    if args.mock_route:
+        report.routing_mode = "forced"
+        from app.agent.offline_router import OfflineWorkflowRouter
+        offline_scorer = OfflineWorkflowRouter()
+        ranked = offline_scorer.score_workflows(args.request, orchestrator.registry.list_all())
+        if ranked:
+            top_wf, top_score, _ = ranked[0]
+            forced_score = 0.0
+            for wf, s, _ in ranked:
+                if wf.workflow_id == args.mock_route:
+                    forced_score = s
+                    break
+            if top_wf.workflow_id != args.mock_route and top_score >= 3.0 and top_score > forced_score:
+                warning_msg = (
+                    f"[WARNING] Forced route selected {args.mock_route}, but request appears to match "
+                    f"{top_wf.workflow_id} ({top_wf.workflow_name})."
+                )
+                report.warnings.append(warning_msg)
 
     if args.json:
         print(report.model_dump_json(indent=2))

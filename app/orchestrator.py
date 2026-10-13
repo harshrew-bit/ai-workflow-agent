@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
+from app.agent.offline_router import OfflineWorkflowRouter
+from app.agent.provider import is_live_llm_configured
 from app.agent.router import LLMWorkflowRouter, RoutingDecision, WorkflowRouter
 from app.engine.base import GenericWorkflowEngine
 from app.engine.resolver import ConfigurableStepResolver, StepResolver, create_default_step_resolver
@@ -45,7 +47,13 @@ class WorkflowOrchestrator:
         self.registry = (
             registry if registry is not None else WorkflowRegistry.from_excel(wb_path)
         )
-        self.router = router if router is not None else LLMWorkflowRouter()
+        if router is not None:
+            self.router = router
+        elif is_live_llm_configured():
+            self.router = LLMWorkflowRouter()
+        else:
+            self.router = OfflineWorkflowRouter()
+
         self.tool_registry = (
             tool_registry
             if tool_registry is not None
@@ -76,6 +84,14 @@ class WorkflowOrchestrator:
             self.registry.list_all(),
         )
 
+        # Fallback to deterministic offline router if live LLM router was inactive / unconfigured
+        if (
+            routing_decision.requires_clarification
+            and "Live LLM provider is not configured" in (routing_decision.reasoning or "")
+        ):
+            offline_router = OfflineWorkflowRouter()
+            routing_decision = offline_router.route(clean_request, self.registry.list_all())
+
         # 2. Check for clarification, low confidence, or missing selection
         if routing_decision.requires_clarification or not routing_decision.workflow_id:
             return ExecutionReport(
@@ -89,6 +105,7 @@ class WorkflowOrchestrator:
                 final_output=None,
                 errors=[routing_decision.reasoning] if routing_decision.reasoning else [],
                 clarification_required=True,
+                routing_mode=routing_decision.routing_mode,
             )
 
         # 3. Validate selected ID against registry
@@ -108,6 +125,7 @@ class WorkflowOrchestrator:
                 final_output=None,
                 errors=[err],
                 clarification_required=True,
+                routing_mode=routing_decision.routing_mode,
             )
 
         # 4. Prepare execution inputs.
@@ -130,12 +148,6 @@ class WorkflowOrchestrator:
             )
             reasoning = f"{reasoning} {note}".strip()
 
-        # For WF002, the decision threshold is fixed at 10% by definition in data/workflows.xlsx.
-        # Prevent any runtime input or router-extracted argument from overriding it.
-        if workflow.workflow_id == "WF002":
-            merged_inputs.pop("threshold", None)
-            merged_inputs.pop("threshold_percentage", None)
-
         # 5. Execute via generic execution engine
         exec_result = self.engine.execute(workflow, **merged_inputs)
 
@@ -145,7 +157,7 @@ class WorkflowOrchestrator:
             summary = None
             if s.status == ExecutionStatus.COMPLETED and s.output is not None:
                 if isinstance(s.output, dict):
-                    if "summary" in s.output:
+                    if "summary" in s.output and s.output["summary"]:
                         summary = str(s.output["summary"])
                     elif "total_loaded" in s.output:
                         summary = f"Loaded {s.output['total_loaded']} inventory records."
@@ -154,7 +166,11 @@ class WorkflowOrchestrator:
                     elif "restock_items" in s.output:
                         summary = f"Calculated reorders for {len(s.output['restock_items'])} items."
                     else:
-                        summary = f"Step output completed with {len(s.output)} fields."
+                        list_keys = [k for k, v in s.output.items() if isinstance(v, list)]
+                        if list_keys:
+                            summary = f"Processed {len(s.output[list_keys[0]])} items ({', '.join(s.output.keys())})."
+                        else:
+                            summary = f"Completed step ({', '.join(s.output.keys())})."
                 else:
                     summary = str(s.output)[:120]
 
@@ -193,4 +209,5 @@ class WorkflowOrchestrator:
             final_output=exec_result.output,
             errors=errors,
             clarification_required=needs_clarification,
+            routing_mode=routing_decision.routing_mode,
         )

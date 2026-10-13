@@ -1,0 +1,1197 @@
+{
+  "request": "Show execution health report, error rates, and slowest steps across automated pipelines.",
+  "selected_workflow_id": "WF010",
+  "selected_workflow_name": "Workflow Performance Report",
+  "routing_confidence": 0.9,
+  "routing_reasoning": "Offline keyword match against trigger/metadata for WF010 (Workflow Performance Report): matched terms [error, perform, report, step, workflow].",
+  "status": "success",
+  "steps": [
+    {
+      "step_number": 1,
+      "step_name": "Load execution logs",
+      "status": "completed",
+      "output_summary": "Loaded 39 workflow execution log record(s).",
+      "output": {
+        "raw_logs": [
+          {
+            "log_id": "LOG-1001",
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "execution_time_seconds": 0.45,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T09:00:00Z"
+          },
+          {
+            "log_id": "LOG-1002",
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "execution_time_seconds": 0.52,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T09:15:00Z"
+          },
+          {
+            "log_id": "LOG-1003",
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "execution_time_seconds": 0.48,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T09:30:00Z"
+          },
+          {
+            "log_id": "LOG-1004",
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "execution_time_seconds": 0.61,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T10:00:00Z"
+          },
+          {
+            "log_id": "LOG-1005",
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "execution_time_seconds": 0.55,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T10:30:00Z"
+          },
+          {
+            "log_id": "LOG-1006",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.15,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T11:00:00Z"
+          },
+          {
+            "log_id": "LOG-1007",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.32,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T11:15:00Z"
+          },
+          {
+            "log_id": "LOG-1008",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.2,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T11:30:00Z"
+          },
+          {
+            "log_id": "LOG-1009",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_comparator",
+            "execution_time_seconds": 1.1,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T11:45:00Z"
+          },
+          {
+            "log_id": "LOG-1010",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.25,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T12:00:00Z"
+          },
+          {
+            "log_id": "LOG-1011",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.4,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T12:15:00Z"
+          },
+          {
+            "log_id": "LOG-1012",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.18,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T12:30:00Z"
+          },
+          {
+            "log_id": "LOG-1013",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.22,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T12:45:00Z"
+          },
+          {
+            "log_id": "LOG-1014",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "execution_time_seconds": 1.3,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T13:00:00Z"
+          },
+          {
+            "log_id": "LOG-1015",
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_data_loader",
+            "execution_time_seconds": 0.95,
+            "status": "FAILED",
+            "error_message": "MissingColumnError: vendor_price column absent",
+            "timestamp": "2026-10-10T13:15:00Z"
+          },
+          {
+            "log_id": "LOG-1016",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 6.8,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T14:00:00Z"
+          },
+          {
+            "log_id": "LOG-1017",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 7.2,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T14:15:00Z"
+          },
+          {
+            "log_id": "LOG-1018",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 6.1,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T14:30:00Z"
+          },
+          {
+            "log_id": "LOG-1019",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "vendor_file_reader",
+            "execution_time_seconds": 1.8,
+            "status": "FAILED",
+            "error_message": "FormatError: Invalid CSV delimiter",
+            "timestamp": "2026-10-10T14:45:00Z"
+          },
+          {
+            "log_id": "LOG-1020",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 8.5,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T15:00:00Z"
+          },
+          {
+            "log_id": "LOG-1021",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 6.9,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T15:15:00Z"
+          },
+          {
+            "log_id": "LOG-1022",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 5.9,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T15:30:00Z"
+          },
+          {
+            "log_id": "LOG-1023",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "vendor_file_reader",
+            "execution_time_seconds": 1.75,
+            "status": "FAILED",
+            "error_message": "FormatError: Invalid CSV delimiter",
+            "timestamp": "2026-10-10T15:45:00Z"
+          },
+          {
+            "log_id": "LOG-1024",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 6.4,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T16:00:00Z"
+          },
+          {
+            "log_id": "LOG-1025",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 7.1,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T16:15:00Z"
+          },
+          {
+            "log_id": "LOG-1026",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 9.1,
+            "status": "FAILED",
+            "error_message": "Timeout: file upload timeout after 9s",
+            "timestamp": "2026-10-10T16:30:00Z"
+          },
+          {
+            "log_id": "LOG-1027",
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "execution_time_seconds": 6.3,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T16:45:00Z"
+          },
+          {
+            "log_id": "LOG-1028",
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "step_name": "meta_description_generator",
+            "execution_time_seconds": 2.1,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T17:00:00Z"
+          },
+          {
+            "log_id": "LOG-1029",
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "step_name": "meta_description_generator",
+            "execution_time_seconds": 1.95,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T17:15:00Z"
+          },
+          {
+            "log_id": "LOG-1030",
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "step_name": "meta_description_generator",
+            "execution_time_seconds": 2.25,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T17:30:00Z"
+          },
+          {
+            "log_id": "LOG-1031",
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "order_status_summarizer",
+            "execution_time_seconds": 0.75,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T18:00:00Z"
+          },
+          {
+            "log_id": "LOG-1032",
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "order_status_summarizer",
+            "execution_time_seconds": 0.82,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T18:15:00Z"
+          },
+          {
+            "log_id": "LOG-1033",
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "order_status_summarizer",
+            "execution_time_seconds": 0.78,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T18:30:00Z"
+          },
+          {
+            "log_id": "LOG-1034",
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "shipment_info_retriever",
+            "execution_time_seconds": 1.9,
+            "status": "FAILED",
+            "error_message": "CarrierAPIError: Simulated carrier timeout",
+            "timestamp": "2026-10-10T18:45:00Z"
+          },
+          {
+            "log_id": "LOG-1035",
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "order_status_summarizer",
+            "execution_time_seconds": 0.85,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T19:00:00Z"
+          },
+          {
+            "log_id": "LOG-1036",
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "step_name": "duplicate_confidence_assigner",
+            "execution_time_seconds": 3.1,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T19:15:00Z"
+          },
+          {
+            "log_id": "LOG-1037",
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "step_name": "duplicate_confidence_assigner",
+            "execution_time_seconds": 3.4,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T19:30:00Z"
+          },
+          {
+            "log_id": "LOG-1038",
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "step_name": "campaign_checklist_creator",
+            "execution_time_seconds": 1.45,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T19:45:00Z"
+          },
+          {
+            "log_id": "LOG-1039",
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "step_name": "campaign_checklist_creator",
+            "execution_time_seconds": 1.55,
+            "status": "SUCCESS",
+            "error_message": "",
+            "timestamp": "2026-10-10T20:00:00Z"
+          }
+        ],
+        "total_logs": 39,
+        "summary": "Loaded 39 workflow execution log record(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 2,
+      "step_name": "calculate success/failure rate",
+      "status": "completed",
+      "output_summary": "Overall Success Rate: 87.2% (34/39), Failure Rate: 12.8% (5/39). Workflows exceeding 10.0% failure threshold: WF003, WF005.",
+      "output": {
+        "workflow_rates": {
+          "WF001": {
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "total_runs": 5,
+            "success_count": 5,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF002": {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "total_runs": 10,
+            "success_count": 9,
+            "failure_count": 1,
+            "success_rate_percent": 90.0,
+            "failure_rate_percent": 10.0,
+            "is_failure_flagged": false
+          },
+          "WF003": {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "total_runs": 12,
+            "success_count": 9,
+            "failure_count": 3,
+            "success_rate_percent": 75.0,
+            "failure_rate_percent": 25.0,
+            "is_failure_flagged": true
+          },
+          "WF004": {
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "total_runs": 3,
+            "success_count": 3,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF005": {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "total_runs": 5,
+            "success_count": 4,
+            "failure_count": 1,
+            "success_rate_percent": 80.0,
+            "failure_rate_percent": 20.0,
+            "is_failure_flagged": true
+          },
+          "WF006": {
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "total_runs": 2,
+            "success_count": 2,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF007": {
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "total_runs": 2,
+            "success_count": 2,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          }
+        },
+        "overall_success_rate": 87.2,
+        "overall_failure_rate": 12.8,
+        "flagged_high_failure_workflows": [
+          "WF003",
+          "WF005"
+        ],
+        "summary": "Overall Success Rate: 87.2% (34/39), Failure Rate: 12.8% (5/39). Workflows exceeding 10.0% failure threshold: WF003, WF005."
+      },
+      "error": null
+    },
+    {
+      "step_number": 3,
+      "step_name": "calculate average execution time",
+      "status": "completed",
+      "output_summary": "Overall Avg Execution Time: 2.81s. Workflows exceeding 5.0s threshold: WF003.",
+      "output": {
+        "workflow_times": {
+          "WF001": {
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "avg_execution_time_seconds": 0.52,
+            "min_execution_time_seconds": 0.45,
+            "max_execution_time_seconds": 0.61,
+            "is_slow_flagged": false
+          },
+          "WF002": {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "avg_execution_time_seconds": 1.21,
+            "min_execution_time_seconds": 0.95,
+            "max_execution_time_seconds": 1.4,
+            "is_slow_flagged": false
+          },
+          "WF003": {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "avg_execution_time_seconds": 6.15,
+            "min_execution_time_seconds": 1.75,
+            "max_execution_time_seconds": 9.1,
+            "is_slow_flagged": true
+          },
+          "WF004": {
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "avg_execution_time_seconds": 2.1,
+            "min_execution_time_seconds": 1.95,
+            "max_execution_time_seconds": 2.25,
+            "is_slow_flagged": false
+          },
+          "WF005": {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "avg_execution_time_seconds": 1.02,
+            "min_execution_time_seconds": 0.75,
+            "max_execution_time_seconds": 1.9,
+            "is_slow_flagged": false
+          },
+          "WF006": {
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "avg_execution_time_seconds": 3.25,
+            "min_execution_time_seconds": 3.1,
+            "max_execution_time_seconds": 3.4,
+            "is_slow_flagged": false
+          },
+          "WF007": {
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "avg_execution_time_seconds": 1.5,
+            "min_execution_time_seconds": 1.45,
+            "max_execution_time_seconds": 1.55,
+            "is_slow_flagged": false
+          }
+        },
+        "overall_avg_time": 2.81,
+        "flagged_slow_workflows": [
+          "WF003"
+        ],
+        "summary": "Overall Avg Execution Time: 2.81s. Workflows exceeding 5.0s threshold: WF003."
+      },
+      "error": null
+    },
+    {
+      "step_number": 4,
+      "step_name": "identify frequent errors",
+      "status": "completed",
+      "output_summary": "Identified 5 failure(s) across 4 distinct error type(s).",
+      "output": {
+        "frequent_errors": [
+          {
+            "error_message": "FormatError: Invalid CSV delimiter",
+            "count": 2,
+            "affected_workflows": [
+              "WF003"
+            ]
+          },
+          {
+            "error_message": "MissingColumnError: vendor_price column absent",
+            "count": 1,
+            "affected_workflows": [
+              "WF002"
+            ]
+          },
+          {
+            "error_message": "Timeout: file upload timeout after 9s",
+            "count": 1,
+            "affected_workflows": [
+              "WF003"
+            ]
+          },
+          {
+            "error_message": "CarrierAPIError: Simulated carrier timeout",
+            "count": 1,
+            "affected_workflows": [
+              "WF005"
+            ]
+          }
+        ],
+        "total_errors_found": 5,
+        "summary": "Identified 5 failure(s) across 4 distinct error type(s)."
+      },
+      "error": null
+    },
+    {
+      "step_number": 5,
+      "step_name": "identify slow steps",
+      "status": "completed",
+      "output_summary": "Identified 1 step(s) with average latency exceeding 4.0s.",
+      "output": {
+        "slow_steps": [
+          {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "run_count": 10,
+            "avg_time_seconds": 7.03,
+            "max_time_seconds": 9.1,
+            "is_slow": true
+          },
+          {
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "step_name": "duplicate_confidence_assigner",
+            "run_count": 2,
+            "avg_time_seconds": 3.25,
+            "max_time_seconds": 3.4,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "step_name": "meta_description_generator",
+            "run_count": 3,
+            "avg_time_seconds": 2.1,
+            "max_time_seconds": 2.25,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "shipment_info_retriever",
+            "run_count": 1,
+            "avg_time_seconds": 1.9,
+            "max_time_seconds": 1.9,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "vendor_file_reader",
+            "run_count": 2,
+            "avg_time_seconds": 1.77,
+            "max_time_seconds": 1.8,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "step_name": "campaign_checklist_creator",
+            "run_count": 2,
+            "avg_time_seconds": 1.5,
+            "max_time_seconds": 1.55,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_exception_flagger",
+            "run_count": 8,
+            "avg_time_seconds": 1.25,
+            "max_time_seconds": 1.4,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_comparator",
+            "run_count": 1,
+            "avg_time_seconds": 1.1,
+            "max_time_seconds": 1.1,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "step_name": "price_data_loader",
+            "run_count": 1,
+            "avg_time_seconds": 0.95,
+            "max_time_seconds": 0.95,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "step_name": "order_status_summarizer",
+            "run_count": 4,
+            "avg_time_seconds": 0.8,
+            "max_time_seconds": 0.85,
+            "is_slow": false
+          },
+          {
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "step_name": "restock_reporter",
+            "run_count": 5,
+            "avg_time_seconds": 0.52,
+            "max_time_seconds": 0.61,
+            "is_slow": false
+          }
+        ],
+        "flagged_slow_steps": [
+          {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "run_count": 10,
+            "avg_time_seconds": 7.03,
+            "max_time_seconds": 9.1,
+            "is_slow": true
+          }
+        ],
+        "summary": "Identified 1 step(s) with average latency exceeding 4.0s."
+      },
+      "error": null
+    },
+    {
+      "step_number": 6,
+      "step_name": "generate recommendations",
+      "status": "completed",
+      "output_summary": "Generated 5 recommendation(s) across 7 monitored workflow(s). Flagged 2 high-failure workflow(s) and 1 slow workflow(s).",
+      "output": {
+        "overall_metrics": {
+          "success_rate_percent": 87.2,
+          "failure_rate_percent": 12.8,
+          "avg_execution_time_seconds": 2.81,
+          "total_workflows_monitored": 7
+        },
+        "workflow_performance": {
+          "WF001": {
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "total_runs": 5,
+            "success_count": 5,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF002": {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "total_runs": 10,
+            "success_count": 9,
+            "failure_count": 1,
+            "success_rate_percent": 90.0,
+            "failure_rate_percent": 10.0,
+            "is_failure_flagged": false
+          },
+          "WF003": {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "total_runs": 12,
+            "success_count": 9,
+            "failure_count": 3,
+            "success_rate_percent": 75.0,
+            "failure_rate_percent": 25.0,
+            "is_failure_flagged": true
+          },
+          "WF004": {
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "total_runs": 3,
+            "success_count": 3,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF005": {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "total_runs": 5,
+            "success_count": 4,
+            "failure_count": 1,
+            "success_rate_percent": 80.0,
+            "failure_rate_percent": 20.0,
+            "is_failure_flagged": true
+          },
+          "WF006": {
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "total_runs": 2,
+            "success_count": 2,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          },
+          "WF007": {
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "total_runs": 2,
+            "success_count": 2,
+            "failure_count": 0,
+            "success_rate_percent": 100.0,
+            "failure_rate_percent": 0.0,
+            "is_failure_flagged": false
+          }
+        },
+        "workflow_timings": {
+          "WF001": {
+            "workflow_id": "WF001",
+            "workflow_name": "Inventory Restock Check",
+            "avg_execution_time_seconds": 0.52,
+            "min_execution_time_seconds": 0.45,
+            "max_execution_time_seconds": 0.61,
+            "is_slow_flagged": false
+          },
+          "WF002": {
+            "workflow_id": "WF002",
+            "workflow_name": "Product Price Validation",
+            "avg_execution_time_seconds": 1.21,
+            "min_execution_time_seconds": 0.95,
+            "max_execution_time_seconds": 1.4,
+            "is_slow_flagged": false
+          },
+          "WF003": {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "avg_execution_time_seconds": 6.15,
+            "min_execution_time_seconds": 1.75,
+            "max_execution_time_seconds": 9.1,
+            "is_slow_flagged": true
+          },
+          "WF004": {
+            "workflow_id": "WF004",
+            "workflow_name": "Product Description Generator",
+            "avg_execution_time_seconds": 2.1,
+            "min_execution_time_seconds": 1.95,
+            "max_execution_time_seconds": 2.25,
+            "is_slow_flagged": false
+          },
+          "WF005": {
+            "workflow_id": "WF005",
+            "workflow_name": "Customer Order Status",
+            "avg_execution_time_seconds": 1.02,
+            "min_execution_time_seconds": 0.75,
+            "max_execution_time_seconds": 1.9,
+            "is_slow_flagged": false
+          },
+          "WF006": {
+            "workflow_id": "WF006",
+            "workflow_name": "Duplicate Product Detection",
+            "avg_execution_time_seconds": 3.25,
+            "min_execution_time_seconds": 3.1,
+            "max_execution_time_seconds": 3.4,
+            "is_slow_flagged": false
+          },
+          "WF007": {
+            "workflow_id": "WF007",
+            "workflow_name": "Marketing Campaign Brief",
+            "avg_execution_time_seconds": 1.5,
+            "min_execution_time_seconds": 1.45,
+            "max_execution_time_seconds": 1.55,
+            "is_slow_flagged": false
+          }
+        },
+        "flagged_high_failure_workflows": [
+          "WF003",
+          "WF005"
+        ],
+        "flagged_slow_workflows": [
+          "WF003"
+        ],
+        "frequent_errors": [
+          {
+            "error_message": "FormatError: Invalid CSV delimiter",
+            "count": 2,
+            "affected_workflows": [
+              "WF003"
+            ]
+          },
+          {
+            "error_message": "MissingColumnError: vendor_price column absent",
+            "count": 1,
+            "affected_workflows": [
+              "WF002"
+            ]
+          },
+          {
+            "error_message": "Timeout: file upload timeout after 9s",
+            "count": 1,
+            "affected_workflows": [
+              "WF003"
+            ]
+          },
+          {
+            "error_message": "CarrierAPIError: Simulated carrier timeout",
+            "count": 1,
+            "affected_workflows": [
+              "WF005"
+            ]
+          }
+        ],
+        "slow_steps": [
+          {
+            "workflow_id": "WF003",
+            "workflow_name": "Vendor File Processing",
+            "step_name": "clean_dataset_producer",
+            "run_count": 10,
+            "avg_time_seconds": 7.03,
+            "max_time_seconds": 9.1,
+            "is_slow": true
+          }
+        ],
+        "recommendations": [
+          {
+            "category": "RELIABILITY",
+            "workflow_id": "WF003",
+            "priority": "HIGH",
+            "finding": "WF003 (Vendor File Processing) has an elevated failure rate of 25.0% (Threshold: 10.0%).",
+            "action": "Implement retry policies, strict schema validation, or robust error recovery in WF003."
+          },
+          {
+            "category": "RELIABILITY",
+            "workflow_id": "WF005",
+            "priority": "HIGH",
+            "finding": "WF005 (Customer Order Status) has an elevated failure rate of 20.0% (Threshold: 10.0%).",
+            "action": "Implement retry policies, strict schema validation, or robust error recovery in WF005."
+          },
+          {
+            "category": "PERFORMANCE",
+            "workflow_id": "WF003",
+            "priority": "MEDIUM",
+            "finding": "WF003 (Vendor File Processing) average execution time is 6.15s (Threshold: 5.0s).",
+            "action": "Profile step execution in WF003, optimize file streaming, or add caching for repetitive operations."
+          },
+          {
+            "category": "ERROR_MITIGATION",
+            "workflow_id": "WF003",
+            "priority": "HIGH",
+            "finding": "Top error (2 occurrences): 'FormatError: Invalid CSV delimiter'.",
+            "action": "Add upstream input sanitization or fallback handling for this error type."
+          },
+          {
+            "category": "BOTTLENECK_OPTIMIZATION",
+            "workflow_id": "WF003",
+            "priority": "MEDIUM",
+            "finding": "Step 'clean_dataset_producer' in WF003 averages 7.03s.",
+            "action": "Refactor I/O or parallelize chunk processing to reduce latency."
+          }
+        ],
+        "is_simulated": true,
+        "summary": "Generated 5 recommendation(s) across 7 monitored workflow(s). Flagged 2 high-failure workflow(s) and 1 slow workflow(s)."
+      },
+      "error": null
+    }
+  ],
+  "final_output": {
+    "overall_metrics": {
+      "success_rate_percent": 87.2,
+      "failure_rate_percent": 12.8,
+      "avg_execution_time_seconds": 2.81,
+      "total_workflows_monitored": 7
+    },
+    "workflow_performance": {
+      "WF001": {
+        "workflow_id": "WF001",
+        "workflow_name": "Inventory Restock Check",
+        "total_runs": 5,
+        "success_count": 5,
+        "failure_count": 0,
+        "success_rate_percent": 100.0,
+        "failure_rate_percent": 0.0,
+        "is_failure_flagged": false
+      },
+      "WF002": {
+        "workflow_id": "WF002",
+        "workflow_name": "Product Price Validation",
+        "total_runs": 10,
+        "success_count": 9,
+        "failure_count": 1,
+        "success_rate_percent": 90.0,
+        "failure_rate_percent": 10.0,
+        "is_failure_flagged": false
+      },
+      "WF003": {
+        "workflow_id": "WF003",
+        "workflow_name": "Vendor File Processing",
+        "total_runs": 12,
+        "success_count": 9,
+        "failure_count": 3,
+        "success_rate_percent": 75.0,
+        "failure_rate_percent": 25.0,
+        "is_failure_flagged": true
+      },
+      "WF004": {
+        "workflow_id": "WF004",
+        "workflow_name": "Product Description Generator",
+        "total_runs": 3,
+        "success_count": 3,
+        "failure_count": 0,
+        "success_rate_percent": 100.0,
+        "failure_rate_percent": 0.0,
+        "is_failure_flagged": false
+      },
+      "WF005": {
+        "workflow_id": "WF005",
+        "workflow_name": "Customer Order Status",
+        "total_runs": 5,
+        "success_count": 4,
+        "failure_count": 1,
+        "success_rate_percent": 80.0,
+        "failure_rate_percent": 20.0,
+        "is_failure_flagged": true
+      },
+      "WF006": {
+        "workflow_id": "WF006",
+        "workflow_name": "Duplicate Product Detection",
+        "total_runs": 2,
+        "success_count": 2,
+        "failure_count": 0,
+        "success_rate_percent": 100.0,
+        "failure_rate_percent": 0.0,
+        "is_failure_flagged": false
+      },
+      "WF007": {
+        "workflow_id": "WF007",
+        "workflow_name": "Marketing Campaign Brief",
+        "total_runs": 2,
+        "success_count": 2,
+        "failure_count": 0,
+        "success_rate_percent": 100.0,
+        "failure_rate_percent": 0.0,
+        "is_failure_flagged": false
+      }
+    },
+    "workflow_timings": {
+      "WF001": {
+        "workflow_id": "WF001",
+        "workflow_name": "Inventory Restock Check",
+        "avg_execution_time_seconds": 0.52,
+        "min_execution_time_seconds": 0.45,
+        "max_execution_time_seconds": 0.61,
+        "is_slow_flagged": false
+      },
+      "WF002": {
+        "workflow_id": "WF002",
+        "workflow_name": "Product Price Validation",
+        "avg_execution_time_seconds": 1.21,
+        "min_execution_time_seconds": 0.95,
+        "max_execution_time_seconds": 1.4,
+        "is_slow_flagged": false
+      },
+      "WF003": {
+        "workflow_id": "WF003",
+        "workflow_name": "Vendor File Processing",
+        "avg_execution_time_seconds": 6.15,
+        "min_execution_time_seconds": 1.75,
+        "max_execution_time_seconds": 9.1,
+        "is_slow_flagged": true
+      },
+      "WF004": {
+        "workflow_id": "WF004",
+        "workflow_name": "Product Description Generator",
+        "avg_execution_time_seconds": 2.1,
+        "min_execution_time_seconds": 1.95,
+        "max_execution_time_seconds": 2.25,
+        "is_slow_flagged": false
+      },
+      "WF005": {
+        "workflow_id": "WF005",
+        "workflow_name": "Customer Order Status",
+        "avg_execution_time_seconds": 1.02,
+        "min_execution_time_seconds": 0.75,
+        "max_execution_time_seconds": 1.9,
+        "is_slow_flagged": false
+      },
+      "WF006": {
+        "workflow_id": "WF006",
+        "workflow_name": "Duplicate Product Detection",
+        "avg_execution_time_seconds": 3.25,
+        "min_execution_time_seconds": 3.1,
+        "max_execution_time_seconds": 3.4,
+        "is_slow_flagged": false
+      },
+      "WF007": {
+        "workflow_id": "WF007",
+        "workflow_name": "Marketing Campaign Brief",
+        "avg_execution_time_seconds": 1.5,
+        "min_execution_time_seconds": 1.45,
+        "max_execution_time_seconds": 1.55,
+        "is_slow_flagged": false
+      }
+    },
+    "flagged_high_failure_workflows": [
+      "WF003",
+      "WF005"
+    ],
+    "flagged_slow_workflows": [
+      "WF003"
+    ],
+    "frequent_errors": [
+      {
+        "error_message": "FormatError: Invalid CSV delimiter",
+        "count": 2,
+        "affected_workflows": [
+          "WF003"
+        ]
+      },
+      {
+        "error_message": "MissingColumnError: vendor_price column absent",
+        "count": 1,
+        "affected_workflows": [
+          "WF002"
+        ]
+      },
+      {
+        "error_message": "Timeout: file upload timeout after 9s",
+        "count": 1,
+        "affected_workflows": [
+          "WF003"
+        ]
+      },
+      {
+        "error_message": "CarrierAPIError: Simulated carrier timeout",
+        "count": 1,
+        "affected_workflows": [
+          "WF005"
+        ]
+      }
+    ],
+    "slow_steps": [
+      {
+        "workflow_id": "WF003",
+        "workflow_name": "Vendor File Processing",
+        "step_name": "clean_dataset_producer",
+        "run_count": 10,
+        "avg_time_seconds": 7.03,
+        "max_time_seconds": 9.1,
+        "is_slow": true
+      }
+    ],
+    "recommendations": [
+      {
+        "category": "RELIABILITY",
+        "workflow_id": "WF003",
+        "priority": "HIGH",
+        "finding": "WF003 (Vendor File Processing) has an elevated failure rate of 25.0% (Threshold: 10.0%).",
+        "action": "Implement retry policies, strict schema validation, or robust error recovery in WF003."
+      },
+      {
+        "category": "RELIABILITY",
+        "workflow_id": "WF005",
+        "priority": "HIGH",
+        "finding": "WF005 (Customer Order Status) has an elevated failure rate of 20.0% (Threshold: 10.0%).",
+        "action": "Implement retry policies, strict schema validation, or robust error recovery in WF005."
+      },
+      {
+        "category": "PERFORMANCE",
+        "workflow_id": "WF003",
+        "priority": "MEDIUM",
+        "finding": "WF003 (Vendor File Processing) average execution time is 6.15s (Threshold: 5.0s).",
+        "action": "Profile step execution in WF003, optimize file streaming, or add caching for repetitive operations."
+      },
+      {
+        "category": "ERROR_MITIGATION",
+        "workflow_id": "WF003",
+        "priority": "HIGH",
+        "finding": "Top error (2 occurrences): 'FormatError: Invalid CSV delimiter'.",
+        "action": "Add upstream input sanitization or fallback handling for this error type."
+      },
+      {
+        "category": "BOTTLENECK_OPTIMIZATION",
+        "workflow_id": "WF003",
+        "priority": "MEDIUM",
+        "finding": "Step 'clean_dataset_producer' in WF003 averages 7.03s.",
+        "action": "Refactor I/O or parallelize chunk processing to reduce latency."
+      }
+    ],
+    "is_simulated": true,
+    "summary": "Generated 5 recommendation(s) across 7 monitored workflow(s). Flagged 2 high-failure workflow(s) and 1 slow workflow(s)."
+  },
+  "errors": [],
+  "clarification_required": false,
+  "routing_mode": "offline",
+  "warnings": []
+}
