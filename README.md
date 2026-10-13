@@ -48,7 +48,7 @@ The system dynamically loads and validates business workflow definitions directl
 | Excel Ingestion | **openpyxl** (`openpyxl>=3.1.5`) | Workbook parsing and header validation |
 | Environment Config | **python-dotenv** (`python-dotenv>=1.0.0`) | `.env` file discovery and loading |
 | TLS / Certificates | **certifi** (`certifi>=2024.2.2`) | Mozilla root CA bundle for secure Gemini HTTPS requests |
-| Test Framework | **pytest** (`pytest>=8.0.0`) | Automated test suite (154 passing tests) |
+| Test Framework | **pytest** (`pytest>=8.0.0`) | Automated test suite (241 passing tests) |
 
 ---
 
@@ -161,7 +161,7 @@ ai-workflow-agent/
 │   ├── sample_vendor_catalog.csv# Unprocessed vendor feed with bad rows (WF003)
 │   ├── sample_vendor_prices.csv # Vendor quotes (WF002)
 │   └── sample_workflow_logs.csv # Execution telemetry logs (WF010)
-├── tests/                       # 21 test modules (154 passing tests)
+├── tests/                       # 24 test modules (241 passing tests)
 ├── .env.example                 # Documented environment configuration template
 ├── .gitignore                   # Ignore patterns for secrets, venv, caches
 ├── pyproject.toml               # Project metadata, dependencies, and pytest config
@@ -396,16 +396,18 @@ python -m app.main --mock-route WF001 "Which products need restocking?"
 python -m app.main --mock-route WF002 "Find products where vendor price differs by more than 10%."
 
 # WF003: Vendor File Processing
+# Writes cleaned_<stem>.csv and invalid_rows_<stem>.csv to <repo>/outputs/ (or --output-dir)
 python -m app.main --mock-route WF003 "Process this vendor spreadsheet and show invalid rows."
 
 # WF004: Product Description Generator
+# Without a product name the workflow FAILS (exit 1); inputs are never invented
 python -m app.main --mock-route WF004 "Generate SEO content for this product."
 python -m app.main --mock-route WF004 --product-name "Ergonomic Desk Chair" --color "Black" --material "Mesh" "Generate copy"
 
 # WF005: Customer Order Status (known order)
 python -m app.main --mock-route WF005 --order-id "ORD-1001" "What is the status of order ORD-1001?"
 
-# WF005: Customer Order Status (unknown order -> prompts for another identifier)
+# WF005: Customer Order Status (unknown order -> needs_clarification, exit 4)
 python -m app.main --mock-route WF005 --order-id "ORD-9999" "Check order status"
 
 # WF006: Duplicate Product Detection
@@ -418,6 +420,7 @@ python -m app.main --mock-route WF007 --campaign-goal "Launch Eco Line" --dates 
 python -m app.main --mock-route WF008 "Classify these keywords and map them to pages."
 
 # WF009: Employee Task Assignment
+# Missing task skills request clarification (exit 4); no skill is invented
 python -m app.main --mock-route WF009 "Assign this urgent task to the best available developer."
 python -m app.main --mock-route WF009 --task-desc "Develop GraphQL service" --skills "graphql, python" --task-priority "Urgent" "Assign task"
 
@@ -470,6 +473,71 @@ The execution engine and tool registry enforce strict operational safety:
   - Outputs and reports from simulated domain workflows carry explicit `is_simulated: True` metadata.
 
 ---
+
+## Exit Codes
+
+The process exit code reflects the report status (the contract is covered by `tests/test_phase2_fixes.py`).
+
+| Code | Meaning |
+|---|---|
+| `0` | `success` |
+| `1` | `failed` (a step raised an error, or required inputs were missing and the workflow does not define a clarification rule) |
+| `2` | usage error (missing request, unknown flag; reported by argparse) |
+| `3` | `partial_failure` (some steps completed before a failure) |
+| `4` | `needs_clarification` (the user must supply missing information; `clarification_required` is `true`) |
+
+`--json` always prints valid JSON to stdout, and the exit code still applies.
+
+## Missing Input & Clarification Behavior
+
+Missing required inputs are handled consistently. When the user must supply information, the report has `status: needs_clarification`, `clarification_required: true`, a user-facing message in `errors`, and the CLI exits with code 4. Nothing is executed past the failing input, and no value is invented.
+
+- **WF004 (Product Description Generator):** a missing required `product_name` returns `needs_clarification`.
+- **WF005 (Customer Order Status):** if no order matches the identifier, the workflow asks for another Order ID or email (`needs_clarification`).
+- **WF007 (Marketing Campaign Brief):** a missing campaign goal or dates returns `needs_clarification`, and no brief is generated.
+- **WF009 (Employee Task Assignment):** a missing task description, or missing required skills, returns `needs_clarification`. A default skill is never substituted.
+- **Other workflows:** errors such as an unreadable file fail with a clear message (`failed`, exit 1). The workbook defines no clarification rule for them.
+- Mock mode never invents inputs.
+
+## Mock Routing (`--mock-route`)
+
+- `--mock-route WFxxx` skips live LLM routing and always selects `WFxxx`. A request that does not fit that workflow is still executed, so use it for deterministic tests and demos, not as evidence of routing quality.
+- Mock mode does not extract inputs from the request text, with one exception: for WF005 it extracts `ORD-<digits>` and an email address. Other inputs must be passed as flags, for example `--product-name`, `--campaign-goal`, `--dates`, `--vendor-file`.
+- An unregistered ID such as `WF099` is rejected by router validation and returns `needs_clarification` (exit 4).
+- There is no default request. Running `python -m app.main` without a request prints a usage error (exit 2).
+
+## Input Validation
+
+- **Price CSVs (WF002):** a header row is required. Every row must have exactly as many cells as the header, so an unquoted thousands separator such as `$1,200` is rejected with a line number. Values with thousands separators must be quoted. Prices must be finite and strictly positive, and `NaN`, `Infinity`, zero, and negative values are rejected. SKUs must be unique, compared case-insensitively. A currency mismatch between the two files is rejected, and a blank currency is rejected when a currency column exists. Currency codes are compared case-insensitively.
+- **Vendor files (WF003):** column names are normalized through synonyms. Rows missing a SKU or product name are invalid, as are malformed or negative prices.
+- **LLM routing:** a non-finite confidence (`NaN`, `Infinity`) fails closed to `needs_clarification`. Confidence below 0.70 also requires clarification. Routed workflow IDs must exist in the registry.
+- **WF009 employees:** an employee is viable only if they hold every required skill and have available hours. Escalation is raised when no viable employee exists.
+
+## Security Restrictions
+
+- **LLM-supplied file paths are ignored.** Values extracted by the router whose keys contain `path`, `file`, or `csv` are dropped before tool execution, and the report notes what was ignored. File paths come only from explicit CLI flags or configured defaults, so a model response cannot make a tool read an arbitrary local file.
+- **Secrets:** API keys are read from the environment, sent in headers rather than URLs, and never printed. Provider errors are sanitized. `.env` is gitignored, and `.env.example` contains placeholders only.
+- **Source files are never modified.** WF003 writes new files only, and a guard refuses any output path that resolves to the source file.
+- **Spreadsheet formula injection:** WF003 CSV output prefixes any cell beginning with `=`, `+`, `-`, or `@` with an apostrophe, so spreadsheet applications treat it as text.
+
+## WF003 Output Files
+
+WF003 writes three files to `<repo>/outputs/` by default. Use `--output-dir` to change the location. The input file is never modified. Existing files with the same names are replaced.
+
+- `cleaned_<stem>.csv`: valid records, columns `sku, product_name, price, category, stock`.
+- `invalid_rows_<stem>.csv`: rejected rows, columns `row_number, sku, product_name, price, category, stock, errors`. `row_number` is the 1-based data-row index, not the file line number.
+- `validation_summary_<stem>.json`: a JSON object with `source_file` (the input file name), `processed_rows`, `valid_rows`, `invalid_rows` (processed equals valid plus invalid), and `output_files` (the names of the three files).
+- `<stem>` is the input file name without its extension. For `sample_vendor_catalog.csv` the names are `cleaned_sample_vendor_catalog.csv`, `invalid_rows_sample_vendor_catalog.csv`, and `validation_summary_sample_vendor_catalog.json`.
+- Both CSV files neutralise spreadsheet formula injection: a cell beginning with `=`, `+`, `-`, or `@` is prefixed with an apostrophe.
+- The filenames and formats are a project decision. The workbook names a cleaned file, an invalid-row report, and a validation summary, but specifies no names or formats.
+- An empty input with only a header produces empty outputs with headers. A zero-byte input fails and writes nothing.
+
+## WF009 Ranking and Assignment
+
+- Only employees who possess every required skill are assigned. A partially qualified employee is never assigned, regardless of capacity or priority.
+- Qualified employees are ranked by available capacity, highest first. The selected employee is the top-ranked qualified employee with available hours.
+- If no qualified employee has available capacity, the workflow escalates (`escalation_required: true`, status `success`). If no employee holds every required skill, it escalates with a reason that says so.
+- The composite score is shown for reference only and does not drive ranking.
 
 ## Demonstration Extension: WF011 Supplier Delivery Risk Assessment
 
@@ -559,7 +627,7 @@ Adding a new workflow involves two clear steps:
 
 ## Testing & Verification
 
-The test suite contains **154 automated tests** with 100% pass rate.
+The test suite contains **241 automated tests** with a 100% pass rate (verified with `pytest -q`).
 
 ### Run All Tests
 ```bash

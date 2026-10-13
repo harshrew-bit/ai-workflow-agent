@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
+from app.tools.base import ClarificationRequired
 
 
 class ValidatedProductAttributes(BaseModel):
@@ -42,7 +43,7 @@ def validate_product_content_attributes(
     """
     clean_name = str(product_name or "").strip()
     if not clean_name:
-        raise ValueError(
+        raise ClarificationRequired(
             "Required attribute 'product_name' is missing or empty. "
             "A valid product name is required to generate descriptions."
         )

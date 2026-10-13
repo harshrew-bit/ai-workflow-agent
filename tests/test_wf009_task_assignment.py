@@ -3,6 +3,8 @@
 from pathlib import Path
 import pytest
 
+from app.tools.base import ClarificationRequired
+
 from app.tools.task_assignment import (
     AssignmentSummarizerTool,
     CandidateRankerTool,
@@ -37,10 +39,10 @@ def test_task_requirements_parsing_and_skill_extraction():
     assert reqs["priority"] == "Urgent"
 
 
-def test_task_requirements_missing_desc_raises_error():
-    """Verify missing task description raises ValueError."""
+def test_task_requirements_missing_desc_requests_clarification():
+    """Decision 3: a missing task description requests clarification (was a plain ValueError)."""
     analyzer = TaskRequirementsAnalyzerTool()
-    with pytest.raises(ValueError):
+    with pytest.raises(ClarificationRequired, match="task_description"):
         analyzer.execute(task_description="")
 
 

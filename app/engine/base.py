@@ -14,6 +14,7 @@ from app.models.execution import (
 from app.models.workflow import WorkflowDefinition
 from app.tools.base import BaseTool
 from app.tools.registry import ToolRegistry
+from app.tools.base import ClarificationRequired
 
 
 class WorkflowExecutor(ABC):
@@ -208,6 +209,23 @@ class GenericWorkflowEngine(WorkflowExecutor):
             # 4. Invoke tool.execute()
             try:
                 actual_output = tool.execute(**call_kwargs)
+            except ClarificationRequired as exc:
+                step_res = StepExecutionResult(
+                    step_number=idx,
+                    step_name=step_name,
+                    status=ExecutionStatus.NEEDS_CLARIFICATION,
+                    output=None,
+                    error=str(exc),
+                    metadata={"tool_name": tool.name, "decision_logic": workflow.decision_logic},
+                )
+                ctx.record_step(step_res)
+                step_results.append(step_res)
+                return WorkflowExecutionResult(
+                    workflow_id=workflow.workflow_id,
+                    status=ExecutionStatus.NEEDS_CLARIFICATION,
+                    error=step_res.error,
+                    step_results=step_results,
+                )
             except Exception as exc:
                 step_res = StepExecutionResult(
                     step_number=idx,

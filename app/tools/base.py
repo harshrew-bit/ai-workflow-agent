@@ -5,6 +5,14 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, Field
 
 
+class ClarificationRequired(Exception):
+    """Raised by a tool when the user must supply missing information or make a choice.
+
+    The engine stops the workflow with status NEEDS_CLARIFICATION (not FAILED), so the
+    report sets clarification_required=True and the CLI exits with the clarification code.
+    """
+
+
 class ToolMetadata(BaseModel):
     """Metadata describing a reusable tool."""
 

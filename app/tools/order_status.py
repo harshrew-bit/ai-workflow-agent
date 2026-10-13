@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
+from app.tools.base import ClarificationRequired
 
 
 class OrderRecord(BaseModel):
@@ -347,14 +348,7 @@ class OrderStatusSummarizerTool(BaseTool):
                 f"No order found matching {id_text}. "
                 "Please provide a valid Order ID (e.g., ORD-1001) or customer email address to locate your order."
             )
-            return {
-                "order_found": False,
-                "identifier_queried": identifier,
-                "request_another_identifier": True,
-                "summary": prompt_msg,
-                "orders": [],
-                "is_simulated": True,
-            }
+            raise ClarificationRequired(prompt_msg)
 
         summaries: List[Dict[str, Any]] = []
         for o in orders:

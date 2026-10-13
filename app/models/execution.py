@@ -13,6 +13,7 @@ class ExecutionStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     SKIPPED = "skipped"
+    NEEDS_CLARIFICATION = "needs_clarification"
 
 
 class StepExecutionResult(BaseModel):

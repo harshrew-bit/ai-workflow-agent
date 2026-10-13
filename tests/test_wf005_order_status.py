@@ -3,6 +3,7 @@
 from pathlib import Path
 import pytest
 
+from app.tools.base import ClarificationRequired
 from app.tools.order_status import (
     OrderDataSearchTool,
     OrderIdentifierValidatorTool,
@@ -101,22 +102,22 @@ def test_order_without_shipment_yet():
 
 
 def test_unknown_order_asks_for_another_identifier():
-    """Verify Decision Logic: if no order is found, ask for another identifier."""
+    """Verify Decision Logic: if no order is found, ask for another identifier (clarification)."""
     search_tool = OrderDataSearchTool()
     summarizer_tool = OrderStatusSummarizerTool()
 
     search_res = search_tool.execute(identifier="ORD-9999", identifier_type="order_id")
     assert search_res["order_found"] is False
 
-    summary_res = summarizer_tool.execute(
-        identifier="ORD-9999",
-        matching_orders=search_res["matching_orders"],
-        order_found=False,
-    )
-    assert summary_res["order_found"] is False
-    assert summary_res["request_another_identifier"] is True
-    assert "No order found matching 'ORD-9999'" in summary_res["summary"]
-    assert "Please provide a valid Order ID" in summary_res["summary"]
+    with pytest.raises(ClarificationRequired) as exc:
+        summarizer_tool.execute(
+            identifier="ORD-9999",
+            matching_orders=search_res["matching_orders"],
+            order_found=False,
+        )
+    assert "No order found matching 'ORD-9999'" in str(exc.value)
+    assert "Please provide a valid Order ID" in str(exc.value)
+
 
 
 def test_missing_files_error_handling(tmp_path: Path):

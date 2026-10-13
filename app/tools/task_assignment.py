@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
+from app.tools.base import ClarificationRequired
 
 
 class TaskRequirement(BaseModel):
@@ -115,7 +116,9 @@ class TaskRequirementsAnalyzerTool(BaseTool):
     ) -> Dict[str, Any]:
         desc = (task_description or "").strip()
         if not desc:
-            raise ValueError("Task description is required for task assignment.")
+            raise ClarificationRequired(
+                "Required input 'task_description' is missing. Please describe the task to assign."
+            )
 
         parsed_skills: List[str] = []
         if required_skills:
@@ -136,9 +139,12 @@ class TaskRequirementsAnalyzerTool(BaseTool):
                 if re.search(rf"\b{re.escape(s)}\b", desc_lower):
                     parsed_skills.append("postgresql" if s == "postgres" else s)
 
-        # Fallback to general skill if none extracted
+        # Required skills are mandatory. Never fabricate a skill: ask the user instead.
         if not parsed_skills:
-            parsed_skills = ["general software engineering"]
+            raise ClarificationRequired(
+                "Required input 'required_skills' is missing. "
+                "Please specify the skills the task requires (e.g. python, fastapi, postgresql)."
+            )
 
         # Priority determination
         p_val = (priority or "").strip().capitalize()
@@ -196,8 +202,12 @@ class SkillsComparatorTool(BaseTool):
     ) -> Dict[str, Any]:
         reqs = task_requirements or {}
         req_skills = reqs.get("required_skills", [])
+
         if not req_skills:
-            req_skills = ["general software engineering"]
+            raise ClarificationRequired(
+                "Required input 'required_skills' is missing. "
+                "Please provide the skills needed for this task."
+            )
 
         if employee_list:
             employees = employee_list
@@ -327,7 +337,7 @@ class CandidateRankerTool(BaseTool):
             explanation = (
                 f"Skill match: {s_score*100:.0f}% ({m_skills}); "
                 f"Workload: {util:.0f}% used ({avail_h}h available); "
-                f"Composite score: {composite:.3f} (Weights: {skill_w:.0%} skill, {cap_w:.0%} capacity)."
+                f"Ranking: all required skills first, then available capacity; composite score (reference only): {composite:.3f}."
             )
 
             c_rec = dict(c)
@@ -335,14 +345,34 @@ class CandidateRankerTool(BaseTool):
             c_rec["ranking_explanation"] = explanation
             ranked.append(c_rec)
 
-        # Sort descending by composite score, then by available hours
-        ranked.sort(key=lambda x: (x["composite_score"], x["available_hours"]), reverse=True)
+        # Decision (final): only candidates with every required skill are qualified.
+        # Qualified candidates rank first, ordered by available capacity. The composite score
+        # is reference-only and does not drive ranking.
+        ranked.sort(
+            key=lambda x: (
+                _is_fully_qualified(x),
+                x.get("available_hours", 0.0),
+                x.get("capacity_score", 0.0),
+            ),
+            reverse=True,
+        )
 
         return {
             "ranked_candidates": ranked,
             "top_candidate": ranked[0] if ranked else None,
-            "summary": f"Ranked {len(ranked)} candidate(s) by composite suitability score.",
+            "summary": f"Ranked {len(ranked)} candidate(s): fully qualified first, then by available capacity.",
         }
+
+
+def _is_fully_qualified(candidate: Dict[str, Any]) -> bool:
+    """A candidate is fully qualified only if they hold EVERY required skill.
+
+    Uses the explicit missing_skills list when present (always the case inside the workflow);
+    otherwise falls back to a skill score of 1.0. A partial score never qualifies.
+    """
+    if "missing_skills" in candidate:
+        return not candidate["missing_skills"]
+    return candidate.get("skill_match_score", 0.0) >= 1.0
 
 
 class EmployeeSelectorTool(BaseTool):
@@ -367,9 +397,13 @@ class EmployeeSelectorTool(BaseTool):
         # Decision Logic:
         # Prefer employees with required skills and available capacity;
         # Escalate if no suitable employee exists.
+        # Only fully qualified candidates (every required skill) with available capacity are viable.
+        # A partially qualified employee is never assigned, regardless of capacity or priority.
         viable_candidates = [
             c for c in candidates
-            if c.get("skill_match_score", 0.0) > 0.0 and c.get("available_hours", 0.0) > 0.0
+            if _is_fully_qualified(c)
+            and c.get("skill_match_score", 0.0) > 0.0
+            and c.get("available_hours", 0.0) > 0.0
         ]
 
         if viable_candidates:
@@ -382,11 +416,14 @@ class EmployeeSelectorTool(BaseTool):
             }
         else:
             # Check why no one was viable
-            has_skills = any(c.get("skill_match_score", 0.0) > 0.0 for c in candidates)
-            if not has_skills:
-                reason = "No employee possesses the required skills for this task."
+            fully_qualified = [c for c in candidates if _is_fully_qualified(c)]
+            if not fully_qualified:
+                reason = (
+                    "No employee possesses the required skills for this task "
+                    "(every required skill must be present); partially qualified employees are never assigned."
+                )
             else:
-                reason = "All employees with matching skills are currently at 100% capacity with no available bandwidth."
+                reason = "All employees who possess every required skill are currently at 100% capacity with no available bandwidth."
 
             return {
                 "selected_employee": None,

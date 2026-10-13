@@ -14,6 +14,12 @@ from app.tools import create_default_tool_registry
 from app.tools.registry import ToolRegistry
 
 
+def _is_path_like_key(key: str) -> bool:
+    """True for input names that point at the filesystem (e.g. vendor_csv_path, file_path)."""
+    lowered = key.lower()
+    return any(token in lowered for token in ("path", "file", "csv"))
+
+
 class WorkflowOrchestrator:
     """Application-level orchestrator driving the end-to-end workflow lifecycle:
 
@@ -104,10 +110,25 @@ class WorkflowOrchestrator:
                 clarification_required=True,
             )
 
-        # 4. Prepare execution inputs
+        # 4. Prepare execution inputs.
+        # Router-extracted values are LLM-controlled and untrusted. File-path inputs are
+        # dropped so an extracted path can never make a tool read an arbitrary local file;
+        # paths must come from explicit CLI/runtime arguments or configured defaults.
+        extracted = dict(routing_decision.extracted_inputs)
+        ignored_path_inputs = sorted(k for k in extracted if _is_path_like_key(k))
+        for key in ignored_path_inputs:
+            extracted.pop(key, None)
         merged_inputs = dict(self.default_inputs)
-        merged_inputs.update(routing_decision.extracted_inputs)
+        merged_inputs.update(extracted)
         merged_inputs.update(runtime_inputs)
+        reasoning = routing_decision.reasoning
+        if ignored_path_inputs:
+            note = (
+                "Ignored router-supplied file path input(s): "
+                + ", ".join(ignored_path_inputs)
+                + ". Pass file paths explicitly."
+            )
+            reasoning = f"{reasoning} {note}".strip()
 
         # For WF002, the decision threshold is fixed at 10% by definition in data/workflows.xlsx.
         # Prevent any runtime input or router-extracted argument from overriding it.
@@ -149,9 +170,13 @@ class WorkflowOrchestrator:
             )
 
         # 7. Determine overall report status
+        needs_clarification = exec_result.status == ExecutionStatus.NEEDS_CLARIFICATION
         if exec_result.status == ExecutionStatus.COMPLETED:
             overall_status = "success"
             errors = []
+        elif needs_clarification:
+            overall_status = "needs_clarification"
+            errors = [exec_result.error] if exec_result.error else []
         else:
             completed_steps = sum(1 for s in step_reports if s.status == "completed")
             overall_status = "partial_failure" if completed_steps > 0 else "failed"
@@ -162,10 +187,10 @@ class WorkflowOrchestrator:
             selected_workflow_id=workflow.workflow_id,
             selected_workflow_name=workflow.workflow_name,
             routing_confidence=routing_decision.confidence,
-            routing_reasoning=routing_decision.reasoning,
+            routing_reasoning=reasoning,
             status=overall_status,
             steps=step_reports,
             final_output=exec_result.output,
             errors=errors,
-            clarification_required=False,
+            clarification_required=needs_clarification,
         )

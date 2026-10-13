@@ -213,7 +213,9 @@ def test_cli_unconfigured_requests_clarification(monkeypatch, capsys):
         "sys.argv",
         ["app.main", "Which products need restocking?"],
     )
-    main()
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 4  # exit code 4 = needs clarification (documented contract)
 
     captured = capsys.readouterr()
     assert "NEEDS_CLARIFICATION" in captured.out

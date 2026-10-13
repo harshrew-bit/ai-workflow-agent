@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
+import json
 
 # Standardized column name mapping rules
 COLUMN_SYNONYMS: Dict[str, List[str]] = {
@@ -361,6 +362,86 @@ class InvalidRowsIdentifierTool(BaseTool):
         }
 
 
+WF003_CLEANED_COLUMNS = ["sku", "product_name", "price", "category", "stock"]
+WF003_INVALID_COLUMNS = ["row_number", "sku", "product_name", "price", "category", "stock", "errors"]
+
+
+def _csv_safe(value: Any) -> str:
+    """Neutralise spreadsheet formula injection: cells starting with = + - @ are prefixed."""
+    text = "" if value is None else str(value)
+    return "'" + text if text[:1] in ("=", "+", "-", "@") else text
+
+
+def write_wf003_outputs(
+    valid_rows: List[Dict[str, Any]],
+    invalid_rows: List[Dict[str, Any]],
+    output_dir: Union[str, Path],
+    source_path: Optional[Union[str, Path]] = None,
+) -> Dict[str, str]:
+    """Write the three WF003 outputs and return their paths.
+
+    All names use the input file stem (``vendor`` when no source path is known):
+      cleaned_<stem>.csv               valid records: sku, product_name, price, category, stock
+      invalid_rows_<stem>.csv          rejected rows: row_number, sku, product_name, price,
+                                       category, stock, errors
+      validation_summary_<stem>.json   source_file, processed_rows, valid_rows, invalid_rows,
+                                       output_files
+
+    Existing files with these names are replaced. The source file is never written to.
+    Spreadsheet formula injection is neutralised in both CSV files.
+    """
+    out_dir = Path(output_dir)
+    stem = Path(source_path).stem if source_path else "vendor"
+    targets = {
+        "cleaned_csv": out_dir / f"cleaned_{stem}.csv",
+        "invalid_rows_csv": out_dir / f"invalid_rows_{stem}.csv",
+        "validation_summary_json": out_dir / f"validation_summary_{stem}.json",
+    }
+    if source_path:
+        source = Path(source_path).resolve()
+        for target in targets.values():
+            if target.resolve() == source:
+                raise ValueError("Refusing to write WF003 outputs over the source file.")
+    for target in targets.values():
+        if target.is_dir():
+            raise ValueError(f"Cannot write WF003 output: '{target}' is a directory.")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(targets["cleaned_csv"], "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=WF003_CLEANED_COLUMNS, extrasaction="ignore")
+        writer.writeheader()
+        for rec in valid_rows:
+            writer.writerow({k: _csv_safe(rec.get(k)) for k in WF003_CLEANED_COLUMNS})
+
+    with open(targets["invalid_rows_csv"], "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=WF003_INVALID_COLUMNS)
+        writer.writeheader()
+        for rec in invalid_rows:
+            raw = rec.get("raw_data") or {}
+            writer.writerow({
+                "row_number": rec.get("row_number"),
+                "sku": _csv_safe(raw.get("sku")),
+                "product_name": _csv_safe(raw.get("product_name")),
+                "price": _csv_safe(raw.get("price")),
+                "category": _csv_safe(raw.get("category")),
+                "stock": _csv_safe(raw.get("stock")),
+                "errors": _csv_safe("; ".join(rec.get("errors", []))),
+            })
+
+    summary = {
+        "source_file": Path(source_path).name if source_path else None,
+        "processed_rows": len(valid_rows) + len(invalid_rows),
+        "valid_rows": len(valid_rows),
+        "invalid_rows": len(invalid_rows),
+        "output_files": {key: path.name for key, path in targets.items()},
+    }
+    with open(targets["validation_summary_json"], "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+        f.write("\n")
+
+    return {key: str(path) for key, path in targets.items()}
+
+
 class CleanDatasetProducerTool(BaseTool):
     """Step 6 Tool: produce cleaned dataset."""
 
@@ -386,11 +467,26 @@ class CleanDatasetProducerTool(BaseTool):
             f"{len(invalid)} invalid row(s) flagged."
         )
 
+        output_files: Dict[str, str] = {}
+        output_dir = kwargs.get("output_dir")
+        if output_dir:
+            output_files = write_wf003_outputs(
+                valid,
+                invalid,
+                output_dir=output_dir,
+                source_path=kwargs.get("file_path"),
+            )
+            summary_msg += (
+                f" Wrote {output_files['cleaned_csv']}, {output_files['invalid_rows_csv']} "
+                f"and {output_files['validation_summary_json']}."
+            )
+
         return {
             "cleaned_records": valid,
             "invalid_records": invalid,
             "total_processed": total,
             "valid_count": len(valid),
             "invalid_count": len(invalid),
+            "output_files": output_files,
             "summary": summary_msg,
         }

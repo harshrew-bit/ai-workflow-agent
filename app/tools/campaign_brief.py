@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from app.tools.base import BaseTool, ToolMetadata
+from app.tools.base import ClarificationRequired
 
 
 class ValidatedCampaignInputs(BaseModel):
@@ -42,7 +43,7 @@ def extract_and_validate_campaign_inputs(
     """
     clean_goal = str(campaign_goal or "").strip()
     if not clean_goal:
-        raise ValueError(
+        raise ClarificationRequired(
             "Required input 'campaign_goal' is missing. "
             "Please provide a specific campaign goal before generating the campaign brief."
         )
@@ -52,7 +53,7 @@ def extract_and_validate_campaign_inputs(
         clean_dates = f"{start_date} to {end_date or 'Ongoing'}"
 
     if not clean_dates:
-        raise ValueError(
+        raise ClarificationRequired(
             "Required input 'dates' is missing. "
             "Please provide campaign dates or a schedule before generating the campaign brief."
         )

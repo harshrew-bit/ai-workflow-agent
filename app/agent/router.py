@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import json
+import math
 import re
 from typing import Any, Dict, List, Optional, Sequence
 from pydantic import BaseModel, Field, ValidationError
@@ -178,6 +179,9 @@ class LLMWorkflowRouter(WorkflowRouter):
             raw_conf = parsed_data.get("confidence", 0.0)
             try:
                 conf = float(raw_conf)
+                # min()/max() silently turn NaN into 1.0; reject non-finite values outright.
+                if not math.isfinite(conf):
+                    raise ValueError("non-finite confidence")
                 parsed_data["confidence"] = max(0.0, min(1.0, conf))
             except (ValueError, TypeError):
                 parsed_data["confidence"] = 0.0

@@ -2,6 +2,7 @@
 
 import pytest
 
+from app.tools.base import ClarificationRequired
 from app.tools.campaign_brief import (
     CampaignChannelRecommenderTool,
     CampaignChecklistCreatorTool,
@@ -29,30 +30,30 @@ def test_full_campaign_inputs_validation():
     assert inputs.promotion == "10% off bundles"
 
 
-def test_missing_campaign_goal_raises_value_error():
+def test_missing_campaign_goal_requests_clarification():
     """Verify Decision Logic: If campaign goal is missing, request it before generating brief."""
-    with pytest.raises(ValueError, match="Required input 'campaign_goal' is missing"):
+    with pytest.raises(ClarificationRequired, match="Required input 'campaign_goal' is missing"):
         extract_and_validate_campaign_inputs(
             campaign_goal="",
             dates="2026-06-01 to 2026-06-30",
         )
 
-    with pytest.raises(ValueError, match="Required input 'campaign_goal' is missing"):
+    with pytest.raises(ClarificationRequired, match="Required input 'campaign_goal' is missing"):
         extract_and_validate_campaign_inputs(
             campaign_goal=None,
             dates="2026-06-01 to 2026-06-30",
         )
 
 
-def test_missing_dates_raises_value_error():
+def test_missing_dates_requests_clarification():
     """Verify Decision Logic: If dates are missing, request them before generating brief."""
-    with pytest.raises(ValueError, match="Required input 'dates' is missing"):
+    with pytest.raises(ClarificationRequired, match="Required input 'dates' is missing"):
         extract_and_validate_campaign_inputs(
             campaign_goal="Launch Q4 Holiday Promo",
             dates="",
         )
 
-    with pytest.raises(ValueError, match="Required input 'dates' is missing"):
+    with pytest.raises(ClarificationRequired, match="Required input 'dates' is missing"):
         extract_and_validate_campaign_inputs(
             campaign_goal="Launch Q4 Holiday Promo",
             dates=None,

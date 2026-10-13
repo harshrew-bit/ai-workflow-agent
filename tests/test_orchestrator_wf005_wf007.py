@@ -58,14 +58,16 @@ def test_orchestrator_wf005_full_pipeline_known_order_with_shipment():
 
 
 def test_orchestrator_wf005_unknown_order_asks_for_another_identifier():
-    """Verify that WF005 asks for another identifier when order cannot be located."""
+    """Workbook rule: if no order is found, ask for another identifier.
+
+    Corrected expectation: the report is needs_clarification with clarification_required=True
+    (previously asserted status 'success' with a flag, which contradicted the workbook).
+    """
     fake_json = json.dumps({
         "workflow_id": "WF005",
         "confidence": 0.95,
         "reasoning": "Matches Customer Order Status trigger.",
-        "extracted_inputs": {
-            "order_id": "UNKNOWN-9999",
-        },
+        "extracted_inputs": {"order_id": "UNKNOWN-9999"},
         "requires_clarification": False,
     })
     router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
@@ -73,16 +75,11 @@ def test_orchestrator_wf005_unknown_order_asks_for_another_identifier():
 
     report = orchestrator.run("Status for order UNKNOWN-9999 please.")
 
-    assert report.status == "success"
-    assert report.selected_workflow_id == "WF005"
-    assert len(report.steps) == 5
+    assert report.status == "needs_clarification"
+    assert report.clarification_required is True
+    assert report.final_output is None
+    assert "Please provide a valid Order ID" in report.errors[0]
 
-    final = report.final_output
-    assert isinstance(final, dict)
-    assert final["order_found"] is False
-    assert final["request_another_identifier"] is True
-    assert "no order found" in final["summary"].lower()
-    assert "please provide a valid order id" in final["summary"].lower()
 
 
 def test_orchestrator_wf006_full_pipeline():
@@ -185,25 +182,28 @@ def test_orchestrator_wf007_full_pipeline():
 
 
 def test_orchestrator_wf007_missing_dates_fails():
-    """Verify that WF007 halts safely when required dates are not provided."""
+    """Workbook rule: if campaign goal or dates are missing, request them before generating.
+
+    Corrected expectation: needs_clarification with clarification_required=True
+    (previously asserted a generic 'failed' status).
+    """
     fake_json = json.dumps({
         "workflow_id": "WF007",
         "confidence": 0.90,
         "reasoning": "Campaign brief request.",
-        "extracted_inputs": {
-            "campaign_goal": "Boost brand awareness",
-            # dates omitted!
-        },
+        "extracted_inputs": {"campaign_goal": "Boost brand awareness"},
         "requires_clarification": False,
     })
     router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
     orchestrator = WorkflowOrchestrator(router=router)
 
-    report = orchestrator.run("Create a marketing brief.")
+    report = orchestrator.run("Create a campaign brief for Boost brand awareness.")
 
-    assert report.status in ("failed", "partial_failure")
-    assert len(report.errors) > 0
-    assert "dates" in report.errors[0].lower()
+    assert report.status == "needs_clarification"
+    assert report.clarification_required is True
+    assert report.final_output is None
+    assert "dates" in report.errors[0]
+
 
 
 def test_cli_mock_route_wf005(monkeypatch, capsys):

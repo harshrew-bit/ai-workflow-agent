@@ -2,7 +2,9 @@
 
 import argparse
 import json
+import re
 import sys
+from pathlib import Path
 from typing import Any, Dict
 
 from app.orchestrator import WorkflowOrchestrator
@@ -368,6 +370,46 @@ def format_report_for_display(report: Any) -> str:
     return "\n".join(lines)
 
 
+_MOCK_ORDER_ID_RE = re.compile(r"\bORD-\d+\b", re.IGNORECASE)
+_MOCK_EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
+
+
+def _extract_mock_identifiers(request: str) -> Dict[str, str]:
+    """Deterministic identifier extraction used ONLY by --mock-route WF005.
+
+    The mock route bypasses the LLM router, so it cannot extract order IDs or emails
+    from natural language. This mirrors that extraction for the workbook test question.
+    """
+    found: Dict[str, str] = {}
+    order = _MOCK_ORDER_ID_RE.search(request or "")
+    if order:
+        found["order_id"] = order.group(0).upper()
+    email = _MOCK_EMAIL_RE.search(request or "")
+    if email:
+        found["customer_email"] = email.group(0)
+    return found
+
+
+# Exit-code contract (documented in README.md):
+#   0 success | 1 failed | 2 usage error (argparse) | 3 partial failure | 4 needs clarification
+EXIT_SUCCESS = 0
+EXIT_FAILED = 1
+EXIT_USAGE = 2
+EXIT_PARTIAL_FAILURE = 3
+EXIT_NEEDS_CLARIFICATION = 4
+_STATUS_EXIT_CODES = {
+    "success": EXIT_SUCCESS,
+    "failed": EXIT_FAILED,
+    "partial_failure": EXIT_PARTIAL_FAILURE,
+    "needs_clarification": EXIT_NEEDS_CLARIFICATION,
+}
+
+
+def exit_code_for_status(status: str) -> int:
+    """Map a report status to the documented process exit code (unknown -> failed)."""
+    return _STATUS_EXIT_CODES.get(status, EXIT_FAILED)
+
+
 def main() -> None:
     """Run CLI workflow execution."""
     parser = argparse.ArgumentParser(
@@ -375,9 +417,7 @@ def main() -> None:
     )
     parser.add_argument(
         "request",
-        nargs="?",
-        default="Which products need restocking?",
-        help="Natural language user request",
+        help="Natural language user request (required; no default request is run)",
     )
     parser.add_argument(
         "--csv-path",
@@ -533,6 +573,11 @@ def main() -> None:
         help="Supplier delivery records CSV path (WF011)",
     )
 
+    parser.add_argument(
+        "--output-dir",
+        default=str(Path(__file__).resolve().parent.parent / "outputs"),
+        help="Directory for WF003 cleaned and invalid-row CSV outputs (default: <repo>/outputs)",
+    )
     args = parser.parse_args()
 
     router = None
@@ -569,12 +614,6 @@ def main() -> None:
         runtime_inputs["file_path"] = args.vendor_file
     if args.product_name:
         runtime_inputs["product_name"] = args.product_name
-    elif args.mock_route == "WF004" and not args.product_name:
-        runtime_inputs["product_name"] = "Ergonomic Desk Chair"
-        runtime_inputs["category"] = "Office Furniture"
-        runtime_inputs["material"] = "Breathable Mesh"
-        runtime_inputs["color"] = "Charcoal Black"
-        runtime_inputs["target_audience"] = "Remote Professionals"
     if args.category:
         runtime_inputs["category"] = args.category
     if args.material:
@@ -591,12 +630,6 @@ def main() -> None:
         runtime_inputs["catalog_csv_path"] = args.catalog_csv
     if args.campaign_goal:
         runtime_inputs["campaign_goal"] = args.campaign_goal
-    elif args.mock_route == "WF007" and not args.campaign_goal:
-        runtime_inputs["campaign_goal"] = "Launch New Sustainable Workspace Collection"
-        runtime_inputs["dates"] = "2026-11-01 to 2026-11-30"
-        runtime_inputs["target_audience"] = "Remote Professionals"
-        runtime_inputs["promotion"] = "15% off launch bundles with code ECO15"
-        runtime_inputs["product_list"] = ["Bamboo Desk Organizer", "Ergonomic Hemp Chair"]
     if args.dates:
         runtime_inputs["dates"] = args.dates
     if args.promotion:
@@ -613,10 +646,6 @@ def main() -> None:
     # WF009 inputs
     if args.task_desc:
         runtime_inputs["task_description"] = args.task_desc
-    elif args.mock_route == "WF009" and not args.task_desc:
-        runtime_inputs["task_description"] = "Build secure REST API endpoint for user profile export in FastAPI with PostgreSQL"
-        runtime_inputs["required_skills"] = "python, fastapi, postgresql"
-        runtime_inputs["priority"] = "Urgent"
     if args.skills:
         runtime_inputs["required_skills"] = args.skills
     if args.employee_csv:
@@ -638,6 +667,11 @@ def main() -> None:
     if args.supplier_csv:
         runtime_inputs["supplier_csv_path"] = args.supplier_csv
 
+    runtime_inputs["output_dir"] = args.output_dir
+    if args.mock_route == "WF005":
+        for key, value in _extract_mock_identifiers(args.request).items():
+            runtime_inputs.setdefault(key, value)
+
     report = orchestrator.run(args.request, **runtime_inputs)
 
     if args.json:
@@ -645,8 +679,9 @@ def main() -> None:
     else:
         print(format_report_for_display(report))
 
-    if report.status in ("failed", "partial_failure"):
-        sys.exit(1)
+    exit_code = exit_code_for_status(report.status)
+    if exit_code != EXIT_SUCCESS:
+        sys.exit(exit_code)
 
 
 if __name__ == "__main__":

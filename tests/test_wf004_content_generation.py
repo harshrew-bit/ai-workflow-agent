@@ -14,6 +14,7 @@ from app.tools.content_generation import (
     synthesize_short_description,
     validate_product_content_attributes,
 )
+from app.tools.base import ClarificationRequired
 
 
 def test_full_attributes_content_generation():
@@ -69,13 +70,14 @@ def test_missing_attributes_never_invented_and_explicitly_marked():
     assert "omitted to prevent hallucination" in full_desc
 
 
-def test_missing_product_name_raises_value_error():
-    """Verify that omitting mandatory product_name triggers a clear validation error."""
-    with pytest.raises(ValueError, match="Required attribute 'product_name' is missing or empty"):
+def test_missing_product_name_requests_clarification():
+    """Decision 3: omitting mandatory product_name requests clarification (was a plain ValueError)."""
+    with pytest.raises(ClarificationRequired, match="Required attribute 'product_name' is missing or empty"):
         validate_product_content_attributes(product_name="")
 
-    with pytest.raises(ValueError, match="Required attribute 'product_name' is missing or empty"):
+    with pytest.raises(ClarificationRequired, match="Required attribute 'product_name' is missing or empty"):
         validate_product_content_attributes(product_name=None)
+
 
 
 def test_step_by_step_wf004_tools_cascading():

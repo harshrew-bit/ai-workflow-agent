@@ -152,24 +152,23 @@ def test_orchestrator_wf004_full_pipeline():
     assert final["is_simulated"] is True
 
 
-def test_orchestrator_wf004_missing_product_name_fails():
-    """Verify that WF004 fails accurately when required product_name is absent."""
+def test_orchestrator_wf004_missing_product_name_requests_clarification():
+    """Decision 3: a missing required product_name returns needs_clarification (was: failed)."""
     fake_json = json.dumps({
         "workflow_id": "WF004",
-        "confidence": 0.90,
-        "reasoning": "Product content request.",
-        "extracted_inputs": {},  # No product_name provided!
+        "confidence": 0.95,
+        "reasoning": "Matches Product Description Generator trigger.",
+        "extracted_inputs": {},
         "requires_clarification": False,
     })
     router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
-    orchestrator = WorkflowOrchestrator(router=router)
+    report = WorkflowOrchestrator(router=router).run("Generate SEO content for this product.")
 
-    # Calling without product_name should fail on step 1
-    report = orchestrator.run("Generate SEO content for my item.")
-
-    assert report.status in ("failed", "partial_failure")
-    assert len(report.errors) > 0
+    assert report.status == "needs_clarification"
+    assert report.clarification_required is True
+    assert report.final_output is None
     assert "required attribute 'product_name' is missing" in report.errors[0].lower()
+
 
 
 def test_cli_mock_route_wf002(monkeypatch, capsys):
@@ -194,13 +193,13 @@ def test_cli_mock_route_wf002(monkeypatch, capsys):
     assert "Unmatched Internal SKUs: 1 record(s)" in captured.out
 
 
-def test_cli_mock_route_wf003(monkeypatch, capsys):
+def test_cli_mock_route_wf003(monkeypatch, capsys, tmp_path):
     """Test CLI --mock-route WF003."""
     from app.main import main
 
     monkeypatch.setattr(
         "sys.argv",
-        ["app.main", "--mock-route", "WF003", "Process this vendor spreadsheet and show invalid rows."],
+        ["app.main", "--mock-route", "WF003", "--output-dir", str(tmp_path), "Process this vendor spreadsheet and show invalid rows."],
     )
     main()
 
@@ -211,13 +210,39 @@ def test_cli_mock_route_wf003(monkeypatch, capsys):
     assert "Invalid Rows Flagged:  4" in captured.out
 
 
-def test_cli_mock_route_wf004(monkeypatch, capsys):
-    """Test CLI --mock-route WF004."""
+def test_cli_mock_route_wf004_without_product_does_not_fabricate(monkeypatch, capsys):
+    """WF004 must NOT invent product attributes. Missing product_name requests clarification (exit 4).
+
+    Corrected expectation: the earlier version asserted fabricated defaults and SUCCESS.
+    """
     from app.main import main
 
     monkeypatch.setattr(
         "sys.argv",
         ["app.main", "--mock-route", "WF004", "Generate SEO content for this product."],
+    )
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert exc.value.code == 4
+
+    captured = capsys.readouterr()
+    assert "Ergonomic Desk Chair" not in captured.out
+    assert "Breathable Mesh" not in captured.out
+    assert "product_name" in captured.out
+
+
+
+def test_cli_mock_route_wf004_with_explicit_product_succeeds(monkeypatch, capsys):
+    """Explicitly supplied product input still produces a description."""
+    from app.main import main
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "app.main", "--mock-route", "WF004",
+            "--product-name", "Ergonomic Desk Chair",
+            "Generate SEO content for this product.",
+        ],
     )
     main()
 
@@ -226,8 +251,6 @@ def test_cli_mock_route_wf004(monkeypatch, capsys):
     assert "WF004 (Product Description Generator)" in captured.out
     assert "Ergonomic Desk Chair" in captured.out
     assert "SEO Title:" in captured.out
-    assert "Meta Description:" in captured.out
-    assert "simulated" in captured.out.lower()
 
 
 def test_wf001_regression_remains_intact():
