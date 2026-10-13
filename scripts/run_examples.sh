@@ -67,6 +67,10 @@ for slug, spec in expected_data.items():
 
     # 1. Run text report
     env_clean = {k: v for k, v in subprocess.os.environ.items() if "API_KEY" not in k and k != "LLM_PROVIDER"}
+    # Force deterministic offline routing, even when .env contains live credentials.
+    env_clean["LLM_PROVIDER"] = "offline"
+    env_clean["GEMINI_API_KEY"] = ""
+    env_clean["OPENAI_API_KEY"] = ""
 
     proc_txt = subprocess.run(
         [sys.executable, "-m", "app.main", request_text],
