@@ -32,7 +32,7 @@ export const RawJsonViewer: React.FC<RawJsonViewerProps> = ({ report }) => {
       >
         <div className="flex items-center space-x-2">
           {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          <span className="font-semibold">View raw ExecutionReport JSON</span>
+          <span className="font-semibold">Technical details (Raw ExecutionReport JSON)</span>
         </div>
         <span className="text-[10px] text-charcoal-400">
           {isOpen ? 'Click to collapse' : 'Click to expand'}

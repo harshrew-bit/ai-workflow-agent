@@ -18,7 +18,7 @@ export interface ExecutionReport {
   final_output: any;
   errors: string[];
   clarification_required: boolean;
-  routing_mode: 'llm' | 'offline' | 'forced';
+  routing_mode: 'llm' | 'offline' | 'forced' | 'multi_workflow' | string;
   warnings: string[];
   exit_code?: number;
 }
