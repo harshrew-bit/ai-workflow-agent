@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
 
+from app.agent.normalization import parse_comparison_operator, parse_percentage_threshold
 from app.tools.base import BaseTool, ToolMetadata
 
 # The official WF002 workbook defines a fixed 10.0% threshold.
@@ -55,6 +56,11 @@ def to_decimal(val: Any) -> Decimal:
     """Convert input numeric or string to Decimal safely without floating-point distortion."""
     if isinstance(val, Decimal):
         return val
+    if isinstance(val, str):
+        cleaned = val.strip().rstrip("%").strip()
+        if cleaned.lower().endswith("percent"):
+            cleaned = cleaned[:-7].strip()
+        return Decimal(cleaned)
     return Decimal(str(val))
 
 
@@ -120,17 +126,66 @@ def parse_price(raw_price: str, row_idx: int, sku: str, context: str = "Internal
     return price_dec
 
 
+VALID_OPERATORS: Dict[str, str] = {
+    ">": "EXCEEDS",
+    "<": "LESS_THAN",
+    ">=": "AT_LEAST",
+    "<=": "AT_MOST",
+    "==": "EQUALS",
+}
+
+OPERATOR_SYNONYMS: Dict[str, str] = {
+    ">": ">",
+    "gt": ">",
+    "greater": ">",
+    "greater than": ">",
+    "exceeds": ">",
+    "exceeding": ">",
+    "above": ">",
+    "more than": ">",
+    "<": "<",
+    "lt": "<",
+    "less": "<",
+    "less than": "<",
+    "under": "<",
+    "below": "<",
+    ">=": ">=",
+    "gte": ">=",
+    "at least": ">=",
+    "greater than or equal to": ">=",
+    "minimum": ">=",
+    "<=": "<=",
+    "lte": "<=",
+    "at most": "<=",
+    "less than or equal to": "<=",
+    "up to": "<=",
+    "==": "==",
+    "eq": "==",
+    "equals": "==",
+    "equal to": "==",
+    "exactly": "==",
+}
+
+
 def evaluate_price_comparison(
     internal_price: Any,
     vendor_price: Any,
-    threshold_percentage: float = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
+    threshold_percentage: Union[str, float, int, Decimal] = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
+    comparison_operator: str = ">",
 ) -> Tuple[float, float, bool, str]:
     """Authoritative price comparison decision using exact Decimal arithmetic.
 
     Decision Rule:
-        A product is flagged as an exception strictly when the absolute vendor-price
-        difference exceeds threshold_percentage% of the internal price:
-        abs(vendor_price - internal_price) > (internal_price * threshold_percentage / 100)
+        A product is flagged as an exception when the absolute vendor-price
+        difference satisfies the comparison against threshold_percentage% of the internal price:
+        abs(vendor_price - internal_price) <op> (internal_price * threshold_percentage / 100)
+
+        Supported operators:
+          - '>' (strictly exceeding / greater than)
+          - '<' (strictly less than / below)
+          - '>=' (at least / greater than or equal to)
+          - '<=' (at most / less than or equal to)
+          - '==' (exactly equal)
 
     Comparing against the monetary threshold amount (internal_price * threshold / 100)
     avoids floating-point precision boundary errors (e.g. 3.30 vs 3.63 is exactly 10%,
@@ -147,24 +202,47 @@ def evaluate_price_comparison(
     if v_dec <= Decimal("0"):
         raise ValueError(f"Vendor price must be strictly positive, got '{vendor_price}'.")
 
+    try:
+        threshold_dec = to_decimal(threshold_percentage)
+    except Exception:
+        raise ValueError(
+            f"Price validation threshold must be a finite non-negative number, got '{threshold_percentage}'."
+        )
+    if not threshold_dec.is_finite() or threshold_dec < Decimal("0"):
+        raise ValueError(f"Price validation threshold must be a finite non-negative number, got '{threshold_percentage}'.")
+
+    raw_op = comparison_operator if comparison_operator is not None else ">"
+    op_norm = parse_comparison_operator(raw_op)
+
     diff_dec = v_dec - i_dec
     abs_diff_dec = abs(diff_dec)
-
-    threshold_dec = to_decimal(threshold_percentage)
     threshold_amount = (i_dec * threshold_dec) / Decimal("100")
 
-    # Strictly greater than threshold:
-    is_exception = abs_diff_dec > threshold_amount
-
-    if threshold_percentage == 10.0:
-        status = "EXCEPTION_EXCEEDS_10_PERCENT" if is_exception else "COMPLIANT"
+    if op_norm == ">":
+        is_exception = abs_diff_dec > threshold_amount
+    elif op_norm == "<":
+        is_exception = abs_diff_dec < threshold_amount
+    elif op_norm == ">=":
+        is_exception = abs_diff_dec >= threshold_amount
+    elif op_norm == "<=":
+        is_exception = abs_diff_dec <= threshold_amount
+    elif op_norm == "==":
+        is_exception = abs_diff_dec == threshold_amount
     else:
+        is_exception = False
+
+    if not is_exception:
+        status = "COMPLIANT"
+    elif threshold_dec == Decimal("10") and op_norm == ">":
+        status = "EXCEPTION_EXCEEDS_10_PERCENT"
+    else:
+        op_tag = VALID_OPERATORS[op_norm]
         thresh_label = (
-            int(threshold_percentage)
-            if float(threshold_percentage).is_integer()
-            else threshold_percentage
+            int(threshold_dec)
+            if threshold_dec == threshold_dec.to_integral()
+            else f"{threshold_dec:f}".rstrip("0").rstrip(".")
         )
-        status = f"EXCEPTION_EXCEEDS_{thresh_label}_PERCENT" if is_exception else "COMPLIANT"
+        status = f"EXCEPTION_{op_tag}_{thresh_label}_PERCENT"
 
     # Percentage difference for display: |diff| / internal_price * 100, rounded to 2 decimals
     raw_pct_diff = (abs_diff_dec / i_dec) * Decimal("100")
@@ -432,7 +510,8 @@ def match_prices_by_sku(
 
 def compare_and_flag_prices(
     matched_pairs: List[Dict[str, Any]],
-    threshold_percentage: float = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
+    threshold_percentage: Union[str, float, int, Decimal] = DEFAULT_PRICE_THRESHOLD_PERCENTAGE,
+    comparison_operator: str = ">",
 ) -> Dict[str, Any]:
     """Calculate price difference, percentage difference, and flag exceptions exceeding threshold."""
     results: List[Dict[str, Any]] = []
@@ -443,6 +522,7 @@ def compare_and_flag_prices(
             internal_price=pair["internal_price"],
             vendor_price=pair["vendor_price"],
             threshold_percentage=threshold_percentage,
+            comparison_operator=comparison_operator,
         )
 
         item_dict = {
@@ -487,10 +567,44 @@ class PriceDataLoaderTool(BaseTool):
         self,
         internal_csv_path: Optional[str] = None,
         vendor_csv_path: Optional[str] = None,
+        historical_vendor_csv_path: Optional[str] = None,
+        prior_vendor_csv_path: Optional[str] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         default_internal = Path("data/sample_internal_prices.csv")
         default_vendor = Path("data/sample_vendor_prices.csv")
+
+        hist_path = (
+            historical_vendor_csv_path
+            or prior_vendor_csv_path
+            or kwargs.get("historical_vendor_csv_path")
+            or kwargs.get("prior_vendor_csv_path")
+        )
+        if hist_path:
+            h_path = Path(hist_path)
+            v_path = Path(vendor_csv_path) if vendor_csv_path else default_vendor
+            prior_items = load_vendor_prices_csv(h_path)
+            current_items = load_vendor_prices_csv(v_path)
+            baseline_records = [
+                InternalPriceRecord(
+                    sku=item.sku,
+                    product_name=f"{item.vendor_name} ({item.sku})",
+                    internal_price=item.vendor_price,
+                    currency=item.currency,
+                )
+                for item in prior_items
+            ]
+            return {
+                "internal_prices": [item.model_dump() for item in baseline_records],
+                "vendor_prices": [item.model_dump() for item in current_items],
+                "total_internal": len(baseline_records),
+                "total_vendor": len(current_items),
+                "summary": (
+                    f"Loaded {len(baseline_records)} historical vendor price record(s) and "
+                    f"{len(current_items)} current vendor record(s) for period comparison."
+                ),
+                "is_historical_comparison": True,
+            }
 
         i_path = Path(internal_csv_path) if internal_csv_path else default_internal
         v_path = Path(vendor_csv_path) if vendor_csv_path else default_vendor
@@ -604,13 +718,13 @@ class PercentageDifferenceCalculatorTool(BaseTool):
 
 
 class PriceExceptionFlaggerTool(BaseTool):
-    """Step 5 Tool: flag exceptions exceeding 10% threshold."""
+    """Step 5 Tool: flag pricing discrepancy exceptions."""
 
     @property
     def metadata(self) -> ToolMetadata:
         return ToolMetadata(
             name="price_exception_flagger",
-            description="Flag pricing discrepancies strictly exceeding 10% and compile validation report.",
+            description="Flag pricing discrepancies strictly exceeding 10% by default, or according to explicit request threshold and operator.",
         )
 
     def execute(
@@ -618,16 +732,51 @@ class PriceExceptionFlaggerTool(BaseTool):
         price_evaluations: Optional[List[Dict[str, Any]]] = None,
         unmatched_vendor: Optional[List[Dict[str, Any]]] = None,
         unmatched_internal: Optional[List[Dict[str, Any]]] = None,
-        threshold: Optional[float] = None,
+        threshold: Optional[Union[float, int, str, Decimal]] = None,
+        price_threshold: Optional[Union[float, int, str, Decimal]] = None,
+        threshold_percentage: Optional[Union[float, int, str, Decimal]] = None,
+        operator: Optional[str] = None,
+        comparison_operator: Optional[str] = None,
         **kwargs: Any,
     ) -> Dict[str, Any]:
         items = price_evaluations or []
         unmatched_v = unmatched_vendor or []
         unmatched_i = unmatched_internal or []
 
-        # WF002 decision logic as defined in data/workflows.xlsx mandates a fixed 10.0% threshold.
-        # User requests, router extractions, or tool arguments cannot override WF002's fixed policy.
-        fixed_threshold = DEFAULT_PRICE_THRESHOLD_PERCENTAGE
+        # Determine effective threshold: explicit threshold parameter wins over default 10.0%
+        req_thresh = (
+            threshold
+            if threshold is not None
+            else (
+                price_threshold
+                if price_threshold is not None
+                else (
+                    threshold_percentage
+                    if threshold_percentage is not None
+                    else (
+                        kwargs.get("threshold")
+                        if kwargs.get("threshold") is not None
+                        else (
+                            kwargs.get("price_threshold")
+                            if kwargs.get("price_threshold") is not None
+                            else kwargs.get("threshold_percentage")
+                        )
+                    )
+                )
+            )
+        )
+        if req_thresh is not None:
+            eff_thresh_val = parse_percentage_threshold(req_thresh, "Price validation threshold")
+            eff_thresh = to_decimal(eff_thresh_val)
+        else:
+            eff_thresh = Decimal(str(DEFAULT_PRICE_THRESHOLD_PERCENTAGE))
+
+        # Determine effective comparison operator: default is '>'
+        req_op = operator or comparison_operator or kwargs.get("operator") or kwargs.get("comparison_operator")
+        if req_op is not None:
+            eff_op = parse_comparison_operator(req_op)
+        else:
+            eff_op = ">"
 
         validated_list: List[Dict[str, Any]] = []
         exceptions: List[Dict[str, Any]] = []
@@ -636,7 +785,8 @@ class PriceExceptionFlaggerTool(BaseTool):
             diff, pct_diff, is_exception, status = evaluate_price_comparison(
                 internal_price=item["internal_price"],
                 vendor_price=item["vendor_price"],
-                threshold_percentage=fixed_threshold,
+                threshold_percentage=eff_thresh,
+                comparison_operator=eff_op,
             )
 
             res = dict(item)
@@ -650,10 +800,29 @@ class PriceExceptionFlaggerTool(BaseTool):
             if is_exception:
                 exceptions.append(res)
 
-        summary_msg = (
-            f"Validated {len(validated_list)} products: {len(exceptions)} exception(s) "
-            f"exceeding {fixed_threshold}% threshold."
-        )
+        op_norm = OPERATOR_SYNONYMS.get(eff_op.lower(), eff_op)
+        if eff_thresh == Decimal("10") and op_norm == ">":
+            summary_msg = (
+                f"Validated {len(validated_list)} products: {len(exceptions)} exception(s) "
+                f"exceeding {DEFAULT_PRICE_THRESHOLD_PERCENTAGE}% threshold."
+            )
+        else:
+            thresh_label = (
+                int(eff_thresh)
+                if eff_thresh == eff_thresh.to_integral()
+                else f"{eff_thresh:f}".rstrip("0").rstrip(".")
+            )
+            op_phrase = {
+                ">": "exceeding",
+                "<": "less than",
+                ">=": "at least",
+                "<=": "at most",
+                "==": "equal to",
+            }.get(op_norm, "matching")
+            summary_msg = (
+                f"Validated {len(validated_list)} products: {len(exceptions)} exception(s) "
+                f"{op_phrase} {thresh_label}% threshold."
+            )
 
         return {
             "matched_products": validated_list,

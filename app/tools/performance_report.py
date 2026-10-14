@@ -10,11 +10,13 @@ Steps:
 """
 
 import csv
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field
 
+from app.agent.normalization import parse_percentage_threshold, parse_time_threshold_seconds
 from app.tools.base import BaseTool, ToolMetadata
 
 
@@ -117,6 +119,17 @@ class RateCalculatorTool(BaseTool):
         **kwargs: Any,
     ) -> Dict[str, Any]:
         logs = raw_logs or []
+        raw_thresh = (
+            kwargs.get("failure_threshold")
+            if kwargs.get("failure_threshold") is not None
+            else (
+                kwargs.get("failure_rate_threshold")
+                if kwargs.get("failure_rate_threshold") is not None
+                else failure_threshold
+            )
+        )
+        eff_failure_thresh = parse_percentage_threshold(raw_thresh, "Failure rate threshold")
+
         if not logs:
             return {
                 "workflow_rates": {},
@@ -161,9 +174,9 @@ class RateCalculatorTool(BaseTool):
             f_rate = (fail / tot * 100) if tot > 0 else 0.0
             data["success_rate_percent"] = round(s_rate, 1)
             data["failure_rate_percent"] = round(f_rate, 1)
-            # Flag if strictly greater than failure threshold (10.0%)
-            data["is_failure_flagged"] = f_rate > failure_threshold
-            if f_rate > failure_threshold:
+            # Flag if strictly greater than failure threshold (10.0% by default)
+            data["is_failure_flagged"] = f_rate > eff_failure_thresh
+            if f_rate > eff_failure_thresh:
                 flagged_workflows.append(wid)
 
         tot_all = len(logs)
@@ -173,7 +186,7 @@ class RateCalculatorTool(BaseTool):
         summary_msg = (
             f"Overall Success Rate: {ov_succ_rate}% ({total_success}/{tot_all}), "
             f"Failure Rate: {ov_fail_rate}% ({total_failures}/{tot_all}). "
-            f"Workflows exceeding {failure_threshold}% failure threshold: "
+            f"Workflows exceeding {eff_failure_thresh}% failure threshold: "
             f"{', '.join(flagged_workflows) if flagged_workflows else 'None'}."
         )
 
@@ -203,6 +216,21 @@ class ExecutionTimeCalculatorTool(BaseTool):
         **kwargs: Any,
     ) -> Dict[str, Any]:
         logs = raw_logs or []
+        raw_time = (
+            kwargs.get("time_threshold_seconds")
+            if kwargs.get("time_threshold_seconds") is not None
+            else (
+                kwargs.get("time_threshold")
+                if kwargs.get("time_threshold") is not None
+                else (
+                    kwargs.get("latency_threshold")
+                    if kwargs.get("latency_threshold") is not None
+                    else time_threshold_seconds
+                )
+            )
+        )
+        eff_time_thresh = parse_time_threshold_seconds(raw_time)
+
         if not logs:
             return {
                 "workflow_times": {},
@@ -231,7 +259,7 @@ class ExecutionTimeCalculatorTool(BaseTool):
             avg_t = sum(times) / len(times) if times else 0.0
             max_t = max(times) if times else 0.0
             min_t = min(times) if times else 0.0
-            is_slow = avg_t > time_threshold_seconds
+            is_slow = avg_t > eff_time_thresh
 
             if is_slow:
                 flagged_slow.append(wid)
@@ -249,7 +277,7 @@ class ExecutionTimeCalculatorTool(BaseTool):
 
         summary_msg = (
             f"Overall Avg Execution Time: {overall_avg:.2f}s. "
-            f"Workflows exceeding {time_threshold_seconds}s threshold: "
+            f"Workflows exceeding {eff_time_thresh}s threshold: "
             f"{', '.join(flagged_slow) if flagged_slow else 'None'}."
         )
 
@@ -403,6 +431,18 @@ class RecommendationsGeneratorTool(BaseTool):
 
         recommendations: List[Dict[str, str]] = []
 
+        fail_thresh_raw = kwargs.get("failure_threshold", 10.0)
+        try:
+            fail_thresh = parse_percentage_threshold(fail_thresh_raw, "Failure rate threshold")
+        except Exception:
+            fail_thresh = 10.0
+
+        time_thresh_raw = kwargs.get("time_threshold_seconds", 5.0)
+        try:
+            time_thresh = parse_time_threshold_seconds(time_thresh_raw)
+        except Exception:
+            time_thresh = 5.0
+
         # 1. High failure rate recommendations
         for wid in high_fail_wfs:
             r_info = rates.get(wid, {})
@@ -412,7 +452,7 @@ class RecommendationsGeneratorTool(BaseTool):
                 "category": "RELIABILITY",
                 "workflow_id": wid,
                 "priority": "HIGH",
-                "finding": f"{wid} ({w_name}) has an elevated failure rate of {f_rate}% (Threshold: 10.0%).",
+                "finding": f"{wid} ({w_name}) has an elevated failure rate of {f_rate}% (Threshold: {fail_thresh}%).",
                 "action": f"Implement retry policies, strict schema validation, or robust error recovery in {wid}.",
             })
 
@@ -425,7 +465,7 @@ class RecommendationsGeneratorTool(BaseTool):
                 "category": "PERFORMANCE",
                 "workflow_id": wid,
                 "priority": "MEDIUM",
-                "finding": f"{wid} ({w_name}) average execution time is {avg_t}s (Threshold: 5.0s).",
+                "finding": f"{wid} ({w_name}) average execution time is {avg_t}s (Threshold: {time_thresh}s).",
                 "action": f"Profile step execution in {wid}, optimize file streaming, or add caching for repetitive operations.",
             })
 

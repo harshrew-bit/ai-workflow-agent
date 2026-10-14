@@ -3,6 +3,10 @@
 import re
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
+from app.agent.normalization import (
+    detect_query_ambiguity,
+    extract_deterministic_inputs,
+)
 from app.agent.router import RoutingDecision, WorkflowRouter
 from app.models.workflow import WorkflowDefinition
 
@@ -89,6 +93,23 @@ SYNONYMS: Dict[str, str] = {
     "health": "perform",
     "logs": "log",
     "logging": "log",
+    "discrepancy": "difference",
+    "discrepancies": "difference",
+    "variance": "difference",
+    "variances": "difference",
+    "deviations": "difference",
+    "deviation": "difference",
+    "audit": "audit",
+    "auditing": "audit",
+    "audits": "audit",
+}
+
+DELIVERY_DOMAIN_TOKENS: Set[str] = {
+    "delivery", "deliver", "delay", "delays", "late", "lateness", "risk", "shipment", "shipments", "transit", "ontime", "on-time",
+}
+
+PRICING_DOMAIN_TOKENS: Set[str] = {
+    "price", "prices", "pricing", "cost", "costs", "difference", "discrepancy", "variance", "deviation",
 }
 
 
@@ -124,29 +145,90 @@ def tokenize(text: str) -> List[str]:
 
 
 def extract_inputs_from_query(query: str, workflow_id: Optional[str] = None) -> Dict[str, Any]:
-    """Extract explicit identifiers (order ID, email, csv path) from query text."""
-    extracted: Dict[str, Any] = {}
-    if not query:
-        return extracted
+    """Extract explicit identifiers, thresholds, and comparison parameters from query text."""
+    return extract_deterministic_inputs(query, workflow_id)
 
-    # Extract Order ID (e.g. ORD-1001, ORD-999)
-    order_match = re.search(r"\b(ORD-\d+)\b", query, re.IGNORECASE)
-    if order_match:
-        extracted["order_id"] = order_match.group(1).upper()
 
-    # Extract Email address
-    email_match = re.search(
-        r"\b([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)\b", query
+def detect_multi_workflow_intents(
+    query: str,
+    available_workflows: Sequence[WorkflowDefinition],
+    scorer: Optional["OfflineWorkflowRouter"] = None,
+) -> List[Tuple[WorkflowDefinition, str]]:
+    """Detect whether a query requests multiple distinct workflow objectives.
+
+    Distinguishes multiple distinct business workflows from multiple steps
+    within a single workflow (e.g. 'compare prices and flag exceptions' is a single WF002).
+
+    Returns a list of (WorkflowDefinition, sub_clause) pairs if >= 2 distinct workflows
+    are confidently requested; otherwise returns empty list.
+    """
+    clean_query = (query or "").strip()
+    if not clean_query:
+        return []
+
+    router = scorer or OfflineWorkflowRouter()
+
+    # Split on explicit sequence markers or strong sentence/conjunction boundaries
+    clauses: List[str] = []
+    seq_match = re.match(
+        r"^\s*first\s+(.*?)\s+(?:then|next|after\s+that)\s+(.*)",
+        clean_query,
+        re.IGNORECASE | re.DOTALL,
     )
-    if email_match:
-        extracted["customer_email"] = email_match.group(1)
+    if seq_match:
+        part1 = seq_match.group(1).strip()
+        part2 = seq_match.group(2).strip()
+        part2 = re.sub(
+            r"\b(?:return\s+both\s+reports.*|give\s+me\s+both.*|both\s+reports.*)$",
+            "",
+            part2,
+            flags=re.IGNORECASE,
+        ).strip()
+        clauses = [part1, part2]
+    else:
+        sentence_parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+|\n+|;\s*", clean_query) if p.strip()]
+        content_parts = []
+        has_both_indicator = False
+        for sp in sentence_parts:
+            if re.search(r"\b(?:give\s+me\s+both\s+results|return\s+both\s+reports|both\s+reports\s+separately)\b", sp, re.IGNORECASE):
+                has_both_indicator = True
+                continue
+            content_parts.append(sp)
 
-    # Extract CSV file path if explicitly mentioned
-    csv_match = re.search(r"\b([a-zA-Z0-9_./\\-]+\.csv)\b", query, re.IGNORECASE)
-    if csv_match:
-        extracted["file_path"] = csv_match.group(1)
+        if len(content_parts) >= 2:
+            clauses = content_parts
+        elif len(content_parts) == 1 and (" and " in content_parts[0] or " as well as " in content_parts[0]):
+            single_text = content_parts[0]
+            # Match conjunctions only when followed by an action verb indicating a separate objective
+            action_verb_pat = (
+                r"\s+(?:and|as\s+well\s+as)\s+(?:then\s+|also\s+)?"
+                r"(?=(?:run|execute|check|verify|assess|identify|find|audit|compare|calculate|generate|alert|monitor|evaluate|review|determine|process|inspect|list|show|detect)\b)"
+            )
+            conj_split = re.split(action_verb_pat, single_text, flags=re.IGNORECASE)
+            if len(conj_split) == 2 and (has_both_indicator or (len(conj_split[0]) > 10 and len(conj_split[1]) > 10)):
+                clauses = [conj_split[0].strip(), conj_split[1].strip()]
 
-    return extracted
+    if len(clauses) < 2:
+        return []
+
+    matched_wfs: List[Tuple[WorkflowDefinition, str]] = []
+    seen_ids: Set[str] = set()
+
+    for clause in clauses:
+        ranked = router.score_workflows(clause, available_workflows)
+        if not ranked:
+            continue
+        top_wf, top_score, _ = ranked[0]
+        second_score = ranked[1][1] if len(ranked) > 1 else 0.0
+
+        if top_score >= 3.0 and top_score > second_score and top_wf.workflow_id not in seen_ids:
+            seen_ids.add(top_wf.workflow_id)
+            matched_wfs.append((top_wf, clause))
+
+    if len(matched_wfs) >= 2:
+        return matched_wfs
+
+    return []
 
 
 class OfflineWorkflowRouter(WorkflowRouter):
@@ -195,6 +277,26 @@ class OfflineWorkflowRouter(WorkflowRouter):
                 if w > 0:
                     score += w
                     matched.add(tok)
+
+            # Domain-aware negative discrimination:
+            # If query is specifically about pricing/cost/discrepancies and contains no delivery/delay concepts,
+            # WF011 (Delivery Risk) must not outscore WF002 based on generic words like 'audit' or 'vendor'.
+            if wf.workflow_id == "WF011":
+                has_pricing = any(t in q_tokens for t in PRICING_DOMAIN_TOKENS)
+                has_delivery = any(t in q_tokens for t in DELIVERY_DOMAIN_TOKENS)
+                if has_pricing and not has_delivery:
+                    score = 0.0
+                    matched = set()
+
+            # Conversely, if query is specifically about delivery/delays and contains no pricing concepts,
+            # WF002 should not match.
+            if wf.workflow_id == "WF002":
+                has_pricing = any(t in q_tokens for t in PRICING_DOMAIN_TOKENS)
+                has_delivery = any(t in q_tokens for t in DELIVERY_DOMAIN_TOKENS)
+                if has_delivery and not has_pricing:
+                    score = 0.0
+                    matched = set()
+
             results.append((wf, score, matched))
 
         results.sort(key=lambda item: item[1], reverse=True)
@@ -238,6 +340,16 @@ class OfflineWorkflowRouter(WorkflowRouter):
                 f"Offline keyword match against trigger/metadata for {top_wf.workflow_id} "
                 f"({top_wf.workflow_name}): matched terms [{matched_terms_str}]."
             )
+            is_ambiguous, ambiguity_reason = detect_query_ambiguity(clean_query, top_wf.workflow_id)
+            if is_ambiguous:
+                return RoutingDecision(
+                    workflow_id=top_wf.workflow_id,
+                    confidence=round(confidence, 2),
+                    reasoning=ambiguity_reason or reasoning,
+                    extracted_inputs={},
+                    requires_clarification=True,
+                    routing_mode="offline",
+                )
             extracted = extract_inputs_from_query(clean_query, top_wf.workflow_id)
             return RoutingDecision(
                 workflow_id=top_wf.workflow_id,

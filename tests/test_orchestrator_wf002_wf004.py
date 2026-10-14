@@ -454,8 +454,8 @@ def test_orchestrator_wf002_blank_currency_aborts(tmp_path: Path):
     assert any("Missing or blank currency" in err for err in report.errors)
 
 
-def test_orchestrator_wf002_threshold_cannot_be_overridden_to_15_percent(tmp_path: Path):
-    """WF002 enforces the official fixed 10% threshold; router/user 15% cannot change policy."""
+def test_orchestrator_wf002_honors_explicit_threshold_and_operator(tmp_path: Path):
+    """WF002 honors explicit threshold and operator overrides while defaulting to 10%."""
     from decimal import Decimal
 
     int_csv = tmp_path / "int_12pct.csv"
@@ -480,26 +480,44 @@ def test_orchestrator_wf002_threshold_cannot_be_overridden_to_15_percent(tmp_pat
     router = LLMWorkflowRouter(provider=FakeLLMProvider(default_response=fake_json))
     orchestrator = WorkflowOrchestrator(router=router)
 
-    # Explicitly pass threshold=15.0 as runtime input
-    report = orchestrator.run(
+    # Passing explicit threshold=15.0 honors the 15% threshold (12% is compliant, not flagged)
+    report_15 = orchestrator.run(
         "Find products where vendor price differs by more than 15%.",
         internal_csv_path=str(int_csv),
         vendor_csv_path=str(ven_csv),
         threshold=15.0,
-        threshold_percentage=15.0,
     )
+    assert report_15.status == "success"
+    final_15 = report_15.final_output
+    assert final_15["exception_count"] == 0
+    assert len(final_15["exceptions"]) == 0
+    assert "15% threshold" in final_15["summary"]
 
-    assert report.status == "success"
-    final = report.final_output
-    # 112.00 vs 100.00 is 12.0% difference:
-    # Under fixed 10% policy, it MUST be flagged as an exception!
-    assert final["exception_count"] == 1
-    assert len(final["exceptions"]) == 1
-    exc_item = final["exceptions"][0]
+    # When threshold is omitted in router extractions, default 10.0% applies (12% is flagged as exception)
+    default_json = json.dumps({
+        "workflow_id": "WF002",
+        "confidence": 0.95,
+        "reasoning": "Price validation default",
+        "extracted_inputs": {},
+        "requires_clarification": False,
+    })
+    default_orchestrator = WorkflowOrchestrator(
+        router=LLMWorkflowRouter(provider=FakeLLMProvider(default_response=default_json))
+    )
+    report_default = default_orchestrator.run(
+        "Compare vendor and internal prices.",
+        internal_csv_path=str(int_csv),
+        vendor_csv_path=str(ven_csv),
+    )
+    assert report_default.status == "success"
+    final_default = report_default.final_output
+    assert final_default["exception_count"] == 1
+    assert len(final_default["exceptions"]) == 1
+    exc_item = final_default["exceptions"][0]
     assert exc_item["sku"] == "SKU-12"
     assert exc_item["is_exception"] is True
     assert exc_item["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
-    assert "10.0% threshold" in final["summary"]
+    assert "10.0% threshold" in final_default["summary"]
 
 
 def test_orchestrator_wf002_end_to_end_precision_preservation_from_csv(tmp_path: Path):

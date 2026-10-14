@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
+from app.agent.normalization import parse_integer_threshold
 from app.tools.base import BaseTool, ToolMetadata
 
 REQUIRED_INVENTORY_COLUMNS = [
@@ -164,13 +165,13 @@ def calculate_restock_requirements(
             else item.minimum_stock
         )
         if item.current_stock < threshold:
-            reorder_qty = threshold - item.current_stock
+            reorder_qty = max(0, item.minimum_stock - item.current_stock)
             restock_list.append(
                 RestockItem(
                     product_id=item.product_id,
                     product_name=item.product_name,
                     current_stock=item.current_stock,
-                    minimum_stock=threshold,
+                    minimum_stock=item.minimum_stock,
                     reorder_quantity=reorder_qty,
                     unit_cost=item.unit_cost,
                     supplier=item.supplier,
@@ -230,14 +231,38 @@ class StockThresholdComparatorTool(BaseTool):
         if items_raw is None:
             items_raw = []
 
+        raw_override = threshold_override
+        if raw_override is None:
+            raw_override = (
+                kwargs.get("threshold_override")
+                if kwargs.get("threshold_override") is not None
+                else (
+                    kwargs.get("minimum_stock")
+                    if kwargs.get("minimum_stock") is not None
+                    else (
+                        kwargs.get("stock_threshold_override")
+                        if kwargs.get("stock_threshold_override") is not None
+                        else (
+                            kwargs.get("minimum_stock_override")
+                            if kwargs.get("minimum_stock_override") is not None
+                            else kwargs.get("minimum_threshold")
+                        )
+                    )
+                )
+            )
+        eff_override = None
+        if raw_override is not None:
+            eff_override = parse_integer_threshold(raw_override, "Stock threshold override")
+
         compared = []
         low_count = 0
         for raw in items_raw:
             curr = raw.get("current_stock", 0)
+            orig_min = raw.get("minimum_stock", 0)
             threshold = (
-                threshold_override
-                if threshold_override is not None
-                else raw.get("minimum_stock", 0)
+                eff_override
+                if eff_override is not None
+                else orig_min
             )
             is_low = curr < threshold
             if is_low:
@@ -246,6 +271,7 @@ class StockThresholdComparatorTool(BaseTool):
                 **raw,
                 "is_low_stock": is_low,
                 "effective_threshold": threshold,
+                "minimum_stock": orig_min,
             })
 
         return {
@@ -310,14 +336,17 @@ class ReorderQuantityCalculatorTool(BaseTool):
         total_units = 0
         for raw in items_raw:
             curr = raw.get("current_stock", 0)
-            effective_min = raw.get("effective_threshold", raw.get("minimum_stock", 0))
-            reorder_qty = max(0, effective_min - curr)
+            orig_min = raw.get("minimum_stock", 0)
+            effective_min = raw.get("effective_threshold", orig_min)
+            # Authoritative reorder quantity: minimum_stock - current_stock
+            reorder_qty = max(0, orig_min - curr)
             total_units += reorder_qty
             restock_list.append({
                 "product_id": raw.get("product_id"),
                 "product_name": raw.get("product_name"),
                 "current_stock": curr,
-                "minimum_stock": effective_min,
+                "minimum_stock": orig_min,
+                "effective_threshold": effective_min,
                 "reorder_quantity": reorder_qty,
                 "unit_cost": raw.get("unit_cost", 0.0),
                 "supplier": raw.get("supplier", ""),

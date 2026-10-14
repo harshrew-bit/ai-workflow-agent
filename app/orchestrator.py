@@ -3,7 +3,15 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 
-from app.agent.offline_router import OfflineWorkflowRouter
+from app.agent.normalization import (
+    detect_query_ambiguity,
+    extract_deterministic_inputs,
+    merge_execution_inputs,
+)
+from app.agent.offline_router import (
+    OfflineWorkflowRouter,
+    detect_multi_workflow_intents,
+)
 from app.agent.provider import is_live_llm_configured
 from app.agent.router import LLMWorkflowRouter, RoutingDecision, WorkflowRouter
 from app.engine.base import GenericWorkflowEngine
@@ -20,6 +28,30 @@ def _is_path_like_key(key: str) -> bool:
     """True for input names that point at the filesystem (e.g. vendor_csv_path, file_path)."""
     lowered = key.lower()
     return any(token in lowered for token in ("path", "file", "csv"))
+
+
+def _format_step_summary(s: Any) -> Optional[str]:
+    """Extract or construct human-readable summary for a completed workflow step."""
+    summary = None
+    if s.status == ExecutionStatus.COMPLETED and s.output is not None:
+        if isinstance(s.output, dict):
+            if "summary" in s.output and s.output["summary"]:
+                summary = str(s.output["summary"])
+            elif "total_loaded" in s.output:
+                summary = f"Loaded {s.output['total_loaded']} inventory records."
+            elif "low_stock_count" in s.output:
+                summary = f"Identified {s.output['low_stock_count']} low-stock items."
+            elif "restock_items" in s.output:
+                summary = f"Calculated reorders for {len(s.output['restock_items'])} items."
+            else:
+                list_keys = [k for k, v in s.output.items() if isinstance(v, list)]
+                if list_keys:
+                    summary = f"Processed {len(s.output[list_keys[0]])} items ({', '.join(s.output.keys())})."
+                else:
+                    summary = f"Completed step ({', '.join(s.output.keys())})."
+        else:
+            summary = str(s.output)[:120]
+    return summary
 
 
 class WorkflowOrchestrator:
@@ -78,7 +110,112 @@ class WorkflowOrchestrator:
         """Execute a natural-language workflow request through the full orchestration pipeline."""
         clean_request = (user_request or "").strip()
 
-        # 1. Ask router to select workflow
+        # 0. Check for multi-objective / multi-workflow requests
+        multi_intents = detect_multi_workflow_intents(clean_request, self.registry.list_all())
+        if len(multi_intents) >= 2:
+            sub_reports: List[ExecutionReport] = []
+            combined_steps: List[StepReport] = []
+            combined_errors: List[str] = []
+            step_num_offset = 0
+
+            for wf, sub_clause in multi_intents:
+                # Isolate parameter extraction strictly to the sub-clause and target workflow
+                sub_extracted = extract_deterministic_inputs(sub_clause, wf.workflow_id)
+                sub_merged, _ = merge_execution_inputs(
+                    default_inputs=self.default_inputs,
+                    router_extracted={},
+                    query_extracted=sub_extracted,
+                    runtime_inputs=runtime_inputs,
+                    workflow_id=wf.workflow_id,
+                )
+                sub_exec = self.engine.execute(wf, **sub_merged)
+
+                wf_steps: List[StepReport] = []
+                for s in sub_exec.step_results:
+                    summary = _format_step_summary(s)
+                    st_rep = StepReport(
+                        step_number=s.step_number,
+                        step_name=s.step_name,
+                        status=s.status.value,
+                        output_summary=summary,
+                        output=s.output,
+                        error=s.error,
+                    )
+                    wf_steps.append(st_rep)
+                    combined_steps.append(
+                        StepReport(
+                            step_number=step_num_offset + s.step_number,
+                            step_name=f"[{wf.workflow_id}] {s.step_name}",
+                            status=s.status.value,
+                            output_summary=summary,
+                            output=s.output,
+                            error=s.error,
+                        )
+                    )
+                step_num_offset += len(sub_exec.step_results)
+
+                sub_status = "success"
+                sub_errors: List[str] = []
+                for s in sub_exec.step_results:
+                    if s.status == ExecutionStatus.FAILED and s.error:
+                        sub_errors.append(f"Step {s.step_number} ({s.step_name}): {s.error}")
+                if sub_errors:
+                    sub_status = "partial_failure" if sub_exec.output else "failed"
+                    combined_errors.extend(sub_errors)
+
+                sub_rep = ExecutionReport(
+                    request=sub_clause,
+                    selected_workflow_id=wf.workflow_id,
+                    selected_workflow_name=wf.workflow_name,
+                    routing_confidence=0.95,
+                    routing_reasoning=f"Multi-objective intent matched clause '{sub_clause}' to {wf.workflow_id}.",
+                    status=sub_status,
+                    steps=wf_steps,
+                    final_output=sub_exec.output,
+                    errors=sub_errors,
+                    clarification_required=False,
+                    routing_mode="multi_workflow",
+                )
+                sub_reports.append(sub_rep)
+
+            all_success = all(sr.status == "success" for sr in sub_reports)
+            any_success = any(sr.status == "success" for sr in sub_reports)
+            if all_success:
+                overall_status = "success"
+            elif any_success:
+                overall_status = "partial_failure"
+            else:
+                overall_status = "failed"
+
+            wf_ids_str = ", ".join(wf.workflow_id for wf, _ in multi_intents)
+            wf_names_str = " + ".join(wf.workflow_name for wf, _ in multi_intents)
+
+            final_composite_output = {
+                "workflow_reports": {sr.selected_workflow_id: sr.model_dump() for sr in sub_reports},
+                "reports": [sr.model_dump() for sr in sub_reports],
+                "summary": f"Executed {len(sub_reports)} workflows ({wf_ids_str}) with status '{overall_status}'.",
+            }
+            for sr in sub_reports:
+                if isinstance(sr.final_output, dict):
+                    for k, v in sr.final_output.items():
+                        if k not in final_composite_output:
+                            final_composite_output[k] = v
+
+            return ExecutionReport(
+                request=user_request,
+                selected_workflow_id=wf_ids_str,
+                selected_workflow_name=wf_names_str,
+                routing_confidence=0.95,
+                routing_reasoning=f"Executed multi-objective request across workflows: {wf_ids_str}.",
+                status=overall_status,
+                steps=combined_steps,
+                final_output=final_composite_output,
+                errors=combined_errors,
+                clarification_required=False,
+                routing_mode="multi_workflow",
+            )
+
+        # 1. Ask router to select workflow for single-objective request
         routing_decision = self.router.route(
             clean_request,
             self.registry.list_all(),
@@ -92,6 +229,20 @@ class WorkflowOrchestrator:
             offline_router = OfflineWorkflowRouter()
             routing_decision = offline_router.route(clean_request, self.registry.list_all())
 
+        # Check if historical data is provided in runtime inputs
+        has_historical_data = bool(
+            runtime_inputs.get("historical_vendor_csv_path")
+            or runtime_inputs.get("prior_vendor_csv_path")
+            or runtime_inputs.get("historical_data")
+        )
+        if (
+            routing_decision.requires_clarification
+            and routing_decision.workflow_id == "WF002"
+            and has_historical_data
+            and "historical price comparison" in (routing_decision.reasoning or "").lower()
+        ):
+            routing_decision.requires_clarification = False
+
         # 2. Check for clarification, low confidence, or missing selection
         if routing_decision.requires_clarification or not routing_decision.workflow_id:
             return ExecutionReport(
@@ -104,6 +255,25 @@ class WorkflowOrchestrator:
                 steps=[],
                 final_output=None,
                 errors=[routing_decision.reasoning] if routing_decision.reasoning else [],
+                clarification_required=True,
+                routing_mode=routing_decision.routing_mode,
+            )
+
+        # 2b. Check semantic ambiguity (e.g. directional vs absolute variance, historical comparison)
+        is_ambiguous, ambiguity_reason = detect_query_ambiguity(
+            clean_request, routing_decision.workflow_id, has_historical_data=has_historical_data
+        )
+        if is_ambiguous:
+            return ExecutionReport(
+                request=user_request,
+                selected_workflow_id=routing_decision.workflow_id,
+                selected_workflow_name=workflow.workflow_name if (workflow := self.registry.get_or_none(routing_decision.workflow_id)) else None,
+                routing_confidence=routing_decision.confidence,
+                routing_reasoning=ambiguity_reason or routing_decision.reasoning,
+                status="needs_clarification",
+                steps=[],
+                final_output=None,
+                errors=[ambiguity_reason] if ambiguity_reason else [],
                 clarification_required=True,
                 routing_mode=routing_decision.routing_mode,
             )
@@ -128,17 +298,18 @@ class WorkflowOrchestrator:
                 routing_mode=routing_decision.routing_mode,
             )
 
-        # 4. Prepare execution inputs.
+        # 4. Prepare execution inputs with authoritative precedence contract.
         # Router-extracted values are LLM-controlled and untrusted. File-path inputs are
-        # dropped so an extracted path can never make a tool read an arbitrary local file;
+        # dropped from router and query text so untrusted input can never read an arbitrary local file;
         # paths must come from explicit CLI/runtime arguments or configured defaults.
-        extracted = dict(routing_decision.extracted_inputs)
-        ignored_path_inputs = sorted(k for k in extracted if _is_path_like_key(k))
-        for key in ignored_path_inputs:
-            extracted.pop(key, None)
-        merged_inputs = dict(self.default_inputs)
-        merged_inputs.update(extracted)
-        merged_inputs.update(runtime_inputs)
+        query_extracted = extract_deterministic_inputs(clean_request, workflow.workflow_id)
+        merged_inputs, ignored_path_inputs = merge_execution_inputs(
+            default_inputs=self.default_inputs,
+            router_extracted=routing_decision.extracted_inputs,
+            query_extracted=query_extracted,
+            runtime_inputs=runtime_inputs,
+            workflow_id=workflow.workflow_id,
+        )
         reasoning = routing_decision.reasoning
         if ignored_path_inputs:
             note = (
@@ -154,26 +325,7 @@ class WorkflowOrchestrator:
         # 6. Format step reports
         step_reports: List[StepReport] = []
         for s in exec_result.step_results:
-            summary = None
-            if s.status == ExecutionStatus.COMPLETED and s.output is not None:
-                if isinstance(s.output, dict):
-                    if "summary" in s.output and s.output["summary"]:
-                        summary = str(s.output["summary"])
-                    elif "total_loaded" in s.output:
-                        summary = f"Loaded {s.output['total_loaded']} inventory records."
-                    elif "low_stock_count" in s.output:
-                        summary = f"Identified {s.output['low_stock_count']} low-stock items."
-                    elif "restock_items" in s.output:
-                        summary = f"Calculated reorders for {len(s.output['restock_items'])} items."
-                    else:
-                        list_keys = [k for k, v in s.output.items() if isinstance(v, list)]
-                        if list_keys:
-                            summary = f"Processed {len(s.output[list_keys[0]])} items ({', '.join(s.output.keys())})."
-                        else:
-                            summary = f"Completed step ({', '.join(s.output.keys())})."
-                else:
-                    summary = str(s.output)[:120]
-
+            summary = _format_step_summary(s)
             step_reports.append(
                 StepReport(
                     step_number=s.step_number,

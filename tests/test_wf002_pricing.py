@@ -509,18 +509,28 @@ def test_price_exception_flagger_tool_ignores_15_percent_threshold_argument():
         }
     ]
 
-    # Passing threshold=15.0 to WF002 tool must NOT alter WF002's fixed 10% policy
-    res = flagger.execute(
+    # Passing explicit threshold=15.0 to WF002 tool honors 15% threshold (12% is compliant)
+    res_15 = flagger.execute(
         price_evaluations=evaluations,
         unmatched_vendor=[],
         unmatched_internal=[],
         threshold=15.0,
     )
+    assert res_15["exception_count"] == 0
+    assert res_15["matched_products"][0]["is_exception"] is False
+    assert res_15["matched_products"][0]["validation_status"] == "COMPLIANT"
+    assert "15% threshold" in res_15["summary"]
 
-    assert res["exception_count"] == 1
-    assert res["matched_products"][0]["is_exception"] is True
-    assert res["matched_products"][0]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
-    assert "10.0% threshold" in res["summary"]
+    # When threshold is omitted, WF002 uses default 10.0% policy (12% is an exception)
+    res_default = flagger.execute(
+        price_evaluations=evaluations,
+        unmatched_vendor=[],
+        unmatched_internal=[],
+    )
+    assert res_default["exception_count"] == 1
+    assert res_default["matched_products"][0]["is_exception"] is True
+    assert res_default["matched_products"][0]["validation_status"] == "EXCEPTION_EXCEEDS_10_PERCENT"
+    assert "10.0% threshold" in res_default["summary"]
 
     # In contrast, the standalone helper compare_and_flag_prices accepts custom threshold
     standalone_res = compare_and_flag_prices(

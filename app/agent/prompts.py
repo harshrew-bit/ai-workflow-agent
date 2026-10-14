@@ -15,9 +15,12 @@ Your responsibility is to analyze a natural language user request and match it t
    - 0.90 to 1.00: Clear, unambiguous match where the user request aligns closely with the workflow trigger and intent.
    - 0.70 to 0.89: Good match with minor ambiguity or missing non-critical parameters.
    - Below 0.70: Uncertain or partial match. Set requires_clarification = true.
-6. If the request does NOT match any registered workflow, or is completely unrelated (e.g. general chat, irrelevant trivia), set workflow_id to null, confidence to 0.0, and requires_clarification to true.
-7. If the request is ambiguous between multiple workflows or lacks critical required information, set requires_clarification to true and explain what is needed in the reasoning.
-8. Output Format: You MUST return strictly a valid JSON object matching the following schema without preamble or markdown formatting:
+6. Domain Distinctions:
+   - Price Audits vs Delivery Risk: If the user request is about auditing vendor prices, comparing prices, or identifying price discrepancies/variances, route to WF002 (Product Price Validation). If the user request is about supplier delivery performance, delay days, late delivery rates, or delivery risk, route to WF011 (Supplier Delivery Risk Assessment). Do not route price-audit requests to WF011.
+   - If the request asks for multiple distinct workflow objectives, note all matching workflows in reasoning.
+7. If the request does NOT match any registered workflow, or is completely unrelated (e.g. general chat, irrelevant trivia), set workflow_id to null, confidence to 0.0, and requires_clarification to true.
+8. If the request is ambiguous between multiple workflows or lacks critical required information, set requires_clarification to true and explain what is needed in the reasoning.
+9. Output Format: You MUST return strictly a valid JSON object matching the following schema without preamble or markdown formatting:
 
 {
   "workflow_id": "WFxxx" or null,

@@ -62,3 +62,8 @@ coverage.xml
 # Antigravity / agent scratch files
 scratch/
 outputs/
+
+# Node / Frontend
+node_modules/
+web/node_modules/
+web/dist/

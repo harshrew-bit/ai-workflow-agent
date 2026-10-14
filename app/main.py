@@ -90,7 +90,24 @@ def format_report_for_display(report: Any) -> str:
             )
             lines.append("  " + "-" * 88)
             for item in matched_prices:
-                status_label = "EXCEPTION (>10%)" if item.get("is_exception") else "COMPLIANT"
+                if item.get("is_exception"):
+                    raw_status = str(item.get("validation_status", ""))
+                    if raw_status.startswith("EXCEPTION_"):
+                        tag = (
+                            raw_status.replace("EXCEPTION_", "")
+                            .replace("_PERCENT", "%")
+                            .replace("LESS_THAN_", "<")
+                            .replace("EXCEEDS_", ">")
+                            .replace("AT_LEAST_", ">=")
+                            .replace("AT_MOST_", "<=")
+                            .replace("EQUALS_", "==")
+                            .replace("_", " ")
+                        )
+                        status_label = f"EXCEPTION ({tag})"
+                    else:
+                        status_label = "EXCEPTION"
+                else:
+                    status_label = "COMPLIANT"
                 lines.append(
                     f"  {item.get('sku', ''):<10} "
                     f"{item.get('product_name', '')[:26]:<28} "
@@ -573,6 +590,17 @@ def main() -> None:
         help="Average execution time alert threshold in seconds (WF010, default 5.0)",
     )
     parser.add_argument(
+        "--price-threshold",
+        type=float,
+        default=None,
+        help="Price validation discrepancy threshold percentage (WF002, default: 10.0)",
+    )
+    parser.add_argument(
+        "--comparison-operator",
+        default=None,
+        help="Comparison operator for price discrepancy (WF002, e.g. '>', '<', '>=', '<=', '==')",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Output raw JSON execution report",
@@ -631,6 +659,12 @@ def main() -> None:
         runtime_inputs["internal_csv_path"] = args.internal_csv
     if args.vendor_csv:
         runtime_inputs["vendor_csv_path"] = args.vendor_csv
+    if args.price_threshold is not None:
+        runtime_inputs["threshold"] = args.price_threshold
+        runtime_inputs["price_threshold"] = args.price_threshold
+    if args.comparison_operator is not None:
+        runtime_inputs["operator"] = args.comparison_operator
+        runtime_inputs["comparison_operator"] = args.comparison_operator
     if args.vendor_file:
         runtime_inputs["file_path"] = args.vendor_file
     if args.product_name:

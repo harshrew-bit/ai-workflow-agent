@@ -635,14 +635,37 @@ To prove that the architecture supports additional workflows without modifying c
 
 ### Business Logic & Deterministic Thresholds
 
-1. **Delay Calculation**: For each delivery, computes $\text{delay\_days} = \text{actual\_date} - \text{promised\_date}$. Shipments with $\text{delay\_days} > 0$ are flagged as late.
-2. **Per-Supplier Metrics**: Calculates total shipments, late shipments, late delivery rate ($\frac{\text{late}}{\text{total}}$), and average delay in days for late deliveries.
-3. **Deterministic Risk Score (0 to 100)**:
-   $$\text{risk\_score} = \min\left(100.0, \, (\text{late\_delivery\_rate} \times 60.0) + \min(\text{average\_delay\_days} \times 8.0, \, 40.0)\right)$$
+1. **Delay Calculation**: For each delivery, computes delay in days from the promised and actual delivery dates:
+
+$$
+\text{delay\_days} = \text{actual\_date} - \text{promised\_date}
+$$
+
+   Shipments with `delay_days > 0` are flagged as late (`is_late = True`).
+
+2. **Per-Supplier Metrics**: Calculates total shipments, late shipments, late delivery rate, and average delay in days for late deliveries:
+
+$$
+\text{late\_delivery\_rate} = \frac{\text{late\_shipments}}{\text{total\_shipments}}
+$$
+
+$$
+\text{average\_delay\_days} = \frac{\text{total\_delay\_days}}{\text{late\_shipments}} \quad (\text{for } \text{late\_shipments} > 0)
+$$
+
+3. **Deterministic Risk Score (0.0 to 100.0)**:
+
+$$
+\text{risk\_score} = \min\left(100.0, \, (\text{late\_delivery\_rate} \times 60.0) + \min(\text{average\_delay\_days} \times 8.0, \, 40.0)\right)
+$$
+
 4. **Risk Categorization**:
-   - **HIGH RISK**: $\text{risk\_score} \ge 50.0$ OR $\text{late\_delivery\_rate} \ge 0.35$ OR $\text{average\_delay\_days} \ge 7.0$. Action: Formal vendor review, source backup suppliers.
-   - **MEDIUM RISK**: $\text{risk\_score} \ge 25.0$ OR $\text{late\_delivery\_rate} \ge 0.15$ OR $\text{average\_delay\_days} \ge 3.0$. Action: Monitor lead times weekly.
-   - **LOW RISK**: Otherwise. Action: Maintain preferred status.
+   - **HIGH RISK**: `risk_score >= 50.0` OR `late_delivery_rate >= 0.35` OR `average_delay_days >= 7.0`
+     - *Action*: Formal vendor review, source backup suppliers.
+   - **MEDIUM RISK**: `risk_score >= 25.0` OR `late_delivery_rate >= 0.15` OR `average_delay_days >= 3.0`
+     - *Action*: Monitor lead times weekly.
+   - **LOW RISK**: Otherwise.
+     - *Action*: Maintain preferred status.
 
 ### Verification Command
 ```bash
